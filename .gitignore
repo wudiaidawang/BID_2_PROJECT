@@ -1,0 +1,20 @@
+.env
+
+# Python 自动生成的缓存和编译文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 编辑器/IDE 的私有配置文件夹
+.idea/
+.claude/
+.vscode/
+
+# 本地向量数据库和临时备份（避免体积过大）
+chroma_db/
+project_backup.md
+
+# 操作系统临时文件
+.DS_Store
+Thumbs.db

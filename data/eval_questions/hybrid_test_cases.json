@@ -1,0 +1,122 @@
+[
+  {
+    "question": "目前库中所有招标项目的总成交金额是多少？",
+    "expected_answer": "根据数据库统计结果而定",
+    "source": "SQL_Database",
+    "note": "测试：聚合统计意图拦截与SQL生成。"
+  },
+  {
+    "question": "中标金额超过1000万的项目共有多少个？",
+    "expected_answer": "计数结果",
+    "source": "SQL_Database",
+    "note": "测试：条件过滤SQL查询。"
+  },
+  {
+    "question": "给我列出中标金额前三名的项目名称和对应的金额。",
+    "expected_answer": "前三名列表",
+    "source": "SQL_Database",
+    "note": "测试：排序与分页SQL。"
+  },
+  {
+    "question": "2023年之后（含2023年）完成招标的项目有哪些？",
+    "expected_answer": "项目列表",
+    "source": "SQL_Database",
+    "note": "测试：日期维度过滤。"
+  },
+  {
+    "question": "有没有关于‘设备采购’类的项目？请列出最新的一条。",
+    "expected_answer": "具体项目详情",
+    "source": "SQL_Database",
+    "note": "测试：模糊匹配与排序。"
+  },
+  {
+    "question": "在法律法规中，关于‘限制、排斥潜在投标人’的处罚金额是多少？",
+    "expected_answer": "一万元以上五万元以下",
+    "source": "法律法规PDF",
+    "full_chunk": "第六条：处一万元以上五万元以下罚款..."
+  },
+  {
+    "question": "依法必须公开招标的项目，在哪些特殊情形下可以邀请招标？",
+    "expected_answer": "技术复杂, 自然环境限制, 费用比例过大",
+    "source": "法律法规PDF",
+    "note": "测试：多点召回能力。"
+  },
+  {
+    "question": "招标文件里能指定特定的生产厂家或品牌吗？",
+    "expected_answer": "不得要求或者标明供应商名称或者特定货物的品牌",
+    "source": "法律法规PDF",
+    "note": "测试：合规性判定。"
+  },
+  {
+    "question": "招标人泄露已获取招标文件的潜在投标人名单，需要承担什么法律责任？",
+    "expected_answer": "警告, 1万〜10万元的罚款, 处分, 刑事责任",
+    "source": "法律法规PDF",
+    "note": "测试：惩戒措施检索。"
+  },
+  {
+    "question": "如果中标人因不可抗力不能履行合同，还需要没收保证金吗？",
+    "expected_answer": "不可抗力不能履行合同的除外",
+    "source": "法律法规PDF",
+    "note": "测试：例外条款召回。"
+  },
+  {
+    "question": "水运工程建设项目必须通过什么审批后才能开展施工招标？",
+    "expected_answer": "通过初步设计审批",
+    "source": "法律法规PDF",
+    "note": "测试：行业特定流程节点。"
+  },
+  {
+    "question": "评标过程中，超过多少比例的成员认为时间不够可以延长？",
+    "expected_answer": "超过三分之一",
+    "source": "法律法规PDF",
+    "note": "测试：数字型法条检索。"
+  },
+  {
+    "question": "电子招标投标公共服务平台需要具备链接专家库并共享的功能吗？",
+    "expected_answer": "链接依法设立的评标专家库，实现专家资源共享",
+    "source": "法律法规PDF",
+    "note": "测试：系统功能要求检索。"
+  },
+  {
+    "question": "采购人收到评审报告后，几天内必须确定中标供应商？",
+    "expected_answer": "5个工作日内",
+    "source": "法律法规PDF",
+    "note": "测试：时效性法律要求。"
+  },
+  {
+    "question": "联合体中同类资质供应商承担相同工作的，资质等级怎么认定？",
+    "expected_answer": "按照资质等级较低的供应商确定",
+    "source": "法律法规PDF",
+    "note": "测试：联合体规则检索。"
+  },
+  {
+    "question": "母子公司可以同时申请同一个标段的资格预审吗？",
+    "expected_answer": "不能",
+    "source": "法律法规PDF",
+    "note": "测试：关联企业限制判定。"
+  },
+  {
+    "question": "如果评标委员会成员中途被更换，他之前做的评审结论还有效吗？",
+    "expected_answer": "评审结论无效, 更换后的专家重新评审",
+    "source": "法律法规PDF",
+    "note": "测试：异常流程处理。"
+  },
+  {
+    "question": "投标文件对技术参数引用了特定标准，应加注什么字样以防排他？",
+    "expected_answer": "或相当于",
+    "source": "法律法规PDF",
+    "note": "测试：细节合规词汇。"
+  },
+  {
+    "question": "投标人在开标前书面通知撤回文件，保证金什么时候退还？",
+    "expected_answer": "5日内退还已收取的投标保证金",
+    "source": "法律法规PDF",
+    "note": "测试：资金管理流程。"
+  },
+  {
+    "question": "谁有权向他人透漏标底内容？",
+    "expected_answer": "任何单位和个人不得非法干预、影响评标过程和结果",
+    "source": "法律法规PDF",
+    "note": "测试：反向陷阱提问。"
+  }
+]
