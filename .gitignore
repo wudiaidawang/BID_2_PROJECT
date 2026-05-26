@@ -1,4 +1,5 @@
 .env
+config.yaml
 
 # Python 自动生成的缓存和编译文件
 __pycache__/

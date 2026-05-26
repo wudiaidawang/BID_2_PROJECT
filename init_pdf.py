@@ -19,7 +19,7 @@ PDF_FILES = [
         "name": "招标投标法律解读与风险防范实务",
         "author": "白如银",
         "chunk_size": 500,
-        "overlap": 100
+        "overlap": 200
     },
 
     {
@@ -27,7 +27,7 @@ PDF_FILES = [
         "name": "中华人民共和国招标投标法律法规全书",
         "author": "中国法制出版社",
         "chunk_size": 500,
-        "overlap": 100
+        "overlap": 200
     }
 ]
 

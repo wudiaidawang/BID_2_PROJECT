@@ -1,0 +1,286 @@
+# ============================================================================
+# 招投标智能问答系统 — 统一配置文件
+# 所有模块选型、参数、策略均可在此修改，无需改动代码
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# 1. LLM 配置 — 支持多厂商切换
+# ---------------------------------------------------------------------------
+llm:
+  # 当前使用的厂商: hunyuan | deepseek | openai | custom
+  provider: "hunyuan"
+
+  # 通用参数
+  temperature: 0.3
+  max_tokens: 2000
+  request_timeout: 60
+
+  # 各厂商配置
+  providers:
+    hunyuan:
+      api_url: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions"
+      api_key: "你的API_KEY"
+      model: "hunyuan-standard"
+
+    deepseek:
+      api_url: "https://api.deepseek.com/v1/chat/completions"
+      api_key: ""
+      model: "deepseek-chat"
+
+    openai:
+      api_url: "https://api.openai.com/v1/chat/completions"
+      api_key: ""
+      model: "gpt-4o"
+
+    # 本地部署或任意 OpenAI 兼容接口
+    custom:
+      api_url: "http://localhost:11434/v1/chat/completions"
+      api_key: "ollama"
+      model: "qwen2.5:14b"
+
+# ---------------------------------------------------------------------------
+# 2. Embedding 模型配置
+# ---------------------------------------------------------------------------
+embedding:
+  # 当前使用的模型: bge-small | bge-large | gte-large | m3e | custom
+  model_name: "bge-small"
+
+  models:
+    bge-small:
+      name: "BAAI/bge-small-zh"
+      dimension: 512
+    bge-large:
+      name: "BAAI/bge-large-zh-v1.5"
+      dimension: 1024
+    gte-large:
+      name: "thenlper/gte-large-zh"
+      dimension: 1024
+    m3e:
+      name: "moka-ai/m3e-base"
+      dimension: 768
+    custom:
+      name: "BAAI/bge-small-zh"
+      dimension: 512
+
+  # HuggingFace 镜像（国内加速）
+  hf_endpoint: "https://hf-mirror.com"
+  # 设备: cpu | cuda
+  device: "cpu"
+  # 批处理大小
+  batch_size: 32
+
+# ---------------------------------------------------------------------------
+# 3. Reranker 重排模型配置
+# ---------------------------------------------------------------------------
+reranker:
+  # 是否启用
+  enabled: true
+  # 当前模型
+  model_name: "BAAI/bge-reranker-base"
+  # 最大输入长度 (字符)
+  max_input_length: 512
+  # 重排候选池大小
+  candidate_pool: 30
+  # 设备
+  device: "cpu"
+
+# ---------------------------------------------------------------------------
+# 4. 检索配置
+# ---------------------------------------------------------------------------
+retrieval:
+  # 最终返回数
+  top_k: 5
+  # 向量召回候选数
+  vector_recall: 50
+  # BM25 召回候选数
+  bm25_recall: 50
+
+  # 融合策略: rrf | weighted | smart
+  fusion_strategy: "rrf"
+
+  # RRF 参数
+  rrf_k: 60
+
+  # Weighted 融合参数 (当 fusion_strategy=weighted 时生效)
+  weighted:
+    bm25_weight: 0.65
+    dense_weight: 0.35
+    # 问题类型 → 动态权重
+    question_type_weights:
+      keyword_heavy: [0.75, 0.25]   # [bm25, dense]
+      semantic_heavy: [0.40, 0.60]
+      balanced: [0.65, 0.35]
+
+  # 分数阈值
+  min_final_score: 0.1
+  low_score_threshold: 0.25
+
+  # 查询扩展
+  query_expansion:
+    enabled: true
+    # 同义词映射文件路径 (为空则使用内置默认)
+    synonym_file: ""
+
+# ---------------------------------------------------------------------------
+# 5. 路由 / Planner 配置
+# ---------------------------------------------------------------------------
+router:
+  # 模式: binary | intent | planner
+  #   binary  - 当前你项目的3路投票 SQL/RAG 二分类
+  #   intent  - 队友项目的 LLM 意图分类 (type + complexity)
+  #   planner - Agent 模式，LLM 自己规划工具调用步骤
+  mode: "binary"
+
+  # Binary 模式参数
+  binary:
+    # 模板匹配阈值 (超过则直接复用 SQL，不走 LLM 生成)
+    template_match_threshold: 0.92
+    # 是否启用 3 路投票
+    three_way_voting: true
+    # LLM 分类超时(秒)
+    llm_classify_timeout: 15
+
+  # Intent 模式参数 (队友风格)
+  intent:
+    # 是否启用快速拦截 (问候语/无关问题/致谢)
+    quick_intercept: true
+
+  # Planner 模式参数 (Agent)
+  planner:
+    # 是否预规划完整步骤（false 则为 ReAct 单步模式）
+    plan_then_execute: false
+    # 最大规划步骤数
+    max_steps: 5
+    # Planner 专用 temperature
+    temperature: 0.2
+    # 是否允许重规划（执行中发现问题可修正计划）
+    allow_replan: true
+
+# ---------------------------------------------------------------------------
+# 6. Agent 工具注册 — 声明式管理，增删工具只需改这里
+# ---------------------------------------------------------------------------
+agent:
+  enabled: false  # 设为 true 启用 Agent 模式
+  max_steps: 5
+  temperature: 0.3
+
+  tools:
+    # 每个工具只需声明 name + class_path，启动时自动注册
+    - name: "search_regulations"
+      description: "语义检索招投标法规知识库，用于查询概念定义、处罚规定、操作流程"
+      class_path: "app.agent.tools.SearchRegulationsTool"
+      enabled: true
+      params:
+        top_k: 3
+        max_text_len: 500
+
+    - name: "get_article"
+      description: "精确查询特定法条的第X条内容"
+      class_path: "app.agent.tools.GetArticleTool"
+      enabled: true
+      params:
+        max_results: 2
+        max_text_len: 800
+
+    - name: "sql_query"
+      description: "对招标数据库执行统计查询，返回数量、金额、排名等"
+      class_path: "app.agent.tools.SQLQueryTool"
+      enabled: true
+
+    - name: "search_market_price"
+      description: "查询建材市场价格行情、材料信息价"
+      class_path: "app.agent.tools.MarketPriceTool"
+      enabled: false  # 待数据接入后开启
+      params:
+        top_k: 3
+
+    - name: "search_qualification"
+      description: "查询企业资质要求、资质等级标准"
+      class_path: "app.agent.tools.QualificationTool"
+      enabled: false  # 待数据接入后开启
+      params:
+        top_k: 3
+
+# ---------------------------------------------------------------------------
+# 7. 会话配置 — 支持存储后端切换
+# ---------------------------------------------------------------------------
+session:
+  # 存储后端: redis | sqlite
+  backend: "redis"
+  # 会话过期时间(秒)
+  ttl: 1800
+  # 最大保留对话轮次
+  max_history: 10
+
+  # Redis 配置
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+
+  # SQLite 配置
+  sqlite:
+    db_path: "./data/sessions.db"
+    # 后台清理间隔(秒)
+    cleanup_interval: 3600
+
+# ---------------------------------------------------------------------------
+# 8. 数据源配置
+# ---------------------------------------------------------------------------
+data:
+  # 招标数据 Excel 文件
+  bid_data_path: "./data/bid_data.xlsx"
+  # SQLite 数据库路径
+  db_path: "./data/bid_data.db"
+  # PDF 法规文件目录
+  pdf_dir: "./data/pdfs"
+  # ChromaDB 持久化目录
+  chroma_persist_dir: "./chroma_db"
+  # 口语映射文件
+  colloquial_map: "./data/colloquial_map.json"
+
+  # ChromaDB 集合定义 — 增删集合只需改这里
+  collections:
+    - name: "bids"
+      description: "招标项目数据"
+    - name: "regulations"
+      description: "法律法规条文"
+    # 待扩展
+    # - name: "market_prices"
+    #   description: "建材市场行情"
+    # - name: "enterprise_quals"
+    #   description: "企业资质标准"
+
+# ---------------------------------------------------------------------------
+# 9. 问题改写配置
+# ---------------------------------------------------------------------------
+query_rewriter:
+  # 口语转书面语
+  colloquial_to_formal: true
+  # 冗余精简
+  redundancy_removal: true
+  # 行业同义词替换
+  synonym_expansion: true
+  # LLM 指代消解 (需额外 API 调用)
+  llm_reference_resolution: true
+
+# ---------------------------------------------------------------------------
+# 10. 服务配置
+# ---------------------------------------------------------------------------
+server:
+  host: "0.0.0.0"
+  port: 8000
+  debug: true
+  # 是否启用 API 文档
+  enable_docs: true
+
+# ---------------------------------------------------------------------------
+# 11. 评估配置
+# ---------------------------------------------------------------------------
+evaluation:
+  # 检索评估用的评测集路径
+  eval_set_path: "./data/eval_questions/hybrid_test_cases.json"
+  # 评估时检索返回数
+  top_k_for_eval: 10
+  # 相关性阈值
+  similarity_threshold: 0.85

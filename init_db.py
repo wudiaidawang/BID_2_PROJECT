@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""初始化招标库和价格库"""
+"""初始化招标库"""
 
 import sys
 from pathlib import Path
@@ -30,43 +30,24 @@ def build_text_for_bid(record: dict) -> str:
     return res
 
 
-def build_text_for_price(record: dict) -> str:
-    parts = [
-        str(record.get("material_name", "")),
-        str(record.get("supplier", "")),
-        str(record.get("price", "")),
-    ]
-    return " ".join([p for p in parts if p and p != "nan"])
-
-
 def main():
     print("=" * 60)
-    print("初始化招标库和价格库")
+    print("初始化招标库")
     print("=" * 60)
     print("注意：法规库请运行 python init_pdf.py")
     print("=" * 60)
-    
+
     client = ChromaStore()
-    
-    print("\n[1/2] 重建招标库...")
+
+    print("\n重建招标库...")
     if Path(settings.data_path_bids).exists():
         client.rebuild_from_excel("bids", settings.data_path_bids, build_text_for_bid)
     else:
         print(f"  警告: {settings.data_path_bids} 不存在")
-    
-    print("\n[2/2] 重建价格库...")
-    if Path(settings.data_path_prices).exists():
-        client.rebuild_from_excel("prices", settings.data_path_prices, build_text_for_price)
-    else:
-        Path(settings.data_path_prices).parent.mkdir(parents=True, exist_ok=True)
-        import pandas as pd
-        pd.DataFrame().to_excel(settings.data_path_prices, index=False)
-        client.rebuild_from_excel("prices", settings.data_path_prices, build_text_for_price)
-    
+
     print("\n" + "=" * 60)
     print(f"初始化完成!")
     print(f"  Bids库: {client.get_count('bids')} 条")
-    print(f"  Prices库: {client.get_count('prices')} 条")
     print("=" * 60)
     print("\n提示: 请运行 python init_pdf.py 导入法规库")
 
