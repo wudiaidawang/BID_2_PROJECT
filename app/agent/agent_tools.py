@@ -44,17 +44,35 @@ class SearchRegulationsTool(BaseTool):
         return "\n\n".join(output_parts)
 
     def _format_source(self, chunk: Dict) -> str:
-        data = chunk.get("data", {})
-        doc_title = data.get("doc_title", "")
-        article_num = data.get("article_num", "")
-        if doc_title and doc_title != "unknown":
-            clean = doc_title.replace("《", "").replace("》", "")
-            if article_num and article_num not in ("unknown", "full"):
-                return f"{clean} 第{article_num}条"
+        meta = chunk.get("metadata", {}) or chunk.get("data", {})
+        law_name = meta.get("law_name", "")
+        article = meta.get("article", "")
+        article_id = meta.get("article_id", "")
+        chunk_type = meta.get("chunk_type", "")
+
+        # 优先用 law_name + article
+        if law_name:
+            clean = law_name.replace("《", "").replace("》", "")
+            if article:
+                return f"{clean} {article}"
+            if article_id:
+                return f"{clean} 第{article_id}条"
             return clean
+
+        # 降级：用 source + article
         source = data.get("source", "未知来源")
-        if article_num and article_num not in ("unknown", "full"):
-            return f"{source} 第{article_num}条"
+        if article:
+            return f"{source} {article}"
+        if article_id:
+            return f"{source} 第{article_id}条"
+
+        # 再降级：提取文本中的法条号
+        text = chunk.get("text", "")
+        import re
+        match = re.search(r'第([一二三四五六七八九十百千\d]+)条', text)
+        if match:
+            return f"{source} 第{match.group(1)}条"
+
         return source
 
 
@@ -70,21 +88,32 @@ class GetArticleTool(BaseTool):
         if not article_num:
             return "错误：请提供条款号"
 
-        results = self.retriever.search_article_exact(law_name, article_num)
+        # 使用主项目 retriever 的 search 方法（带 metadata 语义匹配）
+        query = f"{law_name} 第{article_num}条" if law_name else f"第{article_num}条"
+        results = self.retriever.search(query, "regulations", top_k=5)
 
         if not results:
-            fallback_query = f"{law_name} 第{article_num}条" if law_name else f"第{article_num}条"
-            results = self.retriever.search(fallback_query, "regulations", top_k=3)
-            if not results:
-                return f"未找到第{article_num}条的相关内容"
+            return f"未找到第{article_num}条的相关内容"
+
+        # 过滤：优先匹配 article_id
+        filtered = []
+        for r in results:
+            meta = r.get("metadata", {}) or r.get("data", {})
+            rid = str(meta.get("article_id", ""))
+            if rid == str(article_num):
+                filtered.append(r)
+
+        if not filtered:
+            # 降级：返回所有结果
+            filtered = results[:3]
 
         output_parts = []
-        for i, r in enumerate(results[:2], 1):
-            text = r.get("text", "")[:800]
-            data = r.get("data", {})
-            doc = data.get("doc_title", data.get("source", "未知"))
-            clean = doc.replace("《", "").replace("》", "")
-            output_parts.append(f"[{i}] 来源：{clean} 第{article_num}条\n{text}")
+        for i, r in enumerate(filtered[:2], 1):
+            text = r.get("parent_content") or r.get("text", "")[:800]
+            meta = r.get("metadata", {}) or r.get("data", {})
+            law = meta.get("law_name", meta.get("source", "未知"))
+            art = meta.get("article", f"第{article_num}条")
+            output_parts.append(f"[{i}] 来源：{law} {art}\n{text}")
 
         return "\n\n".join(output_parts)
 
@@ -124,7 +153,7 @@ class SummarizeTool(BaseTool):
 用户问题：{query}
 检索结果：{chunks_text[:3000]}
 请给出结构化的答案，标注信息来源。如果信息不足以回答问题，请如实说明。"""
-        return await self.llm.generate(prompt)
+        return await self.llm._call_llm(prompt)
 
 
 # ── 工具注册表 ──

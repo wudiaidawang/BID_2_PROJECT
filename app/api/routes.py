@@ -96,17 +96,17 @@ async def ask(request: Request, req: AskRequest):
     # 7. 构建返回 Source 列表
     sources = []
     for r in results[:req.top_k]:
-        data = r.get("data", {})
-        raw_amount = data.get("winner_amount") or data.get("amount") or 0.0
+        meta = r.get("metadata", {}) or r.get("data", {})
+        raw_amount = meta.get("winner_amount") or meta.get("amount") or 0.0
         try:
             clean_amount = float(raw_amount)
         except (ValueError, TypeError):
             clean_amount = 0.0
 
         sources.append(SourceInfo(
-            title=str(data.get("title") or data.get("项目名称") or "查询结果"),
-            project_name=str(data.get("project_name", data.get("项目名称", ""))),
-            winner=str(data.get("winner", data.get("中标人", ""))),
+            title=str(meta.get("title") or meta.get("项目名称") or "查询结果"),
+            project_name=str(meta.get("project_name", meta.get("项目名称", ""))),
+            winner=str(meta.get("winner", meta.get("中标人", ""))),
             winner_amount=clean_amount,
             content_preview=str(r.get("text", ""))[:200],
             source_type=source_collection,

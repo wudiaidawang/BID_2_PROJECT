@@ -45,11 +45,42 @@ def main():
     else:
         print(f"  警告: {settings.data_path_bids} 不存在")
 
+    # 创建供应商画像视图（SQLite VIEW，自动与主表同步）
+    _create_supplier_profile_view()
+
     print("\n" + "=" * 60)
     print(f"初始化完成!")
     print(f"  Bids库: {client.get_count('bids')} 条")
     print("=" * 60)
     print("\n提示: 请运行 python init_pdf.py 导入法规库")
+
+
+def _create_supplier_profile_view():
+    """在 SQLite 中创建供应商画像视图，用于企业资质类查询"""
+    import sqlite3
+    try:
+        conn = sqlite3.connect(settings.db_path)
+        conn.execute("DROP VIEW IF EXISTS supplier_profile")
+        conn.execute("""
+            CREATE VIEW supplier_profile AS
+            SELECT
+                supplier,
+                COUNT(*) AS total_bids,
+                SUM(amount) AS total_amount,
+                ROUND(AVG(amount), 2) AS avg_amount,
+                COUNT(DISTINCT category) AS category_count,
+                GROUP_CONCAT(DISTINCT category) AS categories,
+                COUNT(DISTINCT city) AS city_count,
+                MAX(publish_date) AS latest_bid_date,
+                MIN(publish_date) AS earliest_bid_date
+            FROM bids
+            GROUP BY supplier
+        """)
+        conn.commit()
+        conn.close()
+        print(f"  供应商画像视图已创建")
+    except Exception as e:
+        print(f"  警告: 创建供应商画像视图失败: {e}")
 
 
 if __name__ == "__main__":

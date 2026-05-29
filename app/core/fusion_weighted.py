@@ -203,11 +203,11 @@ class HybridFusionV2:
             doc_id = r.get("id") or hash(r.get("text", ""))
             base_score = dense_w * r.get("norm_score", 0)
 
-            is_law = r.get("data", {}).get("type") == "law_article"
-            if is_law and query_type == "semantic_heavy":
+            meta = r.get("metadata", {}) or r.get("data", {})
+            if meta.get("chunk_type") in ("parent", "child") and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("data", {}))
+            boost = self._compute_boost(r.get("text", ""), meta)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 
@@ -223,11 +223,11 @@ class HybridFusionV2:
             doc_id = r.get("id") or hash(r.get("text", ""))
             base_score = bm25_w * r.get("norm_score", 0)
 
-            is_law = r.get("data", {}).get("type") == "law_article"
-            if is_law and query_type == "semantic_heavy":
+            meta = r.get("metadata", {}) or r.get("data", {})
+            if meta.get("chunk_type") in ("parent", "child") and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("data", {}))
+            boost = self._compute_boost(r.get("text", ""), meta)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 

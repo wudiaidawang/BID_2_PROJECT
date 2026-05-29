@@ -147,10 +147,7 @@ class ReActAgent:
             )
 
             try:
-                temp = getattr(settings, 'agent_temperature', 0.3)
-                response = await self.llm._call_llm([
-                    {"role": "user", "content": prompt}
-                ], temperature=temp)
+                response = await self.llm._call_llm(prompt)
                 print(f"   [LLM] {response[:300]}...")
 
                 final_answer = self._extract_final_answer(response)
@@ -183,9 +180,9 @@ class ReActAgent:
                 if results and self.llm:
                     context = "\n\n".join([r.get("text", "")[:500] for r in results[:3]])
                     try:
-                        return await self.llm._call_llm([
-                            {"role": "user", "content": f"基于以下信息回答问题：\n{context}\n\n问题：{question}"}
-                        ])
+                        return await self.llm._call_llm(
+                            f"基于以下信息回答问题：\n{context}\n\n问题：{question}"
+                        )
                     except Exception:
                         pass
                 return f"处理失败: {str(e)}"
@@ -201,9 +198,9 @@ class ReActAgent:
         if all_obs and self.llm:
             context = "\n\n".join(all_obs[:5])
             try:
-                return await self.llm._call_llm([
-                    {"role": "user", "content": f"基于以下信息回答问题：\n{context[:3000]}\n\n问题：{question}"}
-                ])
+                return await self.llm._call_llm(
+                    f"基于以下信息回答问题：\n{context[:3000]}\n\n问题：{question}"
+                )
             except Exception:
                 pass
 

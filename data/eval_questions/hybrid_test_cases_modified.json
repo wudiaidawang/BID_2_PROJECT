@@ -1,0 +1,906 @@
+[
+  {
+    "question": "搞招投标活动，得遵守哪些基本规矩？",
+    "expected_type": "rag",
+    "expected_answer": "公开、公平、公正和诚实信用",
+    "expected_answer_contains": [
+      "公开",
+      "公平",
+      "公正和诚实信用"
+    ]
+  },
+  {
+    "question": "《招标投标法》主要是想解决什么问题？",
+    "expected_type": "rag",
+    "expected_answer": "规范招标投标活动，保护国家、社会公共利益和当事人合法权益，提高经济效益，保证项目质量",
+    "expected_answer_contains": [
+      "规范招标投标活动",
+      "保护国家",
+      "社会公共利益和当事人合法权益"
+    ]
+  },
+  {
+    "question": "什么叫“招标人”？",
+    "expected_type": "rag",
+    "expected_answer": "依法提出招标项目、进行招标的法人或者其他组织",
+    "expected_answer_contains": [
+      "依法提出招标项目",
+      "进行招标的法人或者其他组织",
+      "进行招标的法人或"
+    ]
+  },
+  {
+    "question": "一个依法必须招标的项目，招标文件发出去之后，到投标截止日至少要留多少天给投标人准备？",
+    "expected_type": "rag",
+    "expected_answer": "20天",
+    "expected_answer_contains": [
+      "20天"
+    ]
+  },
+  {
+    "question": "邀请招标的话，招标人最少得邀请几家单位？",
+    "expected_type": "rag",
+    "expected_answer": "3家",
+    "expected_answer_contains": [
+      "3家"
+    ]
+  },
+  {
+    "question": "投标截止前，投标人能不能改或撤回自己的投标文件？",
+    "expected_type": "rag",
+    "expected_answer": "可以",
+    "expected_answer_contains": [
+      "可以"
+    ]
+  },
+  {
+    "question": "如果投标人在投标截止前撤回了投标，招标人收了投标保证金的，几天内要退还？",
+    "expected_type": "rag",
+    "expected_answer": "5天内",
+    "expected_answer_contains": [
+      "5天内",
+      "天内"
+    ]
+  },
+  {
+    "question": "几家公司组成联合体投标，联合体各方需要具备什么条件？",
+    "expected_type": "rag",
+    "expected_answer": "都要具备承担招标项目的相应能力",
+    "expected_answer_contains": [
+      "都要具备承担招标项目的相应能力",
+      "都要具备承担招标",
+      "项目的相应能力"
+    ]
+  },
+  {
+    "question": "联合体中标的，联合体各方对招标人承担什么责任？",
+    "expected_type": "rag",
+    "expected_answer": "连带责任",
+    "expected_answer_contains": [
+      "连带责任"
+    ]
+  },
+  {
+    "question": "开标应该啥时候、在哪儿进行？",
+    "expected_type": "rag",
+    "expected_answer": "投标截止时间的同一时间，在招标文件中预先确定的地点公开进行",
+    "expected_answer_contains": [
+      "投标截止时间的同一时间",
+      "在招标文件中预先确定的地点公开进行",
+      "投标截止时间的同"
+    ]
+  },
+  {
+    "question": "评标委员会最少几个人？专家占多少比例？",
+    "expected_type": "rag",
+    "expected_answer": "5人以上单数，专家不少于三分之二",
+    "expected_answer_contains": [
+      "5人以上单数",
+      "专家不少于三分之二",
+      "人以上单数"
+    ]
+  },
+  {
+    "question": "依法必须招标的项目，评标报告出来后几天内要公示中标候选人？公示至少几天？",
+    "expected_type": "rag",
+    "expected_answer": "3日内公示，公示期不少于3日",
+    "expected_answer_contains": [
+      "3日内公示",
+      "公示期不少于3日",
+      "日内公示"
+    ]
+  },
+  {
+    "question": "对评标结果有意见，啥时候提异议？招标人多久答复？",
+    "expected_type": "rag",
+    "expected_answer": "中标候选人公示期间提出，招标人3日内答复",
+    "expected_answer_contains": [
+      "中标候选人公示期间提出",
+      "招标人3日内答复",
+      "中标候选人公示期"
+    ]
+  },
+  {
+    "question": "中标通知书发出后，双方多少天内要签合同？",
+    "expected_type": "rag",
+    "expected_answer": "30天内",
+    "expected_answer_contains": [
+      "30天内",
+      "天内"
+    ]
+  },
+  {
+    "question": "签合同时，能不能再谈价格、工期这些核心内容？",
+    "expected_type": "rag",
+    "expected_answer": "不能，不得背离合同实质性内容",
+    "expected_answer_contains": [
+      "不能",
+      "不得背离合同实质性内容",
+      "不得背离合同实质"
+    ]
+  },
+  {
+    "question": "中标结果确定后，多久要向监管部门提交书面报告？",
+    "expected_type": "rag",
+    "expected_answer": "15天内",
+    "expected_answer_contains": [
+      "15天内",
+      "天内"
+    ]
+  },
+  {
+    "question": "招标文件要求交履约保证金，最高不能超过合同价的多少？",
+    "expected_type": "rag",
+    "expected_answer": "10%",
+    "expected_answer_contains": [
+      "10%"
+    ]
+  },
+  {
+    "question": "投诉招标投标违规行为，要在知道或应当知道后几天内提出？",
+    "expected_type": "rag",
+    "expected_answer": "10天内",
+    "expected_answer_contains": [
+      "10天内",
+      "天内"
+    ]
+  },
+  {
+    "question": "监管部门收到投诉后，几个工作日内决定是否受理？",
+    "expected_type": "rag",
+    "expected_answer": "3个工作日",
+    "expected_answer_contains": [
+      "3个工作日",
+      "个工作日"
+    ]
+  },
+  {
+    "question": "从受理投诉到作出处理决定，最多多少个工作日？",
+    "expected_type": "rag",
+    "expected_answer": "30个工作日",
+    "expected_answer_contains": [
+      "30个工作日",
+      "个工作日"
+    ]
+  },
+  {
+    "question": "合同签完后，投标保证金最迟啥时候退？",
+    "expected_type": "rag",
+    "expected_answer": "合同签订后5日内",
+    "expected_answer_contains": [
+      "合同签订后5日内",
+      "合同签订后",
+      "日内"
+    ]
+  },
+  {
+    "question": "投标人之间串通投标，中标无效，罚款比例是多少？",
+    "expected_type": "rag",
+    "expected_answer": "中标项目金额千分之五以上千分之十以下",
+    "expected_answer_contains": [
+      "中标项目金额千分之五以上千分之十以下",
+      "中标项目金额千分",
+      "之五以上千分之十"
+    ]
+  },
+  {
+    "question": "投标人弄虚作假骗取中标，会有什么后果？",
+    "expected_type": "rag",
+    "expected_answer": "中标无效，罚款，情节严重的取消一至三年投标资格",
+    "expected_answer_contains": [
+      "中标无效",
+      "罚款",
+      "情节严重的取消一至三年投标资格"
+    ]
+  },
+  {
+    "question": "招标人泄露潜在投标人信息，最高会被罚多少钱？",
+    "expected_type": "rag",
+    "expected_answer": "十万元",
+    "expected_answer_contains": [
+      "十万元"
+    ]
+  },
+  {
+    "question": "评标专家收投标人好处，最高罚多少？",
+    "expected_type": "rag",
+    "expected_answer": "五万元",
+    "expected_answer_contains": [
+      "五万元"
+    ]
+  },
+  {
+    "question": "招标公告上必须写清楚哪些内容？",
+    "expected_type": "rag",
+    "expected_answer": "招标人名称和地址、项目性质、数量、实施地点和时间、获取招标文件的办法",
+    "expected_answer_contains": [
+      "招标人名称和地址",
+      "项目性质",
+      "数量"
+    ]
+  },
+  {
+    "question": "投标人不足三家，该怎么办？",
+    "expected_type": "rag",
+    "expected_answer": "重新招标",
+    "expected_answer_contains": [
+      "重新招标"
+    ]
+  },
+  {
+    "question": "“低于成本价竞标”指的是低于什么成本？",
+    "expected_type": "rag",
+    "expected_answer": "企业个别成本，不是社会平均成本",
+    "expected_answer_contains": [
+      "企业个别成本",
+      "不是社会平均成本"
+    ]
+  },
+  {
+    "question": "招标人设了标底，标底在评标中起什么作用？",
+    "expected_type": "rag",
+    "expected_answer": "只能作为参考，不能作为唯一评标依据",
+    "expected_answer_contains": [
+      "只能作为参考",
+      "不能作为唯一评标依据",
+      "不能作为唯一评标"
+    ]
+  },
+  {
+    "question": "确定中标人之前，招标人能跟投标人谈价格吗？",
+    "expected_type": "rag",
+    "expected_answer": "不能，属于实质性谈判，违法",
+    "expected_answer_contains": [
+      "不能",
+      "属于实质性谈判",
+      "违法"
+    ]
+  },
+  {
+    "question": "投标文件没有响应招标文件的实质性要求，怎么处理？",
+    "expected_type": "rag",
+    "expected_answer": "作为无效投标",
+    "expected_answer_contains": [
+      "作为无效投标"
+    ]
+  },
+  {
+    "question": "哪种情况下招标人必须委托招标代理机构？",
+    "expected_type": "rag",
+    "expected_answer": "不具备自行招标能力时",
+    "expected_answer_contains": [
+      "不具备自行招标能力时",
+      "不具备自行招标能",
+      "力时"
+    ]
+  },
+  {
+    "question": "招标代理机构能不能同时代理同一项目的投标和咨询？",
+    "expected_type": "rag",
+    "expected_answer": "不能",
+    "expected_answer_contains": [
+      "不能"
+    ]
+  },
+  {
+    "question": "投标文件晚到了，招标人该怎么做？",
+    "expected_type": "rag",
+    "expected_answer": "拒收",
+    "expected_answer_contains": [
+      "拒收"
+    ]
+  },
+  {
+    "question": "评标委员会认为所有投标都不符合要求，能不能全部否决？",
+    "expected_type": "rag",
+    "expected_answer": "可以，否决后必须重新招标",
+    "expected_answer_contains": [
+      "可以",
+      "否决后必须重新招标",
+      "否决后必须重新招"
+    ]
+  },
+  {
+    "question": "中标人把项目转包给别人，法律上叫什么？",
+    "expected_type": "rag",
+    "expected_answer": "违法转包，禁止",
+    "expected_answer_contains": [
+      "违法转包",
+      "禁止"
+    ]
+  },
+  {
+    "question": "招标文件里指定某品牌产品，违反了哪条原则？",
+    "expected_type": "rag",
+    "expected_answer": "公平和公正原则",
+    "expected_answer_contains": [
+      "公平和公正原则"
+    ]
+  },
+  {
+    "question": "“串通投标”一般指哪些行为？",
+    "expected_type": "rag",
+    "expected_answer": "投标人之间串通报价，或招标人与投标人串通",
+    "expected_answer_contains": [
+      "投标人之间串通报价",
+      "或招标人与投标人串通",
+      "投标人之间串通报"
+    ]
+  },
+  {
+    "question": "投标人行贿中标，法律后果是什么？",
+    "expected_type": "rag",
+    "expected_answer": "中标无效，罚款，可能追究刑事责任",
+    "expected_answer_contains": [
+      "中标无效",
+      "罚款",
+      "可能追究刑事责任"
+    ]
+  },
+  {
+    "question": "评标过程为什么要保密？",
+    "expected_type": "rag",
+    "expected_answer": "防止外界干扰，保证公正性",
+    "expected_answer_contains": [
+      "防止外界干扰",
+      "保证公正性"
+    ]
+  },
+  {
+    "question": "中标候选人公示应当包括哪些信息？",
+    "expected_type": "rag",
+    "expected_answer": "排序、名称、报价、质量、工期、评标情况",
+    "expected_answer_contains": [
+      "排序",
+      "名称",
+      "报价"
+    ]
+  },
+  {
+    "question": "中标人的投标文件在法律上属于合同的什么部分？",
+    "expected_type": "rag",
+    "expected_answer": "组成部分",
+    "expected_answer_contains": [
+      "组成部分"
+    ]
+  },
+  {
+    "question": "中标无效后，招标人下一步怎么做？",
+    "expected_type": "rag",
+    "expected_answer": "从其他中标候选人中重新确定，或重新招标",
+    "expected_answer_contains": [
+      "从其他中标候选人中重新确定",
+      "或重新招标",
+      "从其他中标候选人"
+    ]
+  },
+  {
+    "question": "哪些类型的项目依法必须招标？",
+    "expected_type": "rag",
+    "expected_answer": "大型基础设施、公用事业；国有资金投资或国家融资项目；国际贷款或援助项目",
+    "expected_answer_contains": [
+      "大型基础设施",
+      "公用事业",
+      "国有资金投资或国家融资项目"
+    ]
+  },
+  {
+    "question": "使用国有资金投资的项目，达到什么标准必须招标？",
+    "expected_type": "rag",
+    "expected_answer": "预算资金200万元以上且占投资额10%以上，或国企控股",
+    "expected_answer_contains": [
+      "预算资金200万元以上且占投资额10%以上",
+      "或国企控股",
+      "预算资金"
+    ]
+  },
+  {
+    "question": "施工单项合同估算价多少钱以上必须招标？",
+    "expected_type": "rag",
+    "expected_answer": "400万元",
+    "expected_answer_contains": [
+      "400万元",
+      "万元"
+    ]
+  },
+  {
+    "question": "货物采购单项合同估算价多少钱以上必须招标？",
+    "expected_type": "rag",
+    "expected_answer": "200万元",
+    "expected_answer_contains": [
+      "200万元",
+      "万元"
+    ]
+  },
+  {
+    "question": "勘察、设计、监理等服务采购，多少钱以上必须招标？",
+    "expected_type": "rag",
+    "expected_answer": "100万元",
+    "expected_answer_contains": [
+      "100万元",
+      "万元"
+    ]
+  },
+  {
+    "question": "同一个项目中，几个小合同加起来达到规模标准，能分开不招标吗？",
+    "expected_type": "rag",
+    "expected_answer": "不能，必须合并招标",
+    "expected_answer_contains": [
+      "不能",
+      "必须合并招标"
+    ]
+  },
+  {
+    "question": "哪些特殊情况可以不招标？",
+    "expected_type": "rag",
+    "expected_answer": "涉密、抢险救灾、扶贫以工代赈等",
+    "expected_answer_contains": [
+      "涉密",
+      "抢险救灾",
+      "扶贫以工代赈等"
+    ]
+  },
+  {
+    "question": "使用了不可替代的专利技术，可不可以不招标？",
+    "expected_type": "rag",
+    "expected_answer": "可以",
+    "expected_answer_contains": [
+      "可以"
+    ]
+  },
+  {
+    "question": "采购人自己能生产，能直接不招标吗？",
+    "expected_type": "rag",
+    "expected_answer": "可以，但不能故意规避招标",
+    "expected_answer_contains": [
+      "可以",
+      "但不能故意规避招标",
+      "但不能故意规避招"
+    ]
+  },
+  {
+    "question": "已经通过招标选定的特许经营者，自己能干，还需要再招标吗？",
+    "expected_type": "rag",
+    "expected_answer": "不需要",
+    "expected_answer_contains": [
+      "不需要"
+    ]
+  },
+  {
+    "question": "必须向原中标人采购，否则影响配套，这种情况能直接采购吗？",
+    "expected_type": "rag",
+    "expected_answer": "可以",
+    "expected_answer_contains": [
+      "可以"
+    ]
+  },
+  {
+    "question": "什么是“暂估价”？",
+    "expected_type": "rag",
+    "expected_answer": "招标时暂时无法确定价格的材料、工程设备单价或专业工程金额",
+    "expected_answer_contains": [
+      "招标时暂时无法确定价格的材料",
+      "工程设备单价或专业工程金额",
+      "招标时暂时无法确"
+    ]
+  },
+  {
+    "question": "资格预审公告和招标公告必须在哪儿发布？",
+    "expected_type": "rag",
+    "expected_answer": "国务院发展改革部门指定的媒介",
+    "expected_answer_contains": [
+      "国务院发展改革部门指定的媒介",
+      "国务院发展改革部",
+      "门指定的媒介"
+    ]
+  },
+  {
+    "question": "指定媒介发布依法必招项目的公告，能收费吗？",
+    "expected_type": "rag",
+    "expected_answer": "不能",
+    "expected_answer_contains": [
+      "不能"
+    ]
+  },
+  {
+    "question": "资格预审公告的期限最少几天？",
+    "expected_type": "rag",
+    "expected_answer": "5天",
+    "expected_answer_contains": [
+      "5天"
+    ]
+  },
+  {
+    "question": "通过资格预审的申请人少于3个，怎么办？",
+    "expected_type": "rag",
+    "expected_answer": "重新招标",
+    "expected_answer_contains": [
+      "重新招标"
+    ]
+  },
+  {
+    "question": "提交资格预审申请文件的时间，从停止发售资格预审文件算起，最少几天？",
+    "expected_type": "rag",
+    "expected_answer": "5天",
+    "expected_answer_contains": [
+      "5天"
+    ]
+  },
+  {
+    "question": "招标文件澄清修改影响投标文件编制的，必须在投标截止前多少天通知？",
+    "expected_type": "rag",
+    "expected_answer": "15天",
+    "expected_answer_contains": [
+      "15天"
+    ]
+  },
+  {
+    "question": "对资格预审文件有异议，最晚啥时候提？",
+    "expected_type": "rag",
+    "expected_answer": "提交资格预审申请文件截止2日前",
+    "expected_answer_contains": [
+      "提交资格预审申请文件截止2日前",
+      "提交资格预审申请",
+      "文件截止"
+    ]
+  },
+  {
+    "question": "对招标文件有异议，最晚啥时候提？",
+    "expected_type": "rag",
+    "expected_answer": "投标截止10日前",
+    "expected_answer_contains": [
+      "投标截止10日前",
+      "投标截止",
+      "日前"
+    ]
+  },
+  {
+    "question": "招标人对异议的答复期限是几天？",
+    "expected_type": "rag",
+    "expected_answer": "3天",
+    "expected_answer_contains": [
+      "3天"
+    ]
+  },
+  {
+    "question": "投标截止后撤回投标，保证金还能退吗？",
+    "expected_type": "rag",
+    "expected_answer": "通常不退",
+    "expected_answer_contains": [
+      "通常不退"
+    ]
+  },
+  {
+    "question": "国有资金控股的项目，原则上必须选排名第几的中标候选人？",
+    "expected_type": "rag",
+    "expected_answer": "第一",
+    "expected_answer_contains": [
+      "第一"
+    ]
+  },
+  {
+    "question": "第一中标候选人放弃中标，招标人能不能直接选第二名？",
+    "expected_type": "rag",
+    "expected_answer": "可以，也可以重新招标",
+    "expected_answer_contains": [
+      "可以",
+      "也可以重新招标"
+    ]
+  },
+  {
+    "question": "中标人不签合同，会有什么后果？",
+    "expected_type": "rag",
+    "expected_answer": "取消中标资格，投标保证金不退",
+    "expected_answer_contains": [
+      "取消中标资格",
+      "投标保证金不退"
+    ]
+  },
+  {
+    "question": "招标人和中标人签订的合同如果和招标文件不一致，会被罚款吗？",
+    "expected_type": "rag",
+    "expected_answer": "会，可以处中标项目金额千分之五以上千分之十以下罚款",
+    "expected_answer_contains": [
+      "可以处中标项目金额千分之五以上千分之十以下罚款",
+      "可以处中标项目金",
+      "额千分之五以上千"
+    ]
+  },
+  {
+    "question": "招标人超比例收取履约保证金，最高罚多少钱？",
+    "expected_type": "rag",
+    "expected_answer": "5万元",
+    "expected_answer_contains": [
+      "5万元",
+      "万元"
+    ]
+  },
+  {
+    "question": "招标人在推荐的中标候选人之外定标，中标有效吗？",
+    "expected_type": "rag",
+    "expected_answer": "无效",
+    "expected_answer_contains": [
+      "无效"
+    ]
+  },
+  {
+    "question": "投诉人捏造事实投诉，会受什么处罚？",
+    "expected_type": "rag",
+    "expected_answer": "警告，罚款1万-5万元，赔偿损失",
+    "expected_answer_contains": [
+      "警告",
+      "罚款1万-5万元",
+      "赔偿损失"
+    ]
+  },
+  {
+    "question": "中标结果确定后，书面报告要在多少天内提交？",
+    "expected_type": "rag",
+    "expected_answer": "15天",
+    "expected_answer_contains": [
+      "15天"
+    ]
+  },
+  {
+    "question": "投标人发生合并或破产，不再具备资格，其投标怎么处理？",
+    "expected_type": "rag",
+    "expected_answer": "投标无效",
+    "expected_answer_contains": [
+      "投标无效"
+    ]
+  },
+  {
+    "question": "招标文件能不能含有排斥潜在投标人的内容？",
+    "expected_type": "rag",
+    "expected_answer": "不能",
+    "expected_answer_contains": [
+      "不能"
+    ]
+  },
+  {
+    "question": "招标人把项目拆成小段来规避招标，怎么罚？",
+    "expected_type": "rag",
+    "expected_answer": "责令改正，处项目合同金额千分之五以上千分之十以下罚款",
+    "expected_answer_contains": [
+      "责令改正",
+      "处项目合同金额千分之五以上千分之十以下罚款",
+      "处项目合同金额千"
+    ]
+  },
+  {
+    "question": "招标人可以组织部分潜在投标人看现场吗？",
+    "expected_type": "rag",
+    "expected_answer": "不能，必须统一组织",
+    "expected_answer_contains": [
+      "不能",
+      "必须统一组织"
+    ]
+  },
+  {
+    "question": "评标标准和方法只能在哪儿规定？",
+    "expected_type": "rag",
+    "expected_answer": "招标文件中",
+    "expected_answer_contains": [
+      "招标文件中"
+    ]
+  },
+  {
+    "question": "评标委员会能不能让投标人澄清，但改变投标实质性内容？",
+    "expected_type": "rag",
+    "expected_answer": "不能",
+    "expected_answer_contains": [
+      "不能"
+    ]
+  },
+  {
+    "question": "评标报告需要谁签字？",
+    "expected_type": "rag",
+    "expected_answer": "全体评标委员会成员",
+    "expected_answer_contains": [
+      "全体评标委员会成员",
+      "全体评标委员会成"
+    ]
+  },
+  {
+    "question": "评标委员会成员不客观公正，会受什么处分？",
+    "expected_type": "rag",
+    "expected_answer": "责令改正，情节严重的禁止评标",
+    "expected_answer_contains": [
+      "责令改正",
+      "情节严重的禁止评标",
+      "情节严重的禁止评"
+    ]
+  },
+  {
+    "question": "中标结果确定前，评标委员会名单需要保密吗？",
+    "expected_type": "rag",
+    "expected_answer": "需要",
+    "expected_answer_contains": [
+      "需要"
+    ]
+  },
+  {
+    "question": "投标人向评标专家行贿，中标有效吗？",
+    "expected_type": "rag",
+    "expected_answer": "无效",
+    "expected_answer_contains": [
+      "无效"
+    ]
+  },
+  {
+    "question": "应当公开招标却用了邀请招标，怎么处罚？",
+    "expected_type": "rag",
+    "expected_answer": "责令改正，处项目合同金额千分之五以上千分之十以下罚款",
+    "expected_answer_contains": [
+      "责令改正",
+      "处项目合同金额千分之五以上千分之十以下罚款",
+      "处项目合同金额千"
+    ]
+  },
+  {
+    "question": "招标人自行招标需要什么能力？",
+    "expected_type": "rag",
+    "expected_answer": "编制招标文件和组织评标的能力",
+    "expected_answer_contains": [
+      "编制招标文件和组织评标的能力",
+      "编制招标文件和组",
+      "织评标的能力"
+    ]
+  },
+  {
+    "question": "与招标人有利害关系的人可以投标吗？",
+    "expected_type": "rag",
+    "expected_answer": "如果可能影响公正性，则不得投标",
+    "expected_answer_contains": [
+      "如果可能影响公正性",
+      "则不得投标",
+      "如果可能影响公正"
+    ]
+  },
+  {
+    "question": "对资格预审文件的异议，招标人几天内答复？",
+    "expected_type": "rag",
+    "expected_answer": "3天",
+    "expected_answer_contains": [
+      "3天"
+    ]
+  },
+  {
+    "question": "招标投标活动违法且无法补救，该怎么办？",
+    "expected_type": "rag",
+    "expected_answer": "招标、投标、中标无效，重新招标或评标",
+    "expected_answer_contains": [
+      "招标",
+      "投标",
+      "中标无效"
+    ]
+  },
+  {
+    "question": "“工程”在法律上指什么？",
+    "expected_type": "rag",
+    "expected_answer": "建设工程，包括新建、改建、扩建等",
+    "expected_answer_contains": [
+      "建设工程",
+      "包括新建",
+      "改建"
+    ]
+  },
+  {
+    "question": "投标保证金的金额一般不得超过项目估算价的多少？",
+    "expected_type": "rag",
+    "expected_answer": "2%",
+    "expected_answer_contains": [
+      "2%"
+    ]
+  },
+  {
+    "question": "招标人最迟在什么时候必须退还投标保证金？",
+    "expected_type": "rag",
+    "expected_answer": "书面合同签订后5日内",
+    "expected_answer_contains": [
+      "书面合同签订后5日内",
+      "书面合同签订后",
+      "日内"
+    ]
+  },
+  {
+    "question": "开标时，必须由谁检查投标文件的密封情况？",
+    "expected_type": "rag",
+    "expected_answer": "投标人或其代表，或公证机构",
+    "expected_answer_contains": [
+      "投标人或其代表",
+      "或公证机构"
+    ]
+  },
+  {
+    "question": "开标时发现投标文件破损，还能继续参与吗？",
+    "expected_type": "rag",
+    "expected_answer": "一般视为无效，按招标文件规定",
+    "expected_answer_contains": [
+      "一般视为无效",
+      "按招标文件规定"
+    ]
+  },
+  {
+    "question": "评标委员会成员私下接触投标人，会被怎么处理？",
+    "expected_type": "rag",
+    "expected_answer": "警告，罚款，取消资格",
+    "expected_answer_contains": [
+      "警告",
+      "罚款",
+      "取消资格"
+    ]
+  },
+  {
+    "question": "投标截止后，能不能再补充投标文件？",
+    "expected_type": "rag",
+    "expected_answer": "不能",
+    "expected_answer_contains": [
+      "不能"
+    ]
+  },
+  {
+    "question": "联合体投标时，联合体成员能不能再单独投同一个项目？",
+    "expected_type": "rag",
+    "expected_answer": "不能",
+    "expected_answer_contains": [
+      "不能"
+    ]
+  },
+  {
+    "question": "投标保证金可以用什么形式提交？",
+    "expected_type": "rag",
+    "expected_answer": "现金、支票、银行保函等",
+    "expected_answer_contains": [
+      "现金",
+      "支票",
+      "银行保函等"
+    ]
+  },
+  {
+    "question": "中标人拒绝提交履约保证金，招标人能不能没收投标保证金？",
+    "expected_type": "rag",
+    "expected_answer": "可以",
+    "expected_answer_contains": [
+      "可以"
+    ]
+  },
+  {
+    "question": "招标文件中没有规定的评标方法，评标时能不能用？",
+    "expected_type": "rag",
+    "expected_answer": "不能",
+    "expected_answer_contains": [
+      "不能"
+    ]
+  },
+  {
+    "question": "潜在投标人对招标文件有疑问，该找谁？",
+    "expected_type": "rag",
+    "expected_answer": "向招标人提出书面疑问，招标人答复",
+    "expected_answer_contains": [
+      "向招标人提出书面疑问",
+      "招标人答复",
+      "向招标人提出书面"
+    ]
+  }
+]

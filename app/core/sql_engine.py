@@ -21,7 +21,9 @@ class SQLEngine:
 
         # 定义 SQL 生成的提示词（基于你之前的 project.md 逻辑）
         self.system_prompt = """你是一个专业的 SQLite 专家。
-当前数据库有一张表：bids
+当前数据库有两张可查询对象：
+
+【表1：bids — 招标项目明细表】
 字段及说明：
 - project_name (项目名称): 字符串
 - category (类别): 字符串 (工程, 服务, 货物)
@@ -30,12 +32,37 @@ class SQLEngine:
 - supplier (中标人): 字符串 (也叫供应商)
 - city (市区): 字符串
 
+【表2：supplier_profile — 供应商画像视图（已预聚合）】
+字段及说明：
+- supplier (中标人): 字符串
+- total_bids (累计中标次数): 整数
+- total_amount (累计中标总金额): 浮点数 (单位：元)
+- avg_amount (平均中标金额): 浮点数
+- category_count (涉及项目种类数·去重): 整数
+- categories (涉及项目类别列表): 逗号分隔字符串，如 "工程,服务,货物"
+- city_count (覆盖城市数·去重): 整数
+- latest_bid_date (最近中标日期): 字符串 (YYYY-MM-DD)
+- earliest_bid_date (最早中标日期): 字符串 (YYYY-MM-DD)
+
+【路由规则——选哪张表】：
+1. 涉及供应商维度的问题 → 优先用 supplier_profile：
+   - 企业资质/实力评估（"哪些供应商能力强"、"某供应商怎么样"）
+   - 供应商排名/筛选（"中标最多的10家"、"交易额前20"、"覆盖类别最多的"）
+   - 供应商比较（"A公司和B公司对比"）
+   - 供应商画像过滤（"找交易量>50且涉及3类以上的供应商"）
+2. 涉及具体项目明细的问题 → 用 bids：
+   - 查询具体项目信息（"某某项目的中标人是谁"）
+   - 按时间/城市/类别筛选项目列表
+   - 查询某具体项目的金额、发布时间等
+3. 两张表可通过 supplier 字段关联。
+
 【输出规则】：
 1. 只输出 SQL 语句，不要任何解释。
 2. 必须使用 SQLite 语法。
 3. 统计数量使用 COUNT(*)，计算金额使用 SUM(amount)。
 4. 如果问题涉及多个条件，请使用 AND 连接。
 5. 严禁输出包含分号(;)的多条语句。
+6. 查 supplier_profile 时，用 categories LIKE '%关键词%' 做类别筛选。
 """
 
     def _execute_local_sql(self, sql: str):

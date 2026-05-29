@@ -289,6 +289,70 @@ class Settings(BaseSettings):
         return _yaml("evaluation.eval_set_path", "./data/eval_questions/hybrid_test_cases.json")
 
     # =========================================================================
+    # 法律结构化切块配置
+    # =========================================================================
+    @property
+    def legal_parent_context_enabled(self) -> bool:
+        return bool(_yaml("legal_chunking.parent_context_enabled", True))
+
+    @property
+    def legal_child_split_threshold(self) -> int:
+        return int(_yaml("legal_chunking.child_split_threshold", 400))
+
+    @property
+    def legal_child_target_size(self) -> int:
+        return int(_yaml("legal_chunking.child_target_size", 300))
+
+    @property
+    def legal_child_overlap(self) -> int:
+        return int(_yaml("legal_chunking.child_overlap", 40))
+
+    @property
+    def legal_header_injection_enabled(self) -> bool:
+        return bool(_yaml("legal_chunking.header_injection_enabled", True))
+
+    # =========================================================================
+    # Pipeline 可观测性 + 断路器配置
+    # =========================================================================
+    @property
+    def pipeline_tracing_enabled(self) -> bool:
+        return bool(_yaml("pipeline.tracing.enabled", True))
+
+    @property
+    def pipeline_tracing_show_counts(self) -> bool:
+        return bool(_yaml("pipeline.tracing.show_counts", True))
+
+    @property
+    def pipeline_tracing_show_timing(self) -> bool:
+        return bool(_yaml("pipeline.tracing.show_timing", True))
+
+    def pipeline_stage_config(self, stage_name: str) -> dict:
+        """获取某个阶段的配置 {enabled, circuit_breaker}"""
+        return {
+            "enabled": bool(_yaml(f"pipeline.stages.{stage_name}.enabled", True)),
+            "circuit_breaker": _yaml(f"pipeline.stages.{stage_name}.circuit_breaker", "fail_open"),
+        }
+
+    # =========================================================================
+    # 中文数字转换配置
+    # =========================================================================
+    @property
+    def chinese_number_mapping(self) -> dict:
+        return _yaml("chinese_number_mapping.mapping", {})
+
+    @property
+    def enable_dynamic_conversion(self) -> bool:
+        return bool(_yaml("chinese_number_mapping.enable_dynamic_conversion", True))
+
+    @property
+    def enable_digits(self) -> bool:
+        return bool(_yaml("chinese_number_mapping.enable_digits", True))
+
+    @property
+    def enable_units(self) -> bool:
+        return bool(_yaml("chinese_number_mapping.enable_units", True))
+
+    # =========================================================================
     # Pydantic 基础配置（兼容旧代码里的直接属性访问）
     # =========================================================================
     model_config = {

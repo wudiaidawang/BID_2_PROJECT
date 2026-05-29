@@ -68,9 +68,11 @@ class ChromaStore:
                 score = 1 / (1 + distance)
                 documents.append({
                     "id": doc_id, "text": doc, "metadata": metadata,
-                    "score": score, "data": metadata
+                    "score": score,
                 })
-        return documents
+        # 规范化：确保统一 schema（同时设置 data 用于过渡期兼容）
+        from app.schema.metadata import normalize_chunks
+        return normalize_chunks(documents)
     
     def get_all_documents(self, collection: str) -> List[Dict]:
         collection_obj = self.get_collection(collection)
