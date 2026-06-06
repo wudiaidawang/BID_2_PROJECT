@@ -1,4 +1,4 @@
-# 招投标智能问答系统
+# 基于Agent + Hybrid RAG双引擎的招投标智能问答系统
 
 Bidding & Tendering Intelligent Q&A System — 基于 RAG + SQL 双引擎的招投标法规与数据智能问答平台。
 
