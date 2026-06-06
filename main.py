@@ -44,16 +44,29 @@ async def lifespan(app: FastAPI):
     router_instance = create_router(llm=app.state.generator)
     app.state.router = router_instance
 
-    # 如果是 planner 模式，额外初始化 Agent
-    if settings.router_mode == "planner" and settings.agent_enabled:
-        from app.agent.react_agent import ReActAgent
-        app.state.agent = ReActAgent(
-            retriever=None,  # 下面初始化
+    # 如果是 planner 模式，初始化 PlannerExecutor + 可选 ReActAgent
+    if settings.router_mode == "planner":
+        from app.agent.planner import PlannerExecutor
+        app.state.planner_executor = PlannerExecutor(
+            retriever=None,  # 下面回填
             llm=app.state.generator,
-            max_steps=settings.agent_max_steps,
+            allow_replan=settings.planner_allow_replan,
         )
-        print("   Agent 已初始化")
+        print("   PlannerExecutor 已初始化 "
+              f"(allow_replan={settings.planner_allow_replan})")
+
+        if settings.agent_enabled:
+            from app.agent.react_agent import ReActAgent
+            app.state.agent = ReActAgent(
+                retriever=None,
+                llm=app.state.generator,
+                max_steps=settings.agent_max_steps,
+            )
+            print("   ReActAgent 已初始化 (planner降级备选)")
+        else:
+            app.state.agent = None
     else:
+        app.state.planner_executor = None
         app.state.agent = None
 
     # [5/7] 混合检索器
@@ -68,7 +81,13 @@ async def lifespan(app: FastAPI):
 
     app.state.retriever = HybridRetriever()
 
-    # Agent 的 retriever 回填
+    # 回填 retriever 到需要它的组件
+    if app.state.planner_executor and hasattr(app.state.planner_executor, 'retriever'):
+        app.state.planner_executor.retriever = app.state.retriever
+        # 同时更新所有工具的 retriever
+        for tool in app.state.planner_executor.tools.values():
+            tool.retriever = app.state.retriever
+
     if app.state.agent and hasattr(app.state.agent, 'retriever'):
         app.state.agent.retriever = app.state.retriever
 

@@ -68,7 +68,7 @@ All settings in `config.py` via `pydantic-settings`, with `.env` file support. K
 |---------|---------|---------|
 | `llm_api_key` | hardcoded | Tencent Hunyuan API key |
 | `llm_api_url` | hunyuan.cloud.tencent.com | LLM endpoint |
-| `embedding_model` | BAAI/bge-small-zh | Local embedding model |
+| `embedding_model` | moka-ai/m3e-base | Local embedding model (768d) |
 | `top_k` | 5 | Final results returned |
 | `vector_recall` | 50 | Candidate pool size from vector search |
 | `chroma_persist_dir` | ./chroma_db | ChromaDB storage |

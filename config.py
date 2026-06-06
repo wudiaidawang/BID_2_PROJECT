@@ -183,6 +183,14 @@ class Settings(BaseSettings):
         return float(_yaml("agent.temperature", 0.3))
 
     @property
+    def checkpoint_enabled(self) -> bool:
+        return bool(_yaml("agent.checkpoint.enabled", True))
+
+    @property
+    def checkpoint_dir(self) -> str:
+        return _yaml("agent.checkpoint.dir", "./checkpoints")
+
+    @property
     def agent_tools(self) -> list:
         """返回所有已启用的工具配置"""
         tools = _yaml("agent.tools", [])

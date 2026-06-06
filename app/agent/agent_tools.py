@@ -60,7 +60,7 @@ class SearchRegulationsTool(BaseTool):
             return clean
 
         # 降级：用 source + article
-        source = data.get("source", "未知来源")
+        source = meta.get("source", "未知来源")
         if article:
             return f"{source} {article}"
         if article_id:

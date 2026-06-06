@@ -67,7 +67,7 @@ class SQLEngine:
 
     def _execute_local_sql(self, sql: str):
         """执行本地 SQLite 查询"""
-        print(f"🔍 [SQL引擎] 正在执行 SQL: {sql}")
+        print(f"[SQL引擎] 正在执行 SQL: {sql}")
         try:
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row  # 使返回结果可以通过字段名访问
@@ -77,17 +77,17 @@ class SQLEngine:
             # 转换成字典列表
             results = [dict(row) for row in rows]
             conn.close()
-            print(f"✅ [SQL引擎] 查询成功，返回 {len(results)} 条数据")
+            print(f"[SQL引擎] 查询成功，返回 {len(results)} 条数据")
             return results
         except Exception as e:
-            print(f"❌ [SQL引擎] 数据库执行出错: {str(e)}")
+            print(f"[SQL引擎] 数据库执行出错: {str(e)}")
             return [{"error": str(e)}]
 
     def execute_query(self, user_question: str):
         """
         核心方法：自然语言 -> SQL -> 执行结果
         """
-        print(f"🤖 [SQL引擎] 正在请求 LLM 生成 SQL，问题: {user_question}")
+        print(f"[SQL引擎] 正在请求 LLM 生成 SQL，问题: {user_question}")
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -106,7 +106,7 @@ class SQLEngine:
         try:
             response = requests.post(self.url, json=payload, headers=headers, timeout=15)
             if response.status_code != 200:
-                print(f"❌ [SQL引擎] API 请求失败: {response.text}")
+                print(f"[SQL引擎] API 请求失败: {response.text}")
                 return "API_ERROR", []
 
             res_json = response.json()
@@ -122,5 +122,5 @@ class SQLEngine:
             return clean_sql, db_data
 
         except Exception as e:
-            print(f"❌ [SQL引擎] 流程发生异常: {str(e)}")
+            print(f"[SQL引擎] 流程发生异常: {str(e)}")
             return "EXCEPTION", []
