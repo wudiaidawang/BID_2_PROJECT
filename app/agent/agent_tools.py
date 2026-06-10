@@ -17,22 +17,22 @@ class BaseTool:
 
 
 class SearchRegulationsTool(BaseTool):
-    """语义检索法规工具"""
+    """统一知识库检索工具 — 法规 + 招标项目双库召回"""
     name = "search_regulations"
-    description = """语义检索招投标法规知识库。
-适用场景：问概念定义（什么是围标）、问处罚规定（串通投标罚款多少）、问流程步骤（如何开标）。
+    description = """统一检索招投标知识库（法规条文 + 招标项目案例）。
+适用场景：问概念定义（什么是围标）、问处罚规定（串通投标罚款多少）、问流程步骤（如何开标）、问类似项目案例。
 输入：query（自然语言问题）
-输出：相关法规片段（最多3条）"""
+输出：相关法规片段和项目案例（最多5条，跨库去重）"""
 
     async def run(self, query: str = "", **kwargs) -> str:
         if not query:
             return "错误：请提供检索关键词"
 
         top_k = settings.top_k
-        results = self.retriever.search(query, "regulations", top_k=top_k)
+        results = self.retriever.search_unified(query, top_k=top_k)
 
         if not results:
-            return f"未找到与「{query}」相关的法规信息"
+            return f"未找到与「{query}」相关的信息"
 
         output_parts = []
         max_len = 500
@@ -48,32 +48,43 @@ class SearchRegulationsTool(BaseTool):
         law_name = meta.get("law_name", "")
         article = meta.get("article", "")
         article_id = meta.get("article_id", "")
-        chunk_type = meta.get("chunk_type", "")
 
-        # 优先用 law_name + article
-        if law_name:
-            clean = law_name.replace("《", "").replace("》", "")
+        # ── 法规类型结果 ──
+        if law_name or article or article_id:
+            if law_name:
+                clean = law_name.replace("《", "").replace("》", "")
+                if article:
+                    return f"[法规] {clean} {article}"
+                if article_id:
+                    return f"[法规] {clean} 第{article_id}条"
+                return f"[法规] {clean}"
+            source = meta.get("source", "法规库")
             if article:
-                return f"{clean} {article}"
+                return f"[法规] {source} {article}"
             if article_id:
-                return f"{clean} 第{article_id}条"
-            return clean
+                return f"[法规] {source} 第{article_id}条"
+            return f"[法规] {source}"
 
-        # 降级：用 source + article
+        # ── 招标项目结果 ──
+        project_name = meta.get("项目名称", "")
+        winner = meta.get("中标人", "")
+        province = meta.get("省份", "")
+        if project_name:
+            base = f"[项目] {project_name}"
+            if winner:
+                base += f" | 中标: {winner}"
+            if province:
+                base += f" | {province}"
+            return base
+
+        # ── 降级 ──
         source = meta.get("source", "未知来源")
-        if article:
-            return f"{source} {article}"
-        if article_id:
-            return f"{source} 第{article_id}条"
-
-        # 再降级：提取文本中的法条号
         text = chunk.get("text", "")
         import re
         match = re.search(r'第([一二三四五六七八九十百千\d]+)条', text)
         if match:
-            return f"{source} 第{match.group(1)}条"
-
-        return source
+            return f"[法规] {source} 第{match.group(1)}条"
+        return f"[混合] {source}"
 
 
 class GetArticleTool(BaseTool):

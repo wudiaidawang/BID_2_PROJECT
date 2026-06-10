@@ -25,6 +25,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.agent.agent_tools import TOOL_CLASSES, BaseTool
 from app.agent.agent_state import AgentState, StepRecord
+from config import settings
+
+CHECKPOINT_DIR = settings.checkpoint_dir
+CHECKPOINT_ENABLED = settings.checkpoint_enabled
 
 
 class DAGDeadlockError(Exception):
@@ -145,11 +149,26 @@ class PlannerExecutor:
         self.retriever = retriever
         self.llm = llm
         self.allow_replan = allow_replan
+        self._session_id: str = ""
 
         # 实例化工具
         self.tools: Dict[str, BaseTool] = {}
         for tool_name, tool_class in TOOL_CLASSES.items():
             self.tools[tool_name] = tool_class(retriever, llm)
+
+    def _save_checkpoint(self, state: AgentState, session_id: str):
+        if CHECKPOINT_ENABLED:
+            try:
+                state.save_checkpoint(CHECKPOINT_DIR, session_id or "default")
+            except Exception:
+                pass
+
+    def _delete_checkpoint(self, session_id: str):
+        if CHECKPOINT_ENABLED:
+            try:
+                AgentState.delete_checkpoint(CHECKPOINT_DIR, session_id or "default")
+            except Exception:
+                pass
 
     # ── 计划解析 ───────────────────────────────────────
 
@@ -309,8 +328,10 @@ class PlannerExecutor:
         plan_dict: Dict,
         question: str,
         max_replan: int = 1,
+        session_id: str = "",
     ) -> AgentState:
         """执行计划，DAG 调度：根据 depends_on 自动决定串行/并行"""
+        self._session_id = session_id or "default"
         state = AgentState(question)
         confidence = plan_dict.get("confidence", 0.5)
         tasks, steps = self._parse_plan(plan_dict)
@@ -342,6 +363,7 @@ class PlannerExecutor:
                 tool_duration_ms=(time.time() - t_start) * 1000,
             ))
             state.finish(observation)
+            self._save_checkpoint(state, self._session_id)
             return state
 
         # task_id → PlannedTask 映射
@@ -416,6 +438,9 @@ class PlannerExecutor:
                 error=sr.error if not sr.success else None,
             ))
 
+        # DAG 主阶段完成，保存断点
+        self._save_checkpoint(state, self._session_id)
+
         # 重规划
         failed_count = sum(1 for r in all_results if not r.success)
         replan_count = 0
@@ -451,28 +476,33 @@ class PlannerExecutor:
 
             failed_count = sum(1 for r in retry_results if not r.success)
             replan_count += 1
+            self._save_checkpoint(state, self._session_id)
 
         print(f"  [完成] {len(all_results)} 步, "
               f"{sum(1 for r in all_results if r.success)} 成功, "
               f"{sum(1 for r in all_results if not r.success)} 失败, "
               f"总耗时 {state.elapsed_seconds():.1f}s")
 
+        self._save_checkpoint(state, self._session_id)
         return state
 
     async def aggregate(self, state: AgentState, question: str) -> str:
         """按 Task 分组汇总结果，生成最终答案"""
         if state.finished and state.final_answer:
+            self._delete_checkpoint(self._session_id)
             return state.final_answer
 
         successful = [s for s in state.steps if not s.error and s.observation]
         if not successful:
             fallback = "抱歉，所有检索步骤均未成功获取信息。请稍后重试或换一种问法。"
             state.finish(fallback)
+            self._delete_checkpoint(self._session_id)
             return fallback
 
         if len(successful) == 1 and len(successful[0].observation) < 500:
             answer = successful[0].observation
             state.finish(answer)
+            self._delete_checkpoint(self._session_id)
             return answer
 
         if self.llm:
@@ -509,14 +539,17 @@ class PlannerExecutor:
             try:
                 answer = await self.llm._call_llm(prompt)
                 state.finish(answer)
+                self._delete_checkpoint(self._session_id)
                 return answer
             except Exception:
                 answer = "\n\n".join(f"【{s.action}】{s.observation}" for s in successful)
                 state.finish(answer)
+                self._delete_checkpoint(self._session_id)
                 return answer
 
         answer = "\n\n".join(f"【{s.action}】{s.observation}" for s in successful)
         state.finish(answer)
+        self._delete_checkpoint(self._session_id)
         return answer
 
     async def run(self, question: str, plan_dict: Dict) -> str:
@@ -525,7 +558,8 @@ class PlannerExecutor:
         这是最常用的入口，封装了 execute + aggregate。
         """
         try:
-            state = await self.execute(plan_dict, question)
+            state = await self.execute(plan_dict, question,
+                                        session_id=self._session_id)
         except DAGDeadlockError:
             state = self._last_state  # execute 已写 state.errors + _last_state
         answer = await self.aggregate(state, question)

@@ -9,7 +9,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Start & Develop
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
 
 # Initialize data stores (order matters)
@@ -31,48 +30,118 @@ A local Redis instance is required for session management. The embedding model (
 ## Architecture
 
 ```
-main.py                    # FastAPI app + lifespan (init 6 components in order)
-├── app/api/routes.py      # POST /api/v1/ask — the main Q&A endpoint
-│                          # GET /api/v1/health, DELETE /session/{id}
-├── app/api/schemas.py     # Pydantic models: AskRequest, AskResponse, SourceInfo
+main.py                      # FastAPI app + lifespan (init 6 components in order)
+├── app/api/routes.py        # POST /api/v1/ask — main Q&A endpoint
+│                            # GET /api/v1/health, DELETE /session/{id}
+├── app/api/schemas.py       # Pydantic models: AskRequest, AskResponse, SourceInfo
 ├── app/core/
-│   ├── router.py          # BinaryRouter: 3-way voting (rule + embedding + LLM)
-│   │                      #   classifies query as is_sql or not
-│   ├── retriever.py       # HybridRetriever: vector(Chroma) + BM25(jieba) + RRF fusion
-│   │                      #   + optional BGE-reranker; search_unified()跨库查询
-│   ├── sql_engine.py      # SQLEngine: LLM-generates SQL from NL, executes on SQLite
-│   ├── generator.py       # LLMGenerator: calls Tencent Hunyuan API for final answer
-│   ├── embedding.py       # EmbeddingService: singleton wrapping BAAI/bge-small-zh
-│   ├── session_manager.py # Redis-backed multi-turn session + query rewriting
-│   └── query_normalizer.py# Colloquial→formal Chinese via data/colloquial_map.json
-└── app/storage/
-    ├── chroma_store.py    # ChromaDB persistent client (2 collections: bids, regulations)
-    └── redis_client.py    # Async Redis singleton
+│   ├── router.py            # 3 router modes: Binary(3-way vote) / Intent(LLM) / Planner(LLM-as-Planner)
+│   ├── retriever.py         # HybridRetriever — thin wrapper delegating to SearchPipeline
+│   ├── sql_engine.py        # SQLEngine: LLM-generates SQL from NL, executes on SQLite
+│   ├── generator.py         # LLMGenerator: calls Tencent Hunyuan API for final answer
+│   ├── embedding.py         # EmbeddingService: singleton wrapping BAAI/bge-small-zh
+│   ├── session_manager.py   # Redis-backed multi-turn session + query rewriting
+│   ├── query_normalizer.py  # Colloquial→formal Chinese via data/colloquial_map.json
+│   └── query_rewriter.py    # 3-layer query rewriting (colloquial + redundancy + synonyms)
+├── app/pipeline/            # 5-stage retrieval pipeline (see below)
+│   ├── pipeline.py          # SearchPipeline orchestrator + StageRunner with circuit breakers
+│   ├── preprocessor.py      # Stage 1: Query normalization + synonym expansion
+│   ├── retrievers.py        # Stage 2: VectorRetriever (Chroma) + BM25Retriever (jieba)
+│   ├── fusion.py            # Stage 3: RRF fusion + Weighted fusion (dynamic weights, boost/penalty)
+│   ├── expanders.py         # Stage 4: ParentContextExpander (legal parent-child chunks)
+│   └── rerankers.py         # Stage 5: BgeReranker (CrossEncoder, BAAI/bge-reranker-base)
+├── app/agent/
+│   ├── react_agent.py       # ReActAgent: Thought→Action→Observation loop (max 5 steps)
+│   ├── planner.py           # PlannerExecutor: DAG-scheduled multi-step execution + replan
+│   ├── agent_tools.py       # 4 tools: search_regulations / get_article / sql_query / summarize
+│   └── agent_state.py       # AgentState: serializable execution trace + checkpoint persistence
+├── app/storage/
+│   ├── chroma_store.py      # ChromaDB persistent client (2 collections: bids, regulations)
+│   └── redis_client.py      # Async Redis singleton
+└── app/schema/
+    └── metadata.py          # Chunk schema normalization (unified Dict format)
 ```
+
+## Retrieval Pipeline (5-stage, per-collection)
+
+```
+search_unified(query)
+  │
+  ├─ Stage 1: preprocess  → 口语→书面语 + 同义词扩展 (bidirectional synonym expansion)
+  │
+  ├─ Stage 2: retrieve    → 对每个 collection (regulations, bids) 分别执行:
+  │    per-collection:       vector(ChromaDB, recall=50) + BM25(jieba, recall=50)
+  │                          → fusion (RRF 或 Weighted) → 各库 top_k*3 候选项
+  │                          → 两库候选项合并 (extend)
+  │    ★ 这就是"分库召回" — 各库独立检索，结果层合并
+  │
+  ├─ Stage 3: merge       → 跨库合并 + 按 score 降序 + 按 id 去重
+  │
+  ├─ Stage 4: expand      → ParentContextExpander: child chunk 查找 parent，附加完整法条
+  │                         按 article_id 去重（仅 regulations 库启用）
+  │
+  └─ Stage 5: rerank      → BGE-reranker-base CrossEncoder 精排 → 返回 top_k
+```
+
+**Fusion strategies** (configurable via `retrieval.fusion_strategy`):
+- `rrf`: Reciprocal Rank Fusion — pure rank-based, no normalization needed
+- `weighted` / `smart`: WeightedFusion — Min-Max normalize scores → dynamic weights based on query type (keyword_heavy: BM25=0.75/dense=0.25, semantic_heavy: BM25=0.40/dense=0.60) → keyword boost/penalty tables → filter score < 0.1
+
+**Circuit breaker pattern**: Each stage has `enabled` + `circuit_breaker` config (`fail_close` for core stages preprocess/retrieve; `fail_open` for fusion/expand/rerank — skip on error instead of crash).
+
+**Single-collection search** (`search()`): Same pipeline but only one collection, skips merge stage. Used by Agent tools directly.
 
 ## Request Flow
 
 1. **Session**: get-or-create Redis session, fetch history, rewrite anaphora ("那个项目" → actual name)
-2. **Routing**: `BinaryRouter.route()` runs 3 classifiers in parallel (rule-based keywords, embedding similarity against template banks, LLM) — majority vote decides `is_sql`
-3. **Retrieval**:
-   - **SQL path**: if template match ≥ 92%, reuse pre-baked SQL ("SQL shortcut"); otherwise LLM generates SQL → SQLite → if empty/error, falls back to unified hybrid retrieval
-   - **RAG path**: `search_unified()` queries both `regulations` and `bids` collections, merges with RRF, re-ranks, deduplicates
-4. **Generation**: `LLMGenerator` builds prompt from top-3 context + last 3 conversation turns, calls Hunyuan API
+2. **Routing**: configured via `router.mode` in config.yaml, 4 options:
+   - `auto` **(推荐)**: AutoRouter — IntentRouter 先判意图+复杂度 → greeting/thanks 秒回, stat_query 走 SQL, single_step 直接 RAG, multi_step 走 Planner DAG。零手动开关，自适应分流
+   - `binary`: BinaryRouter — 3-way parallel voting (rule-based keywords + embedding similarity against template banks + LLM), 2/3 majority decides `is_sql`. SQL template match ≥ 92% → reuse pre-baked SQL ("SQL shortcut")
+   - `intent`: IntentRouter — LLM classifies into 6 types (definition/procedure/penalty/provision/stat_query/other) + complexity (single_step/multi_step). Quick-intercept for greetings/thanks/off-topic
+   - `planner`: PlannerRouter — 2-call LLM pipeline: TaskAnalysis (decompose into tasks with depends_on DAG) → ToolPlanning (map tasks to tools). Falls back to search_regulations on failure
+3. **Execution**:
+   - **Auto mode**: `AutoRouter` returns `mode` field → `direct` (greeting秒回, 0次LLM), `auto`+`is_sql` (走 _handle_binary), `planner` (走 _handle_planner)
+   - **Binary/Intent modes**: If `is_sql`, SQLEngine generates SQL → SQLite → if empty/error, falls back to unified hybrid retrieval. If not `is_sql`, RAG path via `search_unified()`
+   - **Planner mode**: `PlannerExecutor` runs DAG-scheduled execution — respects `depends_on` to parallelize independent tasks, serial for dependencies. Auto-replan on step failures (up to 1 replan). Aggregates per-task results into final answer
+   - **Agent mode** (`agent.enabled=true`): ReActAgent — Thought→Action→Observation loop (max 5 steps), state checkpointed per step
+4. **Generation**: LLMGenerator builds prompt from top-3 context + last 3 conversation turns, calls Hunyuan API
 5. **Response**: extracts entities (project name, winner) for next-turn context, saves to Redis
 
 ## Configuration
 
-All settings in `config.py` via `pydantic-settings`, with `.env` file support. Key settings:
+All settings driven by `config.yaml` + `.env`, accessed via `config.py` `Settings` class (pydantic-settings). Key config paths:
 
-| Setting | Default | Purpose |
-|---------|---------|---------|
-| `llm_api_key` | hardcoded | Tencent Hunyuan API key |
-| `llm_api_url` | hunyuan.cloud.tencent.com | LLM endpoint |
-| `embedding_model` | moka-ai/m3e-base | Local embedding model (768d) |
-| `top_k` | 5 | Final results returned |
-| `vector_recall` | 50 | Candidate pool size from vector search |
-| `chroma_persist_dir` | ./chroma_db | ChromaDB storage |
-| `db_path` | ./data/bid_data.db | SQLite database path |
+| YAML path | Default | Purpose |
+|-----------|---------|---------|
+| `llm.provider` | hunyuan | LLM provider selection |
+| `llm.providers.<name>.api_key` | (env LLM_API_KEY) | API key per provider |
+| `embedding.model_name` | bge-small | Which embedding model preset |
+| `embedding.models.<name>.name` | BAAI/bge-small-zh | Actual model name |
+| `embedding.models.<name>.dimension` | 512 | Embedding dimension |
+| `retrieval.top_k` | 5 | Final results returned |
+| `retrieval.vector_recall` | 50 | Candidate pool from vector search |
+| `retrieval.bm25_recall` | 50 | Candidate pool from BM25 |
+| `retrieval.fusion_strategy` | rrf | rrf / weighted / smart |
+| `retrieval.weighted.bm25_weight` | 0.65 | BM25 weight in weighted fusion |
+| `retrieval.weighted.dense_weight` | 0.35 | Dense weight in weighted fusion |
+| `reranker.enabled` | true | Enable BGE reranker |
+| `reranker.model_name` | BAAI/bge-reranker-base | Reranker CrossEncoder model |
+| `reranker.candidate_pool` | 30 | Max candidates fed to reranker |
+| `router.mode` | auto | auto / binary / intent / planner |
+| `router.binary.template_match_threshold` | 0.92 | Cosine threshold for SQL template reuse |
+| `agent.enabled` | false | Enable ReAct Agent mode |
+| `agent.max_steps` | 5 | Max ReAct loop iterations |
+| `agent.checkpoint.enabled` | true | Persist agent state per step |
+| `legal_chunking.parent_context_enabled` | true | Parent-child chunk expansion |
+| `query_rewriter.*` | various | 3-layer query rewriting toggles |
+| `pipeline.tracing.enabled` | true | Print per-stage I/O counts and timing |
+| `pipeline.stages.<name>.enabled` | true | Per-stage enable/disable |
+| `pipeline.stages.<name>.circuit_breaker` | fail_open | fail_close / fail_open |
+| `data.chroma_persist_dir` | ./chroma_db | ChromaDB storage |
+| `data.db_path` | ./data/bid_data.db | SQLite database |
+| `data.collections` | bids, regulations | ChromaDB collection definitions |
+| `session.redis.host` | localhost | Redis host |
+| `server.host` / `server.port` | 0.0.0.0 / 8000 | API server bind |
 
 ## Data
 
@@ -80,3 +149,4 @@ All settings in `config.py` via `pydantic-settings`, with `.env` file support. K
 - `data/pdfs/` — 2 legal reference PDFs chunked into `regulations` collection
 - `data/colloquial_map.json` — 66 colloquial→formal Chinese term mappings for query normalization
 - `data/eval_questions/` — JSON eval sets for retrieval accuracy benchmarking
+- `config.yaml` — main configuration file (LLM providers, retrieval params, pipeline stages, etc.)

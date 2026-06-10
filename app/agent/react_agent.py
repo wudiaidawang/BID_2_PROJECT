@@ -210,26 +210,33 @@ class ReActAgent:
     # 核心执行循环
     # ------------------------------------------------------------------
 
-    async def run(self, question: str, session_id: str = "") -> str:
-        """执行 ReAct 循环，返回最终答案
-
-        Args:
-            question: 用户问题
-            session_id: 可选，多轮对话的 session ID
-
-        Returns:
-            最终答案字符串。完整执行轨迹在 self.last_state
-        """
-
-        # ── 初始化状态 ──
+    async def run(self, question: str, session_id: str = None) -> str:
+        """执行 ReAct 循环，返回最终答案"""
         state = AgentState(question)
+        return await self._run_loop(state, question, session_id)
+
+    async def resume(self, session_id: str) -> str:
+        """从 checkpoint 恢复执行，继续未完成的 ReAct 循环"""
+        state = AgentState.load_checkpoint(CHECKPOINT_DIR, session_id)
+        if state.finished:
+            self._delete_checkpoint(session_id)
+            self.last_state = state
+            return state.final_answer
+        print(f"\n[Agent] 从断点恢复 (session={session_id}, "
+              f"step={state.current_step}/{self.max_steps})")
+        return await self._run_loop(state, state.question, session_id)
+
+    async def _run_loop(self, state: AgentState, question: str,
+                        session_id: str = None) -> str:
+        """核心 ReAct 循环 — 支持从头开始或从 checkpoint 恢复"""
+        sid = session_id or "default"
         print(f"\n[Agent] 处理: {question}")
 
-        # ── 获取历史对话 ──
-        base_history = self._get_history_context(session_id, max_messages=10)
+        base_history = self._get_history_context(sid, max_messages=10)
 
-        # ── ReAct 循环 ──
-        for step_idx in range(self.max_steps):
+        start_step = state.current_step
+        remaining = self.max_steps - start_step
+        for i in range(remaining):
             step_num = state.begin_step()
             print(f"   Step {step_num}/{self.max_steps}...")
 
@@ -257,7 +264,7 @@ class ReActAgent:
                     error=f"LLM调用失败: {e}",
                 )
                 state.add_step(record)
-                self._save_checkpoint(state, session_id)
+                self._save_checkpoint(state, sid)
                 print(f"   [ERROR] LLM调用失败: {e}")
                 break
 
@@ -265,7 +272,7 @@ class ReActAgent:
             final_answer = self._extract_final_answer(response)
             if final_answer:
                 state.finish(final_answer)
-                self._delete_checkpoint(session_id)
+                self._delete_checkpoint(sid)
                 self.last_state = state
                 print(f"   [Final Answer] {len(final_answer)} 字符")
                 return final_answer
@@ -294,7 +301,7 @@ class ReActAgent:
             if tool_name not in self.tools:
                 record.error = f"未知工具: {tool_name}"
                 state.add_step(record)
-                self._save_checkpoint(state, session_id)
+                self._save_checkpoint(state, sid)
                 print(f"   [ERROR] 未知工具: {tool_name}")
                 # 不 break，下一轮 LLM 会看到错误并调整
                 continue
@@ -312,7 +319,7 @@ class ReActAgent:
                 print(f"   [ERROR] 工具执行失败: {e}")
 
             state.add_step(record)
-            self._save_checkpoint(state, session_id)
+            self._save_checkpoint(state, sid)
 
         # ── 达到最大步数 → 强制总结 ──
         print(f"   [MAX_STEPS] 达到最大步数 {self.max_steps}，强制总结")
@@ -325,7 +332,7 @@ class ReActAgent:
                     f"基于以下检索结果，简洁回答用户问题：\n\n{context[:3000]}\n\n问题：{question}"
                 )
                 state.finish(answer)
-                self._delete_checkpoint(session_id)
+                self._delete_checkpoint(sid)
                 self.last_state = state
                 return answer
             except Exception:
@@ -333,6 +340,6 @@ class ReActAgent:
 
         fallback = f"经过 {state.step_count()} 步检索，未能得到完整答案。请尝试更具体的问题。"
         state.finish(fallback)
-        self._delete_checkpoint(session_id)
+        self._delete_checkpoint(sid)
         self.last_state = state
         return fallback

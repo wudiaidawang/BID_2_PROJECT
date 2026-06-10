@@ -11,6 +11,7 @@ Bidding & Tendering Intelligent Q&A System — 基于 RAG + SQL 双引擎的招�
 - **Parent-Child Chunking**：法律条文结构化切块（法律→章→条），检索 child chunk → 补全 parent context
 - **多轮对话**：Redis 会话管理 + 指代消解，支持上下文理解和追问
 - **Agent 模式**：ReAct 循环 (Thought → Action → Observation) + Planner DAG 调度，支持多工具调用与断点续跑
+- **自适应路由 (Auto)**：IntentRouter 判复杂度 → 简单问题直走 RAG/SQL，复杂问题自动分流到 Planner DAG，问候语秒回
 - **多厂商 LLM**：混元 / DeepSeek / OpenAI / 本地模型，改 `config.yaml` 一行切换
 - **模型基准测试**：独立 benchmark 工具，固定问题集 + 多模型对比 + 结果归档
 
@@ -22,7 +23,7 @@ main.py                     FastAPI 入口
 │                           GET  /api/v1/health  健康检查
 │                           DELETE /api/v1/session/{id}  会话管理
 ├── app/core/
-│   ├── router.py           路由层 (Binary 三路投票 / Intent 意图分类 / Planner 两阶段规划)
+│   ├── router.py           路由层 (Auto 自适应 / Binary 三路投票 / Intent 意图分类 / Planner 两阶段规划)
 │   ├── retriever.py        混合检索器 (ChromaDB + BM25 + RRF + Reranker)
 │   ├── sql_engine.py       NL2SQL 引擎 (LLM 生成 SQL → SQLite 执行)
 │   ├── generator.py        LLM 生成器 (支持多厂商 API，OpenAI 兼容)
@@ -219,7 +220,7 @@ python eval_retrieval_accuracy.py
 | Embedding | model_name (bge-small/bge-large/m3e/gte-large/custom), dimension, device |
 | Reranker | enabled, model, max_input_length, candidate_pool, device |
 | 检索 | top_k, vector_recall, bm25_recall, fusion_strategy (rrf/weighted/smart), 分数阈值 |
-| 路由 | mode (binary/intent/planner), template_match_threshold, 三路投票 |
+| 路由 | mode (auto/binary/intent/planner), template_match_threshold, 三路投票 |
 | Agent | enabled, max_steps, temperature, tools 声明式注册, checkpoint 配置 |
 | 会话 | backend (redis/sqlite), ttl, max_history |
 | 查询改写 | colloquial_to_formal, redundancy_removal, synonym_expansion, llm_reference_resolution |

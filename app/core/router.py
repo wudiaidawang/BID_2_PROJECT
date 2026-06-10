@@ -182,7 +182,7 @@ class BinaryRouter:
             pass
         return None
 
-    async def route(self, query: str) -> Dict[str, Any]:
+    async def route(self, query: str, **kwargs) -> Dict[str, Any]:
         """三边并行路由 —— 规则 + Embedding双塔 + LLM，2/3 多数投票"""
         self._warmup()
 
@@ -600,7 +600,7 @@ class PlannerRouter:
             "fallback_reason": reason,
         }
 
-    async def route(self, question: str) -> Dict:
+    async def route(self, question: str, **kwargs) -> Dict:
         """统一路由接口 — 与 BinaryRouter.route() 保持接口兼容
 
         Returns:
@@ -613,6 +613,92 @@ class PlannerRouter:
             "is_sql": None,          # Planner 模式下不预判，交给计划决定
             "plan": plan,
             "votes": {"planner": True},
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# AutoRouter — 自适应路由: IntentRouter 判复杂度 → 简单直走, 复杂走 Planner
+# ═══════════════════════════════════════════════════════════════════════
+
+class AutoRouter:
+    """自适应路由: 意图分类 → 按复杂度分流
+
+    Question
+      → IntentRouter (type + complexity)
+          ├─ greeting/thanks/unrelated → 快速响应
+          ├─ stat_query → SQL 路径 (BinaryRouter 模板匹配)
+          ├─ single_step → 直接 RAG (search_unified)
+          └─ multi_step  → PlannerRouter 规划 → PlannerExecutor DAG 执行
+    """
+
+    def __init__(self, llm=None):
+        self.intent_router = IntentRouter(llm=llm)
+        self.planner_router = PlannerRouter(llm=llm)
+        self.planner_router.set_tools({
+            "search_regulations": "统一检索招投标知识库（法规条文 + 招标项目案例）",
+            "get_article": "精确查询特定法条的第X条完整内容",
+            "sql_query": "对招标数据库执行统计查询，返回数量、金额、排名等结构化数据",
+        })
+        self._binary_router = None
+
+    @property
+    def binary_router(self):
+        if self._binary_router is None:
+            self._binary_router = BinaryRouter()
+        return self._binary_router
+
+    async def route(self, question: str, session_id: str = "",
+                    session_manager=None) -> Dict:
+        """自适应路由：意图分类 → 按复杂度分流"""
+        # ── Step 1: 意图分类 ──
+        intent = await self.intent_router.route(
+            question, session_id, session_manager
+        )
+
+        intent_type = intent.get("type", "other")
+        complexity = intent.get("complexity", "single_step")
+
+        print(f"[AutoRouter] type={intent_type}, complexity={complexity}")
+
+        # ── 快速响应 (问候/致谢/无关) ──
+        if intent_type in ("quick_response", "unrelated"):
+            return {
+                "mode": "direct",
+                "is_sql": False,
+                "intent": intent,
+                "direct_answer": intent.get("response", ""),
+            }
+
+        # ── 统计类 → SQL 路径 ──
+        if intent_type == "stat_query":
+            binary = await self.binary_router.route(question)
+            print(f"[AutoRouter] 统计类 → SQL路径 "
+                  f"(match={binary.get('match_score', 0):.3f})")
+            return {
+                "mode": "auto",
+                "is_sql": True,
+                "sql_template": binary.get("sql_template"),
+                "match_score": binary.get("match_score", 0),
+                "intent": intent,
+            }
+
+        # ── 复杂问题 → Planner DAG ──
+        if complexity == "multi_step":
+            print(f"[AutoRouter] 复杂问题 → Planner 路径")
+            plan = await self.planner_router.plan(question)
+            return {
+                "mode": "planner",
+                "is_sql": None,
+                "plan": plan,
+                "intent": intent,
+            }
+
+        # ── 简单问题 → 直接 RAG ──
+        print(f"[AutoRouter] 简单问题 → 直接 RAG")
+        return {
+            "mode": "auto",
+            "is_sql": False,
+            "intent": intent,
         }
 
 
@@ -635,13 +721,16 @@ def create_router(llm=None):
     elif mode == "planner":
         print("[RouterFactory] 创建 PlannerRouter (Agent决策体)")
         router = PlannerRouter(llm=llm)
-        # 注册默认工具
         router.set_tools({
             "search_regulations": "语义检索招投标法规知识库",
             "get_article": "精确查询特定法条的第X条内容",
             "sql_query": "对招标数据库执行统计查询",
         })
         return router
+
+    elif mode == "auto":
+        print("[RouterFactory] 创建 AutoRouter (自适应路由: Intent判复杂度 → 简单/复杂分流)")
+        return AutoRouter(llm=llm)
 
     else:
         print(f"[RouterFactory] 未知模式 '{mode}'，使用 BinaryRouter")

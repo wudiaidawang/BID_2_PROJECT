@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""API服务入口 — 招投标智能问答系统 (融合版: SQL + RAG + Agent)"""
+"""API服务入口 — 招投标智能问答系统 v5.1 (Auto自适应路由: SQL + RAG + Planner DAG)"""
 import os
 
 os.environ['HF_ENDPOINT'] = os.getenv('HF_ENDPOINT', 'https://hf-mirror.com')
@@ -44,8 +44,8 @@ async def lifespan(app: FastAPI):
     router_instance = create_router(llm=app.state.generator)
     app.state.router = router_instance
 
-    # 如果是 planner 模式，初始化 PlannerExecutor + 可选 ReActAgent
-    if settings.router_mode == "planner":
+    # 如果是 planner 或 auto 模式，初始化 PlannerExecutor
+    if settings.router_mode in ("planner", "auto"):
         from app.agent.planner import PlannerExecutor
         app.state.planner_executor = PlannerExecutor(
             retriever=None,  # 下面回填

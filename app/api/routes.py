@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""API路由 — 支持三种路由模式：binary / intent / planner"""
+"""API路由 — 支持四种路由模式：binary / intent / planner / auto"""
 
 import time
+import os
 from fastapi import APIRouter, Request
 
 from app.api.schemas import AskRequest, AskResponse, SourceInfo, HealthResponse
@@ -22,9 +23,10 @@ session_manager = SessionManager()
 async def ask(request: Request, req: AskRequest):
     """问答接口 — 根据 router_mode 自动选择执行路径
 
-    binary 模式: 3路投票判定 is_sql → SQL 路径或 RAG 路径
-    intent 模式: LLM 意图分类 → SQL 或 RAG 路径
-    planner 模式: LLM 规划步骤 → PlannerExecutor 执行 → 汇总答案
+    binary  模式: 3路投票判定 is_sql → SQL 或 RAG
+    intent  模式: LLM 意图分类 → SQL 或 RAG
+    planner 模式: LLM 规划 → PlannerExecutor DAG 执行
+    auto    模式: IntentRouter 判复杂度 → 简单直走 RAG/SQL, 复杂走 Planner DAG
     """
     start_time = time.time()
 
@@ -32,21 +34,39 @@ async def ask(request: Request, req: AskRequest):
     session_id, is_new = await session_manager.get_or_create_session(req.session_id)
     history = await session_manager.get_history(session_id, last_n=settings.max_history)
 
-    # 2. 路由判定
-    route = await request.app.state.router.route(req.question)
+    # 1.5 断点续跑检查 — 如果存在未完成的 checkpoint，尝试恢复
+    if settings.checkpoint_enabled and not is_new:
+        checkpoint_result = await _try_resume_checkpoint(
+            request, session_id, start_time
+        )
+        if checkpoint_result is not None:
+            return checkpoint_result
+
+    # 2. 路由判定 (auto 模式需要 session 来做指代消解上下文)
+    route = await request.app.state.router.route(
+        req.question,
+        session_id=session_id,
+        session_manager=session_manager,
+    )
 
     # 2.1 获取改写后的问题
     rewritten_question = await session_manager.rewrite_query_with_context(
         session_id, req.question
     )
 
-    # ── Planner 模式 ────────────────────────────────────
+    # ── 直接响应 (问候/致谢/无关) ──
+    if route.get("mode") == "direct":
+        return _handle_direct(
+            req, route, session_id, start_time
+        )
+
+    # ── Planner 模式 (auto 的复杂问题 或 planner 模式) ──
     if route.get("mode") == "planner":
         return await _handle_planner(
             request, req, route, session_id, rewritten_question, history, start_time
         )
 
-    # ── Binary / Intent 模式（原有逻辑）─────────────────
+    # ── 简单问题: auto / binary / intent 模式 ──
     return await _handle_binary(
         request, req, route, session_id, rewritten_question, history, start_time
     )
@@ -81,7 +101,8 @@ async def _handle_planner(
     else:
         # 执行计划
         from app.agent.planner import PlannerExecutor
-        state = await executor.execute(plan_dict, rewritten_question)
+        state = await executor.execute(plan_dict, rewritten_question,
+                                        session_id=session_id)
         answer = await executor.aggregate(state, rewritten_question)
 
         # 构建 results（从 state 提取，供 SourceInfo 和 entity 提取使用）
@@ -186,6 +207,27 @@ async def _handle_binary(
 
 
 # ---------------------------------------------------------------------------
+# Direct 响应 — 问候/致谢/无关问题无需经过 LLM 生成
+# ---------------------------------------------------------------------------
+
+def _handle_direct(
+    req: AskRequest,
+    route: dict,
+    session_id: str,
+    start_time: float,
+) -> AskResponse:
+    """直接返回预设响应，不调用检索和 LLM"""
+    answer = route.get("direct_answer", "您好！我是招投标智能助手，请问有什么可以帮您？")
+
+    return AskResponse(
+        answer=answer,
+        sources=[],
+        processing_time=time.time() - start_time,
+        session_id=session_id,
+    )
+
+
+# ---------------------------------------------------------------------------
 # 辅助函数
 # ---------------------------------------------------------------------------
 
@@ -208,6 +250,62 @@ def _state_to_results(state) -> list:
             "metadata": {"tool": step.tool_name, "step": step.step_num},
         })
     return results
+
+
+async def _try_resume_checkpoint(
+    request: Request,
+    session_id: str,
+    start_time: float,
+):
+    """检查是否存在未完成的 checkpoint，有则尝试恢复执行"""
+    checkpoint_path = os.path.join(
+        settings.checkpoint_dir, f"{session_id}.json"
+    )
+    if not os.path.exists(checkpoint_path):
+        return None
+
+    try:
+        from app.agent.agent_state import AgentState
+        state = AgentState.load_checkpoint(settings.checkpoint_dir, session_id)
+    except Exception:
+        return None
+
+    if state.finished:
+        # 已完成但没被清理的残留文件，直接删除
+        AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
+        return None
+
+    print(f"[Checkpoint] 发现未完成断点 (session={session_id}, "
+          f"step={state.step_count()}), 尝试恢复...")
+
+    agent = getattr(request.app.state, 'agent', None)
+    executor = getattr(request.app.state, 'planner_executor', None)
+
+    try:
+        # 优先用 Agent 恢复（ReAct 循环可以接续）
+        if agent is not None:
+            answer = await agent.resume(session_id)
+        elif executor is not None:
+            # Planner 模式: 直接聚合已有结果
+            executor._session_id = session_id
+            answer = await executor.aggregate(state, state.question)
+        else:
+            # 没有可用的执行器，清理断点，走正常流程
+            AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
+            return None
+
+        sources = _state_to_results(state)
+
+        return AskResponse(
+            answer=answer,
+            sources=_build_sources(sources, 5),
+            processing_time=time.time() - start_time,
+            session_id=session_id,
+        )
+    except Exception as e:
+        print(f"[Checkpoint] 恢复失败: {e}，清理断点，正常处理")
+        AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
+        return None
 
 
 def _build_sources(results: list, top_k: int, collection: str = "unified") -> list:
@@ -241,6 +339,13 @@ def _build_sources(results: list, top_k: int, collection: str = "unified") -> li
 async def delete_session(session_id: str):
     """删除会话"""
     await session_manager.delete_session(session_id)
+    # 同步清理 checkpoint 文件
+    if settings.checkpoint_enabled:
+        try:
+            from app.agent.agent_state import AgentState
+            AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
+        except Exception:
+            pass
     return {"status": "deleted", "session_id": session_id}
 
 
