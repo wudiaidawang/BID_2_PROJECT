@@ -34,6 +34,12 @@ async def ask(request: Request, req: AskRequest):
     session_id, is_new = await session_manager.get_or_create_session(req.session_id)
     history = await session_manager.get_history(session_id, last_n=settings.max_history)
 
+    # 1.2 Memory 上下文 — 从 memory 模块加载历史和实体
+    memory = getattr(request.app.state, 'memory', None)
+    memory_context = {}
+    if memory:
+        memory_context = memory.load_context(session_id, req.question)
+
     # 1.5 断点续跑检查 — 如果存在未完成的 checkpoint，尝试恢复
     if settings.checkpoint_enabled and not is_new:
         checkpoint_result = await _try_resume_checkpoint(
@@ -63,12 +69,14 @@ async def ask(request: Request, req: AskRequest):
     # ── Planner 模式 (auto 的复杂问题 或 planner 模式) ──
     if route.get("mode") == "planner":
         return await _handle_planner(
-            request, req, route, session_id, rewritten_question, history, start_time
+            request, req, route, session_id, rewritten_question, history,
+            memory_context, start_time
         )
 
     # ── 简单问题: auto / binary / intent 模式 ──
     return await _handle_binary(
-        request, req, route, session_id, rewritten_question, history, start_time
+        request, req, route, session_id, rewritten_question, history,
+        memory_context, start_time
     )
 
 
@@ -83,11 +91,13 @@ async def _handle_planner(
     session_id: str,
     rewritten_question: str,
     history: list,
+    memory_context: dict,
     start_time: float,
 ) -> AskResponse:
     """Planner 模式: 计划 → 执行 → 汇总"""
     plan_dict = route.get("plan", {})
     executor = request.app.state.planner_executor
+    memory_ctx = memory_context.get("full_context", "")
 
     if executor is None:
         # 降级: 没有 executor 时走普通 RAG
@@ -96,7 +106,8 @@ async def _handle_planner(
             query=rewritten_question, top_k=req.top_k
         )
         answer = await request.app.state.generator.generate_with_history(
-            query=req.question, context=results, collection="unified", history=history
+            query=req.question, context=results, collection="unified",
+            history=history, memory_context=memory_ctx
         )
     else:
         # 执行计划
@@ -111,6 +122,12 @@ async def _handle_planner(
     # 实体提取 & 保存会话
     entities = await session_manager.extract_entities(rewritten_question, answer, results)
     await session_manager.add_turn(session_id, req.question, answer, entities)
+
+    # Memory 模块: 保存本轮对话
+    memory = getattr(request.app.state, 'memory', None)
+    if memory:
+        memory.save_turn(session_id, req.question, answer, entities)
+        await memory.maybe_summarize(session_id)
 
     # 构建 Source 列表
     sources = _build_sources(results, req.top_k)
@@ -134,11 +151,13 @@ async def _handle_binary(
     session_id: str,
     rewritten_question: str,
     history: list,
+    memory_context: dict,
     start_time: float,
 ) -> AskResponse:
     """Binary/Intent 模式: is_sql 判定 → SQL 或 RAG 路径（带容错降级）"""
     results = []
     source_collection = "unified"
+    memory_ctx = memory_context.get("full_context", "")
 
     if route.get("is_sql"):
         print(f"[SQL模式] 拦截到统计需求: {req.question}")
@@ -189,11 +208,18 @@ async def _handle_binary(
         context=results,
         collection=source_collection,
         history=history,
+        memory_context=memory_ctx,
     )
 
     # 实体提取 & 保存会话
     entities = await session_manager.extract_entities(rewritten_question, answer, results)
     await session_manager.add_turn(session_id, req.question, answer, entities)
+
+    # Memory 模块: 保存本轮对话
+    memory = getattr(request.app.state, 'memory', None)
+    if memory:
+        memory.save_turn(session_id, req.question, answer, entities)
+        await memory.maybe_summarize(session_id)
 
     # 构建 Source 列表
     sources = _build_sources(results, req.top_k, source_collection)
@@ -336,7 +362,7 @@ def _build_sources(results: list, top_k: int, collection: str = "unified") -> li
 # ---------------------------------------------------------------------------
 
 @router.delete("/session/{session_id}")
-async def delete_session(session_id: str):
+async def delete_session(request: Request, session_id: str):
     """删除会话"""
     await session_manager.delete_session(session_id)
     # 同步清理 checkpoint 文件
@@ -346,6 +372,10 @@ async def delete_session(session_id: str):
             AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
         except Exception:
             pass
+    # 同步清理 memory
+    memory = getattr(request.app.state, 'memory', None)
+    if memory:
+        memory.forget_session(session_id)
     return {"status": "deleted", "session_id": session_id}
 
 

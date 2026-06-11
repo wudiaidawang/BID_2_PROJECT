@@ -39,13 +39,23 @@ async def lifespan(app: FastAPI):
     print("\n[3/7] 加载 LLM 生成器...")
     app.state.generator = LLMGenerator()
 
+    # [3.5/7] Memory 模块
+    print("\n[3.5/7] 加载 Memory 模块...")
+    from app.core.memory import MemoryManager
+    app.state.memory = MemoryManager(
+        llm=app.state.generator,
+        storage_dir=getattr(settings, 'memory_storage_dir', './memory_store'),
+        buffer_k=getattr(settings, 'memory_buffer_k', 5),
+    )
+    print(f"   MemoryManager 已初始化 (dir={app.state.memory._storage_dir})")
+
     # [4/7] 路由 (根据配置选择)
     print(f"\n[4/7] 加载路由器 (mode={settings.router_mode})...")
     router_instance = create_router(llm=app.state.generator)
     app.state.router = router_instance
 
     # 如果是 planner 或 auto 模式，初始化 PlannerExecutor
-    if settings.router_mode in ("planner", "auto"):
+    if settings.router_mode in ("planner", "auto", "think"):
         from app.agent.planner import PlannerExecutor
         app.state.planner_executor = PlannerExecutor(
             retriever=None,  # 下面回填

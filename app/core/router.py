@@ -275,48 +275,48 @@ BIDDING_KEYWORDS = [
 ]
 
 
+def quick_intercept(question: str) -> Optional[Dict]:
+    """快速拦截问候/致谢/告别/无关问题 — 纯关键词，零 LLM 调用"""
+    if not settings.intent_quick_intercept:
+        return None
+
+    q = question.strip().lower()
+    q_clean = re.sub(r'[^一-龥a-zA-Z0-9]', '', q)
+
+    for kw in GREETING_KEYWORDS:
+        if kw in q_clean:
+            return {"type": "quick_response", "complexity": "single_step",
+                    "response": "您好！我是招投标智能助手，请问有什么可以帮您？"}
+
+    for kw in THANKS_KEYWORDS:
+        if kw in q_clean:
+            return {"type": "quick_response", "complexity": "single_step",
+                    "response": "不客气，有问题随时问我！"}
+
+    for kw in GOODBYE_KEYWORDS:
+        if kw in q_clean:
+            return {"type": "quick_response", "complexity": "single_step",
+                    "response": "再见！如有问题，随时回来咨询。"}
+
+    # 无关领域检测
+    has_bidding = any(kw in q for kw in BIDDING_KEYWORDS)
+    if not has_bidding:
+        for kw in UNRELATED_KEYWORDS:
+            if kw in q:
+                return {"type": "unrelated", "complexity": "single_step"}
+
+    return None
+
+
 class IntentRouter:
-    """LLM 意图分类器 — 判断问题类型和复杂度"""
+    """LLM 意图分类器 — 判断问题类型和复杂度 (保留向后兼容)"""
 
     def __init__(self, llm=None):
         self.llm = llm
 
-    def quick_intercept(self, question: str) -> Optional[Dict]:
-        """快速拦截问候/致谢/告别/无关问题"""
-        if not settings.intent_quick_intercept:
-            return None
-
-        q = question.strip().lower()
-        q_clean = re.sub(r'[^一-龥a-zA-Z0-9]', '', q)
-
-        for kw in GREETING_KEYWORDS:
-            if kw in q_clean:
-                return {"type": "quick_response", "complexity": "single_step",
-                        "response": "您好！我是招投标智能助手，请问有什么可以帮您？"}
-
-        for kw in THANKS_KEYWORDS:
-            if kw in q_clean:
-                return {"type": "quick_response", "complexity": "single_step",
-                        "response": "不客气，有问题随时问我！"}
-
-        for kw in GOODBYE_KEYWORDS:
-            if kw in q_clean:
-                return {"type": "quick_response", "complexity": "single_step",
-                        "response": "再见！如有问题，随时回来咨询。"}
-
-        # 无关领域检测
-        has_bidding = any(kw in q for kw in BIDDING_KEYWORDS)
-        if not has_bidding:
-            for kw in UNRELATED_KEYWORDS:
-                if kw in q:
-                    return {"type": "unrelated", "complexity": "single_step"}
-
-        return None
-
     async def route(self, question: str, session_id: str = "", session_manager=None) -> Dict:
         """LLM 意图分类"""
-        # 快速拦截
-        intercepted = self.quick_intercept(question)
+        intercepted = quick_intercept(question)
         if intercepted:
             return intercepted
 
@@ -529,6 +529,40 @@ class PlannerRouter:
 
         return self._fallback_plan(question, reason="LLM 规划失败")
 
+    async def plan_from_tasks(self, tasks: List[Dict], question: str) -> Dict:
+        """跳过 TaskAnalysis，直接从已有 tasks 做 ToolPlanning
+
+        ThinkRouter 已做完 Task 分解，这里只需补上工具规划。
+        """
+        if not self.llm:
+            return self._fallback_plan(question, reason="LLM未初始化")
+
+        try:
+            tasks_json = json.dumps(tasks, ensure_ascii=False)
+            tools_desc = self._tools_description or self._default_tools_description()
+            plan_prompt = TOOL_PLANNING_PROMPT.format(
+                tools_description=tools_desc,
+                tasks_json=tasks_json,
+                question=question,
+            )
+            plan_response = await self.llm._call_llm(
+                prompt=plan_prompt,
+                temperature=getattr(settings, 'planner_temperature', 0.2),
+            )
+            plan_result = self._parse_plan_response(plan_response, question)
+
+            if plan_result and plan_result.get("plan"):
+                return {
+                    "analysis": "",
+                    "tasks": tasks,
+                    "plan": plan_result.get("plan", []),
+                    "confidence": 0.8,
+                }
+        except Exception as e:
+            print(f"[Planner] plan_from_tasks 失败: {e}")
+
+        return self._fallback_plan(question, reason="Tool规划失败")
+
     def _parse_plan_response(self, response: str, question: str) -> Optional[Dict]:
         """从 LLM 原始输出中提取计划 JSON
 
@@ -703,6 +737,181 @@ class AutoRouter:
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# FastRouter — 快速模式: 不走 Agent 规划，BinaryRouter 直接判 SQL vs RAG
+# ═══════════════════════════════════════════════════════════════════════
+
+class FastRouter:
+    """快速模式: 关键词拦截 + BinaryRouter 三路投票判 SQL/RAG
+
+    零 LLM 规划开销，适合大多数简单问答和统计查询。
+    """
+
+    def __init__(self, llm=None):
+        self.llm = llm
+        self._binary = None
+
+    @property
+    def binary(self):
+        if self._binary is None:
+            self._binary = BinaryRouter()
+        return self._binary
+
+    async def route(self, question: str, session_id: str = "",
+                    session_manager=None) -> Dict:
+        # ── 1. 关键词快速拦截 ──
+        intercepted = quick_intercept(question)
+        if intercepted:
+            if intercepted.get("type") == "quick_response":
+                return {
+                    "mode": "direct",
+                    "is_sql": False,
+                    "direct_answer": intercepted.get("response", ""),
+                }
+            if intercepted.get("type") == "unrelated":
+                return {
+                    "mode": "direct",
+                    "is_sql": False,
+                    "direct_answer": "抱歉，我是招投标领域的智能助手，无法回答这个问题。",
+                }
+
+        # ── 2. BinaryRouter 判 SQL vs RAG ──
+        result = await self.binary.route(question)
+        is_sql = result["is_sql"]
+        print(f"[FastRouter] is_sql={is_sql} "
+              f"(rule={'Y' if result['votes'].get('rule') else 'N'} "
+              f"emb={'Y' if result['votes'].get('embedding') else 'N'} "
+              f"llm={'Y' if result['votes'].get('llm') else 'N'})")
+
+        return {
+            "mode": "auto",
+            "is_sql": is_sql,
+            "sql_template": result.get("sql_template"),
+            "match_score": result.get("match_score", 0),
+            "votes": result.get("votes", {}),
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ThinkRouter — 思考模式: TaskAnalysis → task 数量 → 分流
+# ═══════════════════════════════════════════════════════════════════════
+
+class ThinkRouter:
+    """思考模式: 先做 Task 分解 → 基于实际 task 数量决定路由
+
+    - 1 个 task: 兼容输出，BinaryRouter 判 SQL vs RAG
+    - 2+ 个 task: PlannerRouter ToolPlanning → PlannerExecutor DAG
+    - 低置信度 / 0 task: 降级到 BinaryRouter
+
+    复杂度判定不再"拍脑袋"——先分解再决定。
+    """
+
+    def __init__(self, llm=None):
+        self.llm = llm
+        self._binary = None
+        self._planner = None
+
+    @property
+    def binary(self):
+        if self._binary is None:
+            self._binary = BinaryRouter()
+        return self._binary
+
+    @property
+    def planner_router(self):
+        if self._planner is None:
+            self._planner = PlannerRouter(llm=self.llm)
+        return self._planner
+
+    async def route(self, question: str, session_id: str = "",
+                    session_manager=None) -> Dict:
+        # ── 1. 关键词快速拦截 ──
+        intercepted = quick_intercept(question)
+        if intercepted:
+            if intercepted.get("type") == "quick_response":
+                return {
+                    "mode": "direct",
+                    "is_sql": False,
+                    "direct_answer": intercepted.get("response", ""),
+                }
+            if intercepted.get("type") == "unrelated":
+                return {
+                    "mode": "direct",
+                    "is_sql": False,
+                    "direct_answer": "抱歉，我是招投标领域的智能助手，无法回答这个问题。",
+                }
+
+        # ── 2. TaskAnalysis — 1 次 LLM 调用 ──
+        task_result = await self._task_analysis(question)
+        tasks = task_result.get("tasks", [])
+        confidence = task_result.get("confidence", 0.5)
+        analysis = task_result.get("analysis", "")
+
+        print(f"[ThinkRouter] {len(tasks)} tasks, confidence={confidence:.2f}")
+
+        # ── 3. 低置信度或无任务 → 降级 BinaryRouter ──
+        if confidence < 0.3 or not tasks:
+            print(f"[ThinkRouter] 降级到快速路由 (confidence={confidence:.2f})")
+            result = await self.binary.route(question)
+            return {
+                "mode": "auto",
+                "is_sql": result["is_sql"],
+                "sql_template": result.get("sql_template"),
+                "match_score": result.get("match_score", 0),
+            }
+
+        # ── 4. 单任务 → 兼容输出: BinaryRouter 判 SQL/RAG ──
+        if len(tasks) == 1:
+            task = tasks[0]
+            search_query = task.get("goal", question)
+            result = await self.binary.route(search_query)
+            print(f"[ThinkRouter] 单任务 '{task.get('task_id', 't1')}' → "
+                  f"is_sql={result['is_sql']}")
+            return {
+                "mode": "auto",
+                "is_sql": result["is_sql"],
+                "sql_template": result.get("sql_template"),
+                "match_score": result.get("match_score", 0),
+                "analysis": analysis,
+                "tasks": tasks,
+            }
+
+        # ── 5. 多任务 → Planner DAG ──
+        for t in tasks:
+            deps = f" ← {t.get('depends_on', [])}" if t.get("depends_on") else ""
+            print(f"  {t['task_id']}: {t['goal']}{deps}")
+
+        plan = await self.planner_router.plan_from_tasks(tasks, question)
+        print(f"[ThinkRouter] → Planner DAG ({len(plan.get('plan', []))} steps)")
+        return {
+            "mode": "planner",
+            "plan": plan,
+            "analysis": analysis,
+        }
+
+    async def _task_analysis(self, question: str) -> Dict:
+        """调用 LLM 做 Task 分解"""
+        if not self.llm:
+            return {"tasks": [], "confidence": 0.0}
+
+        prompt = TASK_ANALYSIS_PROMPT + f"\n\n用户问题：{question}\n请输出任务JSON："
+        try:
+            response = await self.llm._call_llm(
+                prompt=prompt,
+                temperature=getattr(settings, 'planner_temperature', 0.2),
+            )
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                json_str = json_match.group()
+                json_str = re.sub(r',\s*}', '}', json_str)
+                json_str = re.sub(r',\s*]', ']', json_str)
+                return json.loads(json_str)
+        except Exception as e:
+            print(f"[ThinkRouter] Task分析失败: {e}")
+
+        return {"tasks": [], "confidence": 0.0}
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # 统一路由工厂
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -710,7 +919,21 @@ def create_router(llm=None):
     """根据配置创建路由实例"""
     mode = settings.router_mode
 
-    if mode == "binary":
+    if mode == "fast":
+        print("[RouterFactory] 创建 FastRouter (快速模式: BinaryRouter 判 SQL/RAG)")
+        return FastRouter(llm=llm)
+
+    elif mode == "think":
+        print("[RouterFactory] 创建 ThinkRouter (思考模式: TaskAnalysis → 按 task 数分流)")
+        router = ThinkRouter(llm=llm)
+        router.planner_router.set_tools({
+            "search_regulations": "统一检索招投标知识库（法规条文 + 招标项目案例）",
+            "get_article": "精确查询特定法条的第X条完整内容",
+            "sql_query": "对招标数据库执行统计查询",
+        })
+        return router
+
+    elif mode == "binary":
         print("[RouterFactory] 创建 BinaryRouter (3路投票, is_sql判定)")
         return BinaryRouter()
 

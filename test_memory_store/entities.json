@@ -1,0 +1,25 @@
+{
+  "某工程项目": {
+    "type": "project",
+    "metadata": {
+      "winner": "ABC公司"
+    },
+    "count": 4,
+    "first_seen": 1781078220.3255029,
+    "last_seen": 1781078243.6287696
+  },
+  "53": {
+    "type": "legal_reference",
+    "metadata": {},
+    "count": 2,
+    "first_seen": 1781078220.3255029,
+    "last_seen": 1781078243.6171463
+  },
+  "ABC公司": {
+    "type": "company",
+    "metadata": {},
+    "count": 1,
+    "first_seen": 1781078243.6171463,
+    "last_seen": 1781078243.6171463
+  }
+}

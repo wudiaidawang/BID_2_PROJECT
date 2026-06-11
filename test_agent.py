@@ -52,6 +52,6 @@ async def test(question: str):
 
 if __name__ == "__main__":
     # 简单统计查询
-    asyncio.run(test("数据库里有几条数据"))
+    asyncio.run(test("你好呀"))
     # 复杂问题 — 涉及 depends_on
-    asyncio.run(test("工程类和货物类项目去年的中标金额对比"))
+    asyncio.run(test("工程类和货物类项目的中标金额对比"))

@@ -4,12 +4,12 @@ RAG + SQL 双引擎招投标智能问答平台 — 基于 FastAPI，支持法规
 
 ## 功能特性
 
-- **自适应路由 (Auto)**：IntentRouter 判复杂度 → 问候秒回 / 统计直走 SQL / 简单问题 RAG / 复杂问题 Planner DAG，零手动切换
+- **fast/think 双模路由**：快速模式 BinaryRouter 直判 SQL/RAG (0~1 LLM)，思考模式 TaskAnalysis 分解 → 基于 task 数量自适应分流 Planner DAG (1~2 LLM)；复杂度不再拍脑袋
 - **法规检索**：基于《招标投标法》《政府采购法》等 PDF 法规库，支持概念定义、处罚规定、操作流程等自然语言提问
 - **数据统计 (NL2SQL)**：LLM 生成 SQL → SQLite 执行，支持"去年有多少项目""中标金额最高的是哪个"等聚合查询，含模板短路优化
 - **混合检索 Pipeline**：5 阶段可观测管道 — 查询改写 → 分库召回 (ChromaDB + BM25) → RRF/Weighted 融合 → Parent-Context 扩展 → BGE-Reranker 精排
 - **Query 改写**：3 层规则管道 — 口语→书面语 + 冗余精简 + 行业同义词替换，零 API 调用
-- **Agent 模式**：ReAct Agent (Thought→Action→Observation 循环) + Planner DAG 调度 (Task 分析→工具规划→并行执行→汇总)
+- **双模路由 (fast/think)**：快速模式 BinaryRouter 直判 SQL/RAG，思考模式 TaskAnalysis → 基于实际 task 数量分流 Planner DAG；复杂度不再"拍脑袋"
 - **断点续跑**：每步自动保存状态快照，崩溃后自动恢复未完成的 Agent/Planner 执行，任务完成或会话删除时自动清理
 - **4 个 Agent 工具**：search_regulations（双库统一检索）、get_article（法条精确查询）、sql_query（NL2SQL 统计）、summarize（多段归纳）
 - **Parent-Child Chunking**：法律条文结构化切块（法律→章→条），child chunk 检索后自动补全 parent context
@@ -24,7 +24,7 @@ main.py                         FastAPI 入口 (lifespan 初始化 6 组件)
 │                               GET  /api/v1/health       健康检查
 │                               DELETE /api/v1/session/{id} 会话+断点清理
 ├── app/core/
-│   ├── router.py               路由层 — AutoRouter / BinaryRouter / IntentRouter / PlannerRouter
+│   ├── router.py               路由层 — ThinkRouter / FastRouter / BinaryRouter / PlannerRouter
 │   ├── retriever.py            混合检索器 — search_unified() 跨库召回
 │   ├── sql_engine.py           NL2SQL 引擎 — LLM 生成 SQL → SQLite 执行 → 空结果自动降级
 │   ├── generator.py            LLM 生成器 — 多厂商 API (OpenAI 兼容)，统一 _call_llm 接口
@@ -52,11 +52,11 @@ main.py                         FastAPI 入口 (lifespan 初始化 6 组件)
 用户问题
   → Session 管理 (Redis 获取/创建 + 指代消解)
     → 断点续跑检查 (存在未完成 checkpoint? → 自动恢复)
-      → 路由判定 (AutoRouter)
+      → 路由判定 (ThinkRouter)
           ├─ greeting/thanks    → 直接响应 (0 LLM 调用)
-          ├─ stat_query          → SQL 引擎 (含模板短路优化)
-          ├─ single_step (RAG)   → search_unified() → LLM 生成
-          └─ multi_step (Agent)  → PlannerRouter.plan() → PlannerExecutor DAG 执行
+          ├─ 低置信度/0 task    → 降级 BinaryRouter → SQL or RAG
+          ├─ 1 task             → BinaryRouter → SQL or RAG (兼容输出)
+          └─ 2+ tasks           → ToolPlanning → PlannerExecutor DAG 执行
             → LLM 生成最终答案
               → 实体提取 → 保存 Session → 清理 Checkpoint
 ```
@@ -89,7 +89,7 @@ pip install -r requirements.txt
 ```yaml
 # config.yaml 关键配置
 router:
-  mode: auto          # auto / binary / intent / planner
+  mode: think        # fast / think
 
 llm:
   provider: hunyuan   # hunyuan / deepseek / openai
@@ -165,14 +165,21 @@ Response:
 
 ## Agent 模式
 
-### 3 种路由 + 2 种执行器
+### fast / think 双模路由
 
-| 路由模式 | 说明 | config.yaml |
-|---------|------|-------------|
-| **auto** (推荐) | IntentRouter 判复杂度 → 自适应分流，零手动开关 | `router.mode: auto` |
-| binary | 3 路并行投票 (规则+Embedding+LLM) → SQL or RAG | `router.mode: binary` |
-| intent | LLM 分类 6 种意图 + 单步/多步复杂度 | `router.mode: intent` |
-| planner | LLM 两阶段规划 (Task 分析+工具规划) → DAG 执行 | `router.mode: planner` |
+| 模式 | 说明 | LLM 调用 | config.yaml |
+|------|------|----------|-------------|
+| **fast** | 不走 Agent 规划，BinaryRouter 3路投票直判 SQL/RAG | 0~1 次 | `router.mode: fast` |
+| **think** | TaskAnalysis 分解 → 基于实际 task 数量分流 | 1~2 次 | `router.mode: think` |
+
+**fast 模式流程:** quick_intercept(关键词) → BinaryRouter(3路投票) → SQL or RAG
+
+**think 模式流程:** quick_intercept → TaskAnalysis → 
+- confidence < 0.3 或 0 task → 降级 BinaryRouter
+- 1 task → BinaryRouter 判 SQL/RAG（兼容输出）
+- 2+ tasks → ToolPlanning → PlannerExecutor DAG
+
+**复杂度判定不再"拍脑袋"**——think 模式先做 Task 分解，基于实际需要几个 task 来决定走单步还是多步。
 
 **ReAct Agent** — 一步一步思考，每步看到 Observation 再决定下一步：
 
@@ -279,7 +286,7 @@ python eval_retrieval_accuracy.py
 | Embedding | model_name (bge-small/bge-large/m3e/gte-large), dimension, device |
 | Reranker | enabled, model (bge-reranker-base), max_input_length, candidate_pool |
 | 检索 | top_k, vector_recall, bm25_recall, fusion_strategy (rrf/weighted/smart), 分数阈值 |
-| 路由 | mode (auto/binary/intent/planner), template_match_threshold, 三路投票 |
+| 路由 | mode (fast/think), template_match_threshold, 三路投票 |
 | Agent | enabled, max_steps, temperature, tools 声明式注册, checkpoint (enabled/dir) |
 | 会话 | Redis host/port/db, ttl, max_history |
 | Query 改写 | colloquial_to_formal, redundancy_removal, synonym_expansion |

@@ -15,13 +15,14 @@ class LLMGenerator:
         self.model = settings.llm_model
     
     async def generate_with_history(
-        self, query: str, context: List[Dict], collection: str, history: List[Dict] = None
+        self, query: str, context: List[Dict], collection: str,
+        history: List[Dict] = None, memory_context: str = ""
     ) -> str:
-        """生成答案（带历史）"""
+        """生成答案（带历史 + memory 上下文）"""
         if not context:
             return "抱歉，没有找到相关信息。"
-        
-        prompt = self._build_prompt(query, context, collection, history)
+
+        prompt = self._build_prompt(query, context, collection, history, memory_context)
         
         if self.api_key and self.api_url:
             return await self._call_llm(prompt)
@@ -76,7 +77,13 @@ class LLMGenerator:
             "3. 引用法规时请注明出处（法律名称+条款号），引用项目数据时请注明项目和金额。"
         )
     
-    def _build_prompt(self, query: str, context: List[Dict], collection: str, history: List[Dict] = None) -> str:
+    def _build_prompt(self, query: str, context: List[Dict], collection: str,
+                      history: List[Dict] = None, memory_context: str = "") -> str:
+        # Memory 上下文（跨 session 摘要 + 实体积累）
+        memory_text = ""
+        if memory_context:
+            memory_text = f"【记忆上下文】\n{memory_context}\n\n"
+
         history_text = ""
         if history:
             history_parts = []
@@ -84,7 +91,7 @@ class LLMGenerator:
                 history_parts.append(f"用户：{h['question']}\n助手：{h['answer']}")
             if history_parts:
                 history_text = "【对话历史】\n" + "\n\n".join(history_parts) + "\n\n"
-        
+
         # 优先使用 parent_content（完整法条），其次 text（embedding 文本）
         # 取 top-5 片段，每条最多 1500 字符，确保长法条和多片段场景不被截断
         max_per_fragment = 1500
@@ -93,8 +100,8 @@ class LLMGenerator:
             f"【参考信息{i+1}】\n{(c.get('parent_content') or c.get('text', ''))[:max_per_fragment]}"
             for i, c in enumerate(context[:max_fragments])
         ])
-        
-        return f"{history_text}【参考信息】\n{context_text}\n\n【当前问题】\n{query}\n\n【回答】"
+
+        return f"{memory_text}{history_text}【参考信息】\n{context_text}\n\n【当前问题】\n{query}\n\n【回答】"
     
     def _fallback_answer(self, context: List[Dict], collection: str) -> str:
         best = context[0].get("data", {})
