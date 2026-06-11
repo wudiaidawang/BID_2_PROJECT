@@ -258,23 +258,42 @@ def _handle_direct(
 # ---------------------------------------------------------------------------
 
 def _state_to_results(state) -> list:
-    """将 AgentState 的执行轨迹转换为 results 格式"""
+    """将 PlannerState/AgentState 的执行轨迹转换为 results 格式"""
     results = []
-    for step in state.steps:
-        if step.error or not step.observation:
-            continue
-        results.append({
-            "text": step.observation,
-            "score": 0.85,
-            "data": {
-                "title": f"步骤{step.step_num}: {step.action}",
-                "source": step.tool_name or step.action,
-                "project_name": "",
-                "winner": "",
-                "winner_amount": 0.0,
-            },
-            "metadata": {"tool": step.tool_name, "step": step.step_num},
-        })
+    # LangGraph PlannerState: dict with 'step_results' key
+    if isinstance(state, dict) and "step_results" in state:
+        for step in state["step_results"]:
+            if not step.get("success"):
+                continue
+            results.append({
+                "text": step.get("result", ""),
+                "score": 0.85,
+                "data": {
+                    "title": f"步骤{step.get('step_num', '?')}: {step.get('tool_name', '')}",
+                    "source": step.get("tool_name", ""),
+                    "project_name": "",
+                    "winner": "",
+                    "winner_amount": 0.0,
+                },
+                "metadata": {"tool": step.get("tool_name"), "step": step.get("step_num")},
+            })
+    # Legacy AgentState: has .steps attribute
+    elif hasattr(state, 'steps'):
+        for step in state.steps:
+            if step.error or not step.observation:
+                continue
+            results.append({
+                "text": step.observation,
+                "score": 0.85,
+                "data": {
+                    "title": f"步骤{step.step_num}: {step.action}",
+                    "source": step.tool_name or step.action,
+                    "project_name": "",
+                    "winner": "",
+                    "winner_amount": 0.0,
+                },
+                "metadata": {"tool": step.tool_name, "step": step.step_num},
+            })
     return results
 
 
@@ -283,55 +302,28 @@ async def _try_resume_checkpoint(
     session_id: str,
     start_time: float,
 ):
-    """检查是否存在未完成的 checkpoint，有则尝试恢复执行"""
-    checkpoint_path = os.path.join(
-        settings.checkpoint_dir, f"{session_id}.json"
-    )
-    if not os.path.exists(checkpoint_path):
-        return None
-
-    try:
-        from app.agent.agent_state import AgentState
-        state = AgentState.load_checkpoint(settings.checkpoint_dir, session_id)
-    except Exception:
-        return None
-
-    if state.finished:
-        # 已完成但没被清理的残留文件，直接删除
-        AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
-        return None
-
-    print(f"[Checkpoint] 发现未完成断点 (session={session_id}, "
-          f"step={state.step_count()}), 尝试恢复...")
-
+    """LangGraph checkpoint 恢复 — 使用 LangGraph 内置 MemorySaver"""
     agent = getattr(request.app.state, 'agent', None)
-    executor = getattr(request.app.state, 'planner_executor', None)
+    if agent is None:
+        return None
 
     try:
-        # 优先用 Agent 恢复（ReAct 循环可以接续）
-        if agent is not None:
-            answer = await agent.resume(session_id)
-        elif executor is not None:
-            # Planner 模式: 直接聚合已有结果
-            executor._session_id = session_id
-            answer = await executor.aggregate(state, state.question)
-        else:
-            # 没有可用的执行器，清理断点，走正常流程
-            AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
-            return None
-
-        sources = _state_to_results(state)
-
-        return AskResponse(
-            answer=answer,
-            sources=_build_sources(sources, 5),
-            processing_time=time.time() - start_time,
-            session_id=session_id,
-        )
+        answer = await agent.resume(session_id)
+        if answer and answer != "无法恢复历史会话":
+            print(f"[Checkpoint] LangGraph resume succeeded (session={session_id})")
+            # 简短答案可能是失败的恢复
+            if len(answer) < 20 and "失败" in answer:
+                return None
+            return AskResponse(
+                answer=answer,
+                sources=[],
+                processing_time=time.time() - start_time,
+                session_id=session_id,
+            )
     except Exception as e:
-        print(f"[Checkpoint] 恢复失败: {e}，清理断点，正常处理")
-        AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
-        return None
+        print(f"[Checkpoint] LangGraph resume failed: {e}")
+
+    return None
 
 
 def _build_sources(results: list, top_k: int, collection: str = "unified") -> list:
@@ -365,13 +357,7 @@ def _build_sources(results: list, top_k: int, collection: str = "unified") -> li
 async def delete_session(request: Request, session_id: str):
     """删除会话"""
     await session_manager.delete_session(session_id)
-    # 同步清理 checkpoint 文件
-    if settings.checkpoint_enabled:
-        try:
-            from app.agent.agent_state import AgentState
-            AgentState.delete_checkpoint(settings.checkpoint_dir, session_id)
-        except Exception:
-            pass
+    # LangGraph MemorySaver 自动管理 checkpoint，无需手动清理
     # 同步清理 memory
     memory = getattr(request.app.state, 'memory', None)
     if memory:

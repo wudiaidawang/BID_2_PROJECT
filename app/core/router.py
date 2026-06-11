@@ -118,14 +118,10 @@ class BinaryRouter:
         self._embedding_service = EmbeddingService()
 
         sql_questions = [t["question"] for t in SQL_TEMPLATES]
-        sql_vectors = self._embedding_service.model.encode(
-            sql_questions, show_progress_bar=False
-        )
+        sql_vectors = self._embedding_service.embed_batch(sql_questions)
         self._template_vectors = [np.array(v) for v in sql_vectors]
 
-        compliance_vectors = self._embedding_service.model.encode(
-            COMPLIANCE_TEMPLATES, show_progress_bar=False
-        )
+        compliance_vectors = self._embedding_service.embed_batch(COMPLIANCE_TEMPLATES)
         self._compliance_vectors = [np.array(v) for v in compliance_vectors]
 
         self._ready = True
@@ -916,45 +912,15 @@ class ThinkRouter:
 # ═══════════════════════════════════════════════════════════════════════
 
 def create_router(llm=None):
-    """根据配置创建路由实例"""
+    """根据配置创建路由实例 — 统一使用 LangGraph Router"""
     mode = settings.router_mode
 
-    if mode == "fast":
-        print("[RouterFactory] 创建 FastRouter (快速模式: BinaryRouter 判 SQL/RAG)")
-        return FastRouter(llm=llm)
+    if mode in ("think", "auto", "planner", "binary", "intent", "fast"):
+        print(f"[RouterFactory] 创建 LangGraphRouter (mode={mode})")
+        from app.core.router_graph import LangGraphRouter
+        return LangGraphRouter(llm=llm)
 
-    elif mode == "think":
-        print("[RouterFactory] 创建 ThinkRouter (思考模式: TaskAnalysis → 按 task 数分流)")
-        router = ThinkRouter(llm=llm)
-        router.planner_router.set_tools({
-            "search_regulations": "统一检索招投标知识库（法规条文 + 招标项目案例）",
-            "get_article": "精确查询特定法条的第X条完整内容",
-            "sql_query": "对招标数据库执行统计查询",
-        })
-        return router
-
-    elif mode == "binary":
-        print("[RouterFactory] 创建 BinaryRouter (3路投票, is_sql判定)")
-        return BinaryRouter()
-
-    elif mode == "intent":
-        print("[RouterFactory] 创建 IntentRouter (LLM意图分类)")
-        return IntentRouter(llm=llm)
-
-    elif mode == "planner":
-        print("[RouterFactory] 创建 PlannerRouter (Agent决策体)")
-        router = PlannerRouter(llm=llm)
-        router.set_tools({
-            "search_regulations": "语义检索招投标法规知识库",
-            "get_article": "精确查询特定法条的第X条内容",
-            "sql_query": "对招标数据库执行统计查询",
-        })
-        return router
-
-    elif mode == "auto":
-        print("[RouterFactory] 创建 AutoRouter (自适应路由: Intent判复杂度 → 简单/复杂分流)")
-        return AutoRouter(llm=llm)
-
-    else:
-        print(f"[RouterFactory] 未知模式 '{mode}'，使用 BinaryRouter")
-        return BinaryRouter()
+    # Legacy fallback
+    print(f"[RouterFactory] 未知模式 '{mode}'，使用 LangGraphRouter")
+    from app.core.router_graph import LangGraphRouter
+    return LangGraphRouter(llm=llm)

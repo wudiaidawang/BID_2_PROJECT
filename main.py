@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""API服务入口 — 招投标智能问答系统 v5.1 (Auto自适应路由: SQL + RAG + Planner DAG)"""
+"""API服务入口 — 招投标智能问答系统 v6.0 (LangChain/LangGraph 重构版)"""
 import os
 
 os.environ['HF_ENDPOINT'] = os.getenv('HF_ENDPOINT', 'https://hf-mirror.com')
@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.core.retriever import HybridRetriever
 from app.core.generator import LLMGenerator
-from app.core.router import BinaryRouter, IntentRouter, PlannerRouter, create_router
+from app.core.router import create_router
 from app.storage.redis_client import redis_client
 from config import settings
 from app.core.sql_engine import SQLEngine
@@ -20,7 +20,7 @@ from app.core.sql_engine import SQLEngine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("=" * 60)
-    print(f"招投标智能问答系统 v5.0 (融合版) 启动中...")
+    print(f"招投标智能问答系统 v6.0 (LangChain/LangGraph 重构版) 启动中...")
     print(f"  路由模式: {settings.router_mode}")
     print(f"  融合策略: {settings.fusion_strategy}")
     print(f"  Embedding: {settings.embedding_model} ({settings.embedding_dimension}d)")
@@ -49,64 +49,45 @@ async def lifespan(app: FastAPI):
     )
     print(f"   MemoryManager 已初始化 (dir={app.state.memory._storage_dir})")
 
-    # [4/7] 路由 (根据配置选择)
-    print(f"\n[4/7] 加载路由器 (mode={settings.router_mode})...")
+    # [4/7] 混合检索器 (先初始化，后续组件需要它)
+    print("\n[4/7] 加载混合检索器...")
+    app.state.retriever = HybridRetriever()
+
+    # 初始化工具依赖 (注入 retriever + llm 给 LangChain @tool)
+    from app.agent.agent_tools import set_tool_dependencies
+    set_tool_dependencies(app.state.retriever, app.state.generator)
+    print("   Tool dependencies 已注入")
+
+    # [5/7] 路由 (LangGraph Router)
+    print(f"\n[5/7] 加载路由器 (mode={settings.router_mode})...")
     router_instance = create_router(llm=app.state.generator)
     app.state.router = router_instance
 
-    # 如果是 planner 或 auto 模式，初始化 PlannerExecutor
+    # [6/7] Planner + Agent (LangGraph)
     if settings.router_mode in ("planner", "auto", "think"):
-        from app.agent.planner import PlannerExecutor
-        app.state.planner_executor = PlannerExecutor(
-            retriever=None,  # 下面回填
+        from app.agent.langgraph_agent import (
+            LangGraphPlannerAgent, LangGraphReActAgent
+        )
+        app.state.planner_executor = LangGraphPlannerAgent(
+            retriever=app.state.retriever,
             llm=app.state.generator,
             allow_replan=settings.planner_allow_replan,
         )
-        print("   PlannerExecutor 已初始化 "
+        print("   LangGraphPlannerAgent 已初始化 "
               f"(allow_replan={settings.planner_allow_replan})")
 
         if settings.agent_enabled:
-            from app.agent.react_agent import ReActAgent
-            app.state.agent = ReActAgent(
-                retriever=None,
+            app.state.agent = LangGraphReActAgent(
+                retriever=app.state.retriever,
                 llm=app.state.generator,
                 max_steps=settings.agent_max_steps,
             )
-            print("   ReActAgent 已初始化 (planner降级备选)")
+            print("   LangGraphReActAgent 已初始化 (planner降级备选)")
         else:
             app.state.agent = None
     else:
         app.state.planner_executor = None
         app.state.agent = None
-
-    # [5/7] 混合检索器
-    print("\n[5/7] 加载混合检索器...")
-
-    try:
-        # 尝试使用新的统一改写器
-        from app.core.query_rewriter import query_rewriter
-        print(f"   查询改写: 已启用（3层规则管道）")
-    except Exception:
-        print(f"   查询改写: 使用旧版 Normalizer")
-
-    app.state.retriever = HybridRetriever()
-
-    # 回填 retriever 到需要它的组件
-    if app.state.planner_executor and hasattr(app.state.planner_executor, 'retriever'):
-        app.state.planner_executor.retriever = app.state.retriever
-        # 同时更新所有工具的 retriever
-        for tool in app.state.planner_executor.tools.values():
-            tool.retriever = app.state.retriever
-
-    if app.state.agent and hasattr(app.state.agent, 'retriever'):
-        app.state.agent.retriever = app.state.retriever
-
-    # [6/7] IntentRouter (intent 模式时使用)
-    if settings.router_mode == "intent":
-        print("\n[6/7] 加载 IntentRouter...")
-        app.state.intent_router = IntentRouter(llm=app.state.generator)
-    else:
-        app.state.intent_router = None
 
     # [7/7] 统计
     print("\n[7/7] 获取统计信息...")
@@ -131,8 +112,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="招投标智能问答系统",
-    description="基于 RAG + SQL + Agent 三引擎架构的招投标问答服务",
-    version="5.0.0",
+    description="基于 RAG + SQL + LangGraph Agent 三引擎架构的招投标问答服务",
+    version="6.0.0",
     lifespan=lifespan
 )
 
@@ -151,7 +132,7 @@ app.include_router(router)
 async def root():
     return {
         "service": "招投标智能问答系统",
-        "version": "5.0.0",
+        "version": "6.0.0 (LangChain/LangGraph)",
         "router_mode": settings.router_mode,
         "fusion_strategy": settings.fusion_strategy,
         "embedding": {
@@ -164,13 +145,15 @@ async def root():
         },
         "agent_enabled": settings.agent_enabled,
         "features": [
-            "三模式路由: Binary(3路投票) / Intent(意图分类) / Planner(Agent决策体)",
-            "双引擎: SQL统计 + RAG混合检索",
-            "检索融合: RRF / Weighted(动态权重+Boost/Penalty)",
-            "BGE-Reranker 精排",
+            "LangGraph ThinkRouter (TaskAnalysis → 按task数自动分流)",
+            "双引擎: SQL统计 + RAG混合检索 (LCEL链)",
+            "LangChain ChromaDB + HuggingFaceEmbeddings",
+            "langchain_community BM25Retriever",
+            "BaseDocumentCompressor BGE-Reranker",
+            "RedisChatMessageHistory 会话管理",
+            "LangGraph ReActAgent + Planner DAG",
             "3层查询改写: 口语→书面语 + 冗余精简 + 同义词替换",
-            "4个Agent工具: search_regulations / get_article / sql_query / summarize",
-            "多轮对话 (Redis)",
+            "4个LangChain @tool: search_regulations / get_article / sql_query / summarize",
         ],
         "endpoints": [
             {"path": "POST /api/v1/ask", "description": "问答接口"},

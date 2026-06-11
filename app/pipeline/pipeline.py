@@ -1,16 +1,15 @@
 """
-SearchPipeline — 检索管线编排器
+SearchPipeline — LCEL Runnable 链编排
 
-管线阶段: preprocess → retrieve → fuse → merge → expand → rerank
-每阶段有独立断路器（circuit breaker），阶段失败时可跳过而非崩溃。
-
-断路器模式:
-  "fail_close" — 失败立即抛出异常（核心路径：preprocess, retrieve）
-  "fail_open"  — 失败时跳过该阶段，输入直通输出（非核心：fusion, expand, rerank）
+5 阶段管线: preprocess → retrieve → merge → expand → rerank
+每阶段使用 RunnableLambda + with_fallbacks() 实现断路器模式。
 """
 
 import time
-from typing import List, Dict, Optional, Callable
+from typing import List, Dict, Callable
+
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.runnables.base import Runnable
 
 from app.pipeline.preprocessor import QueryPreprocessor
 from app.pipeline.retrievers import VectorRetriever, BM25Retriever
@@ -21,12 +20,8 @@ from app.storage.chroma_store import ChromaStore
 from config import settings
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 阶段追踪器
-# ═══════════════════════════════════════════════════════════════════
-
 class StageTracer:
-    """管线阶段追踪 —— 打印每阶段输入/输出/耗时"""
+    """管线阶段追踪"""
 
     def __init__(self):
         self.enabled = settings.pipeline_tracing_enabled
@@ -46,11 +41,10 @@ class StageTracer:
         count_str = ""
         if self.show_counts and data is not None:
             if isinstance(data, str):
-                count_str = f" ({data})"  # 字符串 hint 直接展示
+                count_str = f" ({data})"
             elif isinstance(data, list):
                 count_str = f" (in: {len(data)})"
-        header = f"[Pipeline] >> Stage: {name}{count_str}"
-        print(header)
+        print(f"[Pipeline] >> Stage: {name}{count_str}")
         return time.time() if self.show_timing else None
 
     def done(self, name: str, data=None, start_ts=None):
@@ -75,103 +69,78 @@ class StageTracer:
             print(f"[Pipeline] !! Stage: {name} FAILED: {error} -- circuit breaker: {breaker_action}")
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 阶段执行器（断路器）
-# ═══════════════════════════════════════════════════════════════════
-
-class StageRunner:
-    """带断路器的阶段执行器"""
-
-    def __init__(self, stage_name: str, tracer: StageTracer):
-        self.name = stage_name
-        self.tracer = tracer
-        cfg = settings.pipeline_stage_config(stage_name)
-        self.enabled = cfg["enabled"]
-        self.breaker = cfg["circuit_breaker"]  # "fail_close" | "fail_open"
-
-    def run(self, fn: Callable, input_data, **kwargs):
-        """
-        执行阶段。
-
-        - enabled=False → 跳过，输入直通
-        - 执行成功 → 返回结果
-        - 执行失败 + fail_open → 跳过，输入直通（断路器断开）
-        - 执行失败 + fail_close → 异常上抛
-        """
-        if not self.enabled:
-            self.tracer.skip(self.name)
-            return input_data
-
-        start_ts = self.tracer.start(self.name, input_data)
-        try:
-            result = fn(input_data, **kwargs) if kwargs else fn(input_data)
-            self.tracer.done(self.name, result, start_ts)
-            return result
-        except Exception as e:
-            self.tracer.fail(self.name, str(e)[:120], self.breaker)
-            if self.breaker == "fail_open":
-                return input_data  # 直通
-            raise
-
-
-# ═══════════════════════════════════════════════════════════════════
-# SearchPipeline 编排器
-# ═══════════════════════════════════════════════════════════════════
-
 class SearchPipeline:
-    """检索管线编排器 —— 每阶段独立断路器 + 全程可观测"""
+    """检索管线编排器 — LCEL Runnable 链"""
 
     def __init__(self):
         self.tracer = StageTracer()
 
-        # ── 阶段1: 预处理器 ──
         self.preprocessor = QueryPreprocessor(
             enable_synonym_expansion=settings.query_expansion_enabled
         )
 
-        # ── 阶段2: 检索器 ──
         self._store = ChromaStore()
         self.vector = VectorRetriever(self._store)
         self.bm25 = BM25Retriever()
 
-        # ── 阶段3: 融合策略 ──
         self.rrf = RRFFusion()
         self.weighted = WeightedFusion(self.vector, self.bm25)
 
-        # ── 阶段4: 上下文扩展 ──
         self.parent_expander = ParentContextExpander(self._store)
         self.noop_expander = NoopExpander()
 
-        # ── 阶段5: 精排器 ──
         self.reranker = BgeReranker()
 
-        # ── 缓存 ──
         self._all_docs_cache: Dict[str, List[Dict]] = {}
 
-        print(f"[SearchPipeline] 6-stage pipeline ready "
+        # 构建 LCEL 链
+        self._unified_chain = self._build_unified_chain()
+        self._single_chain = self._build_single_chain()
+
+        print(f"[SearchPipeline] LCEL chains ready "
               f"(tracing={'ON' if self.tracer.enabled else 'OFF'})")
 
     # ═════════════════════════════════════════════════════════════
-    # 公开接口
+    # LCEL Chain 构建
     # ═════════════════════════════════════════════════════════════
 
-    def search_unified(self, query: str, top_k: int = 5) -> List[Dict]:
-        """统一跨库检索 —— regulations + bids 双库"""
-        if not query:
-            return []
+    def _make_stage(self, name: str, fn: Callable,
+                    breaker: str = "fail_open") -> Runnable:
+        """创建带断路器的阶段 Runnable"""
+        cfg = settings.pipeline_stage_config(name)
+        if not cfg["enabled"]:
+            return RunnableLambda(lambda x: x)
 
-        # ── Stage 1: Preprocess ──
-        normalized = StageRunner("preprocess", self.tracer).run(
-            lambda q: self.preprocessor.process(q), query
-        )
+        def wrapped(input_data):
+            self.tracer.start(name, input_data)
+            try:
+                result = fn(input_data)
+                self.tracer.done(name, result)
+                return result
+            except Exception as e:
+                self.tracer.fail(name, str(e)[:120], breaker)
+                if breaker == "fail_open":
+                    return input_data
+                raise
 
-        # ── Stage 2: Retrieve + Fuse per collection ──
-        def _search_both(normalized_q):
+        return RunnableLambda(wrapped)
+
+    def _build_unified_chain(self) -> Runnable:
+        """跨库检索链: preprocess → retrieve → merge → expand → rerank"""
+        def preprocess_fn(state: Dict) -> Dict:
+            query = state["query"]
+            normalized = self.preprocessor.process(query)
+            return {**state, "normalized": normalized}
+
+        def retrieve_fn(state: Dict) -> Dict:
+            normalized = state["normalized"]
+            query = state["query"]
+            top_k = state.get("top_k", 5)
             all_candidates = []
             for collection in ["regulations", "bids"]:
                 try:
                     col_results = self._retrieve_and_fuse(
-                        normalized_q, query, collection, top_k * 3
+                        normalized, query, collection, top_k * 3
                     )
                     all_candidates.extend(col_results)
                 except Exception as e:
@@ -179,60 +148,94 @@ class SearchPipeline:
                     continue
             if not all_candidates:
                 raise RuntimeError("Both collections returned empty")
-            return all_candidates
+            return {**state, "candidates": all_candidates}
 
-        all_candidates = StageRunner("retrieve", self.tracer).run(
-            _search_both, normalized
+        def merge_fn(state: Dict) -> Dict:
+            merged = self._merge_and_dedup(state["candidates"])
+            return {**state, "merged": merged}
+
+        def expand_fn(state: Dict) -> Dict:
+            expanded = self.parent_expander.expand(
+                state["merged"], "regulations"
+            )
+            return {**state, "expanded": expanded}
+
+        def rerank_fn(state: Dict) -> List[Dict]:
+            query = state["query"]
+            top_k = state.get("top_k", 5)
+            try:
+                return self._do_rerank(query, state["expanded"], top_k)
+            except Exception:
+                return state["expanded"][:top_k]
+
+        chain = (
+            RunnableLambda(preprocess_fn)
+            | self._make_stage("retrieve", retrieve_fn, "fail_close")
+            | self._make_stage("merge", merge_fn, "fail_open")
+            | self._make_stage("expand", expand_fn, "fail_open")
+            | RunnableLambda(rerank_fn)
         )
+        return chain
 
-        if not all_candidates:
-            return []
+    def _build_single_chain(self) -> Runnable:
+        """单库检索链: preprocess → retrieve → (expand) → rerank"""
+        def preprocess_fn(state: Dict) -> Dict:
+            query = state["query"]
+            normalized = self.preprocessor.process(query)
+            return {**state, "normalized": normalized}
 
-        # ── Stage 3: Merge cross-collection ──
-        merged = StageRunner("merge", self.tracer).run(
-            self._merge_and_dedup, all_candidates
+        def retrieve_fn(state: Dict) -> Dict:
+            normalized = state["normalized"]
+            query = state["query"]
+            collection = state.get("collection", "regulations")
+            top_k = state.get("top_k", 5)
+            fused = self._retrieve_and_fuse(
+                normalized, query, collection, top_k * 3
+            )
+            return {**state, "candidates": fused, "collection": collection}
+
+        def maybe_expand_fn(state: Dict) -> Dict:
+            collection = state.get("collection", "")
+            if collection == "regulations":
+                expanded = self.parent_expander.expand(
+                    state["candidates"], collection
+                )
+                return {**state, "expanded": expanded}
+            return {**state, "expanded": state["candidates"]}
+
+        def rerank_fn(state: Dict) -> List[Dict]:
+            query = state["query"]
+            top_k = state.get("top_k", 5)
+            try:
+                return self._do_rerank(query, state["expanded"], top_k)
+            except Exception:
+                return state["expanded"][:top_k]
+
+        chain = (
+            RunnableLambda(preprocess_fn)
+            | self._make_stage("retrieve", retrieve_fn, "fail_close")
+            | self._make_stage("expand", maybe_expand_fn, "fail_open")
+            | RunnableLambda(rerank_fn)
         )
+        return chain
 
-        # ── Stage 4: Expand (parent context) ──
-        expanded = StageRunner("expand", self.tracer).run(
-            lambda m: self.parent_expander.expand(m, "regulations"), merged
-        )
+    # ═════════════════════════════════════════════════════════════
+    # 公开接口
+    # ═════════════════════════════════════════════════════════════
 
-        # ── Stage 5: Rerank ──
-        reranked = StageRunner("rerank", self.tracer).run(
-            lambda e: self._do_rerank(query, e, top_k), expanded
-        )
-
-        return reranked
-
-    def search(self, query: str, collection: str, top_k: int = 5) -> List[Dict]:
-        """单库检索 —— 供 Agent 工具调用"""
+    def search_unified(self, query: str, top_k: int = 5) -> List[Dict]:
+        """统一跨库检索 — LCEL 链执行"""
         if not query:
             return []
+        state = {"query": query, "top_k": top_k}
+        return self._unified_chain.invoke(state)
 
-        # ── Stage 1: Preprocess ──
-        normalized = StageRunner("preprocess", self.tracer).run(
-            lambda q: self.preprocessor.process(q), query
-        )
-
-        # ── Stage 2: Retrieve + Fuse ──
-        def _search_single(normalized_q):
-            return self._retrieve_and_fuse(normalized_q, query, collection, top_k * 3)
-
-        fused = StageRunner("retrieve", self.tracer).run(
-            _search_single, normalized
-        )
-
-        # ── Stage 3: Expand (only if regulations) ──
-        if collection == "regulations":
-            fused = StageRunner("expand", self.tracer).run(
-                lambda f: self.parent_expander.expand(f, collection), fused
-            )
-
-        # ── Stage 4: Rerank ──
-        return StageRunner("rerank", self.tracer).run(
-            lambda f: self._do_rerank(query, f, top_k), fused
-        )
+    def search(self, query: str, collection: str, top_k: int = 5) -> List[Dict]:
+        """单库检索 — LCEL 链执行"""
+        if not query:
+            return []
+        state = {"query": query, "collection": collection, "top_k": top_k}
+        return self._single_chain.invoke(state)
 
     # ═════════════════════════════════════════════════════════════
     # 内部方法
@@ -240,38 +243,28 @@ class SearchPipeline:
 
     def _retrieve_and_fuse(self, normalized: str, original: str,
                            collection: str, top_k: int) -> List[Dict]:
-        """对单个 collection 执行 vector + BM25 召回 + 融合"""
+        """单库 vector + BM25 召回 + 融合"""
         all_docs = self._get_all_docs(collection)
         if not all_docs:
             return self.vector.search(normalized, collection, top_k)
 
-        # Vector 召回
         vec_results = self.vector.search(normalized, collection,
                                          settings.vector_recall)
-
-        # BM25 召回
         bm25_results = self.bm25.search(normalized, collection, all_docs,
                                         settings.bm25_recall)
 
-        # 融合（带断路器）—— 输入 = vec + bm25 候选数
-        fusion_input_hint = f"vec:{len(vec_results)} + bm25:{len(bm25_results)}"
         fusion_strategy = settings.fusion_strategy
         if fusion_strategy in ("weighted", "smart"):
-            fused = StageRunner("fusion", self.tracer).run(
-                lambda _: self.weighted.merge(original, collection,
-                                              vec_results, bm25_results, top_k),
-                fusion_input_hint
-            )
+            fused =  self.weighted.merge(original, collection,
+                                          vec_results, bm25_results, top_k)
         else:
-            fused = StageRunner("fusion", self.tracer).run(
-                lambda _: self.rrf.merge(vec_results, bm25_results, k=settings.rrf_k)[:top_k],
-                fusion_input_hint
-            )
+            fused = self.rrf.merge(vec_results, bm25_results,
+                                   k=settings.rrf_k)[:top_k]
 
         return fused if fused else (vec_results[:top_k])
 
     def _merge_and_dedup(self, candidates: List[Dict]) -> List[Dict]:
-        """跨库合并 + 去重（按 id）"""
+        """跨库合并 + 按 id 去重"""
         candidates.sort(key=lambda x: x.get("score", 0), reverse=True)
         seen = set()
         deduped = []
@@ -301,7 +294,6 @@ class SearchPipeline:
         return [candidates[i] for i in indices if i < len(candidates)]
 
     def _get_all_docs(self, collection: str) -> List[Dict]:
-        """获取 collection 全部文档（带缓存）"""
         if collection not in self._all_docs_cache:
             self._all_docs_cache[collection] = self._store.get_all_documents(collection)
         return self._all_docs_cache[collection]
@@ -313,6 +305,5 @@ class SearchPipeline:
         }
 
     def invalidate_cache(self):
-        """清空缓存"""
         self._all_docs_cache.clear()
         self.parent_expander.invalidate_cache()

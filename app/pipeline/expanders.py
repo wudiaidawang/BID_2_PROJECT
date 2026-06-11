@@ -141,7 +141,7 @@ class ParentContextExpander:
 
     def _query_missing(self, missing_ids: Set[str], collection: str):
         try:
-            col = self._store.get_collection(collection)
+            col = self._store.get_raw_collection(collection)
             result = col.get(ids=list(missing_ids))
         except Exception:
             return

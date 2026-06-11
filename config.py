@@ -70,6 +70,10 @@ class Settings(BaseSettings):
         return _yaml("embedding.device", "cpu")
 
     @property
+    def embedding_batch_size(self) -> int:
+        return int(_yaml("embedding.batch_size", 32))
+
+    @property
     def hf_endpoint(self) -> str:
         return _yaml("embedding.hf_endpoint", "https://hf-mirror.com")
 
