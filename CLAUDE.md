@@ -27,39 +27,65 @@ python eval_retrieval_accuracy.py
 
 A local Redis instance is required for session management. The embedding model (`BAAI/bge-small-zh`) downloads on first use via `HF_ENDPOINT=https://hf-mirror.com`.
 
-## Architecture
+## Architecture (Three-Layer)
 
 ```
-main.py                      # FastAPI app + lifespan (init 6 components in order)
-├── app/api/routes.py        # POST /api/v1/ask — main Q&A endpoint
-│                            # GET /api/v1/health, DELETE /session/{id}
-├── app/api/schemas.py       # Pydantic models: AskRequest, AskResponse, SourceInfo
-├── app/core/
-│   ├── router.py            # 3 router modes: Binary(3-way vote) / Intent(LLM) / Planner(LLM-as-Planner)
-│   ├── retriever.py         # HybridRetriever — thin wrapper delegating to SearchPipeline
-│   ├── sql_engine.py        # SQLEngine: LLM-generates SQL from NL, executes on SQLite
-│   ├── generator.py         # LLMGenerator: calls Tencent Hunyuan API for final answer
-│   ├── embedding.py         # EmbeddingService: singleton wrapping BAAI/bge-small-zh
-│   ├── session_manager.py   # Redis-backed multi-turn session + query rewriting
-│   ├── query_normalizer.py  # Colloquial→formal Chinese via data/colloquial_map.json
-│   └── query_rewriter.py    # 3-layer query rewriting (colloquial + redundancy + synonyms)
-├── app/pipeline/            # 5-stage retrieval pipeline (see below)
-│   ├── pipeline.py          # SearchPipeline orchestrator + StageRunner with circuit breakers
-│   ├── preprocessor.py      # Stage 1: Query normalization + synonym expansion
-│   ├── retrievers.py        # Stage 2: VectorRetriever (Chroma) + BM25Retriever (jieba)
-│   ├── fusion.py            # Stage 3: RRF fusion + Weighted fusion (dynamic weights, boost/penalty)
-│   ├── expanders.py         # Stage 4: ParentContextExpander (legal parent-child chunks)
-│   └── rerankers.py         # Stage 5: BgeReranker (CrossEncoder, BAAI/bge-reranker-base)
-├── app/agent/
-│   ├── react_agent.py       # ReActAgent: Thought→Action→Observation loop (max 5 steps)
-│   ├── planner.py           # PlannerExecutor: DAG-scheduled multi-step execution + replan
-│   ├── agent_tools.py       # 4 tools: search_regulations / get_article / sql_query / summarize
-│   └── agent_state.py       # AgentState: serializable execution trace + checkpoint persistence
-├── app/storage/
-│   ├── chroma_store.py      # ChromaDB persistent client (2 collections: bids, regulations)
-│   └── redis_client.py      # Async Redis singleton
-└── app/schema/
-    └── metadata.py          # Chunk schema normalization (unified Dict format)
+main.py                           # FastAPI app + lifespan (init components in order)
+│
+├── app/api/                      # ── API Layer ── HTTP interface
+│   ├── routes.py                 # POST /api/v1/ask, GET /api/v1/health, DELETE /session/{id}
+│   ├── schemas.py                # Pydantic models: AskRequest, AskResponse, SourceInfo
+│   └── session_manager.py        # Redis-backed multi-turn session + query rewriting
+│
+├── app/agent/                    # ── Agent Layer ── Decision-making, planning, routing
+│   ├── router.py                 # AutoRouter/BinaryRouter/IntentRouter/PlannerRouter (3-mode)
+│   ├── router_graph.py           # LangGraph-based ThinkRouter (TaskAnalysis→ToolRouter→DAG)
+│   ├── langgraph_agent.py        # LangGraph ReActAgent + PlannerAgent (StateGraph + RePlan)
+│   ├── planner.py                # PlannerExecutor: DAG-scheduled multi-step execution
+│   ├── react_agent.py            # ReActAgent: Thought→Action→Observation loop
+│   ├── agent_tools.py            # Tools: rag_search / sql_search / tender / company
+│   ├── agent_state.py            # AgentState: serializable execution trace + checkpoint
+│   ├── tool_registry.py          # ToolRouter: 3-level routing (Rule→Embedding→LLM)
+│   ├── task_cache.py             # TaskAnalysis cache (SQLite top-50 by frequency)
+│   └── context_resolver.py       # Anaphora resolution (Rule First, LLM Fallback)
+│
+└── app/data/                     # ── Data Layer ── Storage, retrieval, processing
+    ├── storage/                  # Vector store backends
+    │   ├── chroma_store.py       # ChromaDB persistent client
+    │   ├── milvus_store.py       # Milvus REST API v2 client (HNSW + BM25)
+    │   └── redis_client.py       # Async Redis singleton
+    ├── pipeline/                 # 5-stage retrieval pipeline
+    │   ├── pipeline.py           # SearchPipeline orchestrator + StageRunner (circuit breakers)
+    │   ├── preprocessor.py       # Stage 1: Query normalization + synonym expansion
+    │   ├── retrievers.py         # Stage 2: VectorRetriever + BM25Retriever (dual backend)
+    │   ├── fusion.py             # Stage 3: RRF + Weighted fusion (dynamic weights)
+    │   ├── expanders.py          # Stage 4: ParentContextExpander (parent-child chunks)
+    │   └── rerankers.py          # Stage 5: BgeReranker (CrossEncoder)
+    ├── sql/                      # SQL engine (read-only, AST-validated)
+    │   ├── gateway.py            # ReadOnlySQLGateway: generate → validate → execute → audit
+    │   ├── validator.py          # SqlglotValidator: AST security (DELETE/DROP blocked)
+    │   ├── catalog.py            # View schema catalog (bids, supplier_profile)
+    │   └── schemas.py            # SQL validation/audit data classes
+    ├── schema/                   # Data schemas
+    │   ├── evidence.py           # Evidence + Citation unified output format
+    │   └── metadata.py           # Chunk schema normalization
+    ├── memory/                   # LangGraph Memory (Buffer + Summary, SQLite-backed)
+    │   ├── manager.py            # MemoryManager: load_context / save_turn
+    │   ├── buffer.py             # ConversationBufferWindowMemory + SummaryMemory
+    │   ├── store.py              # MemoryStore: SQLite persistence
+    │   └── base.py / entity.py   # Base classes
+    ├── embedding.py              # EmbeddingService singleton
+    ├── generator.py              # LLMGenerator: Tencent Hunyuan API for final answer
+    ├── langchain_llm.py          # HunyuanChatModel LangChain adapter
+    ├── retriever.py              # HybridRetriever — thin wrapper for SearchPipeline
+    ├── sql_engine.py             # SQLEngine compat layer → ReadOnlySQLGateway
+    ├── query_normalizer.py       # Colloquial→formal Chinese
+    ├── query_rewriter.py         # 3-layer query rewriting
+    ├── evidence_adapter.py       # RAG/SQL results → Evidence unified format
+    ├── fusion_weighted.py        # HybridFusionV2 weighted fusion
+    ├── *_chunk_builder.py        # Legal document parent-child chunking
+    ├── legal_structure_parser.py # PDF law book structure parser
+    └── config_loader.py          # YAML config loader
 ```
 
 ## Retrieval Pipeline (5-stage, per-collection)

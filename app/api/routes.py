@@ -6,11 +6,9 @@ import os
 from fastapi import APIRouter, Request
 
 from app.api.schemas import AskRequest, AskResponse, SourceInfo, HealthResponse
-from app.core.session_manager import SessionManager
+from app.api.session_manager import SessionManager
 from config import settings
 
-from app.core.sql_engine import SQLEngine
-sql_engine = SQLEngine()
 router = APIRouter(prefix="/api/v1", tags=["rag"])
 session_manager = SessionManager()
 
@@ -166,11 +164,11 @@ async def _handle_binary(
         if route.get("sql_template"):
             print(f"[SQL短路] 模板匹配度={route.get('match_score', 0):.3f}")
             try:
-                db_data = sql_engine._execute_local_sql(route["sql_template"])
+                db_data = request.app.state.sql_engine._execute_local_sql(route["sql_template"])
             except Exception:
                 db_data = [{"error": "SQL template execution failed"}]
         else:
-            _, db_data = sql_engine.execute_query(req.question)
+            _, db_data = request.app.state.sql_engine.execute_query(req.question)
 
         # 容错降级
         sql_failed = (

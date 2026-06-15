@@ -9,12 +9,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
-from app.core.retriever import HybridRetriever
-from app.core.generator import LLMGenerator
-from app.core.router import create_router
-from app.storage.redis_client import redis_client
+from app.data.retriever import HybridRetriever
+from app.data.generator import LLMGenerator
+from app.agent.router import create_router
+from app.data.storage.redis_client import redis_client
 from config import settings
-from app.core.sql_engine import SQLEngine
+from app.data.sql_engine import SQLEngine
 
 
 @asynccontextmanager
@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
 
     # [3.5/7] Memory 模块
     print("\n[3.5/7] 加载 Memory 模块...")
-    from app.core.memory import MemoryManager
+    from app.data.memory import MemoryManager
     app.state.memory = MemoryManager(
         llm=app.state.generator,
         storage_dir=getattr(settings, 'memory_storage_dir', './memory_store'),
@@ -53,10 +53,7 @@ async def lifespan(app: FastAPI):
     print("\n[4/7] 加载混合检索器...")
     app.state.retriever = HybridRetriever()
 
-    # 初始化工具依赖 (注入 retriever + llm 给 LangChain @tool)
-    from app.agent.agent_tools import set_tool_dependencies
-    set_tool_dependencies(app.state.retriever, app.state.generator)
-    print("   Tool dependencies 已注入")
+    # 工具依赖通过 create_agent_tools() 闭包注入，不再使用全局变量
 
     # [5/7] 路由 (LangGraph Router)
     print(f"\n[5/7] 加载路由器 (mode={settings.router_mode})...")
@@ -68,10 +65,27 @@ async def lifespan(app: FastAPI):
         from app.agent.langgraph_agent import (
             LangGraphPlannerAgent, LangGraphReActAgent
         )
+        from langgraph.checkpoint.sqlite import SqliteSaver
+        import sqlite3
+
+        # 共享一个 SqliteSaver — 磁盘持久化 checkpoint，进程重启不丢失
+        import os as _os
+        _checkpoint_dir = _os.path.dirname(settings.checkpoint_db_path)
+        if _checkpoint_dir:
+            _os.makedirs(_checkpoint_dir, exist_ok=True)
+        _conn = sqlite3.connect(
+            settings.checkpoint_db_path, check_same_thread=False
+        )
+        _checkpointer = SqliteSaver(_conn)
+        _checkpointer.setup()
+        print(f"   SqliteSaver 已初始化 (db={settings.checkpoint_db_path})")
+
         app.state.planner_executor = LangGraphPlannerAgent(
             retriever=app.state.retriever,
             llm=app.state.generator,
             allow_replan=settings.planner_allow_replan,
+            checkpointer=_checkpointer,
+            sql_engine=app.state.sql_engine,
         )
         print("   LangGraphPlannerAgent 已初始化 "
               f"(allow_replan={settings.planner_allow_replan})")
@@ -81,6 +95,8 @@ async def lifespan(app: FastAPI):
                 retriever=app.state.retriever,
                 llm=app.state.generator,
                 max_steps=settings.agent_max_steps,
+                checkpointer=_checkpointer,
+                sql_engine=app.state.sql_engine,
             )
             print("   LangGraphReActAgent 已初始化 (planner降级备选)")
         else:
@@ -153,7 +169,7 @@ async def root():
             "RedisChatMessageHistory 会话管理",
             "LangGraph ReActAgent + Planner DAG",
             "3层查询改写: 口语→书面语 + 冗余精简 + 同义词替换",
-            "4个LangChain @tool: search_regulations / get_article / sql_query / summarize",
+            "2个LangChain @tool: rag_search / sql_search (闭包注入，无全局变量)",
         ],
         "endpoints": [
             {"path": "POST /api/v1/ask", "description": "问答接口"},

@@ -4,8 +4,8 @@ import sys
 sys.path.insert(0, '.')
 
 from app.agent.planner import PlannerExecutor
-from app.core.router import PlannerRouter
-from app.core.generator import LLMGenerator
+from app.agent.router import PlannerRouter
+from app.data.generator import LLMGenerator
 
 
 async def test(question: str):

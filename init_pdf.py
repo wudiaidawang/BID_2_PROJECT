@@ -8,11 +8,11 @@ from typing import List, Dict
 sys.path.insert(0, str(Path(__file__).parent))
 
 import fitz
-from app.storage.chroma_store import ChromaStore
+from app.data.storage import get_vector_store
 from config import settings
-from app.core.legal_structure_parser import LegalStructureParser
-from app.core.parent_chunk_builder import ParentChunkBuilder
-from app.core.child_chunk_builder import ChildChunkBuilder
+from app.data.legal_structure_parser import LegalStructureParser
+from app.data.parent_chunk_builder import ParentChunkBuilder
+from app.data.child_chunk_builder import ChildChunkBuilder
 
 PDF_FILES = [
     {
@@ -188,7 +188,7 @@ def chunk_by_structure(full_text: str, pdf_name: str) -> tuple:
     }
 
 
-def process_pdf_to_chroma(pdf_config: Dict, client: ChromaStore):
+def process_pdf_to_store(pdf_config: Dict, client):
     """处理PDF并入Chroma（路由到滑动窗口或结构化切块）"""
     pdf_path = pdf_config["path"]
     pdf_name = pdf_config["name"]
@@ -286,14 +286,14 @@ def main():
     print("      法律解读 → 滑动窗口切块")
     print("=" * 60)
 
-    client = ChromaStore()
+    client = get_vector_store()
 
     print("\n[清理] 清空现有 regulations 库...")
     client.delete_collection("regulations")
     print("[完成] Regulations 库已清空（BM25 索引将在下次检索时重建）")
 
     for pdf_config in PDF_FILES:
-        process_pdf_to_chroma(pdf_config, client)
+        process_pdf_to_store(pdf_config, client)
 
     print("\n" + "=" * 60)
     print("[完成] 初始化完成!")

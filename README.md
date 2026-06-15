@@ -16,49 +16,55 @@ RAG + SQL 双引擎招投标智能问答平台 — 基于 FastAPI，支持法规
 - **多轮对话**：Redis 会话管理 + 指代消解 + 实体提取
 - **多厂商 LLM**：混元 / DeepSeek / OpenAI 兼容 API，改 `config.yaml` 一行切换
 
-## 架构
+## 架构 (三层分离)
 
 ```
-main.py                         FastAPI 入口 (lifespan 初始化 6 组件)
-├── app/api/routes.py           POST /api/v1/ask         问答接口
-│                               GET  /api/v1/health       健康检查
-│                               DELETE /api/v1/session/{id} 会话+断点清理
-├── app/core/
-│   ├── router.py               路由层 — ThinkRouter / FastRouter / BinaryRouter / PlannerRouter
-│   ├── retriever.py            混合检索器 — search_unified() 跨库召回
-│   ├── sql_engine.py           NL2SQL 引擎 — LLM 生成 SQL → SQLite 执行 → 空结果自动降级
-│   ├── generator.py            LLM 生成器 — 多厂商 API (OpenAI 兼容)，统一 _call_llm 接口
-│   ├── embedding.py            Embedding 服务 — BGE/M3E/GTE 系列，HF 镜像加速
-│   ├── session_manager.py      Redis 多轮会话 + 指代消解 + 实体提取
-│   └── query_rewriter.py       3 层 Query 改写管道 (口语→书面语 + 冗余精简 + 同义词)
-├── app/agent/
-│   ├── react_agent.py          ReAct Agent — Thought→Action→Observation 循环 (max 5 steps)
-│   ├── planner.py              PlannerExecutor — DAG 调度 + 自动重规划 + 并行执行
-│   ├── agent_state.py          AgentState — 结构化执行轨迹 + 断点序列化/恢复/清理
-│   └── agent_tools.py          4 工具: search_regulations / get_article / sql_query / summarize
-├── app/pipeline/               可观测检索 Pipeline (preprocess→retrieve→fuse→merge→expand→rerank)
-├── app/storage/                ChromaDB 持久化 + Redis 连接管理
-├── app/schema/                 Chunk 元数据规范化
-├── config.yaml                 统一配置文件 (LLM/Embedding/检索/路由/Agent/Pipeline)
-├── config.py                   pydantic-settings 配置定义
-├── init_db.py                  招标数据导入 (Excel → SQLite + ChromaDB 'bids')
-├── init_pdf.py                 PDF 法规导入 (结构化切块 → ChromaDB 'regulations')
-└── ask_cli.py                  命令行交互客户端
+main.py                           FastAPI 入口 (lifespan 初始化组件)
+│
+├── app/api/                      ── API Layer ── HTTP 接口
+│   ├── routes.py                 POST /api/v1/ask, GET /api/v1/health, DELETE /session/{id}
+│   ├── schemas.py                Pydantic 模型: AskRequest, AskResponse, SourceInfo
+│   └── session_manager.py        Redis 多轮会话 + 指代消解 + 实体提取
+│
+├── app/agent/                    ── Agent Layer ── 决策、路由、规划
+│   ├── router.py                 AutoRouter/BinaryRouter/IntentRouter/PlannerRouter (3-mode)
+│   ├── router_graph.py           LangGraph ThinkRouter (TaskAnalysis→ToolRouter→DAG)
+│   ├── langgraph_agent.py        LangGraph ReActAgent + PlannerAgent (StateGraph + RePlan)
+│   ├── planner.py                PlannerExecutor — DAG 调度 + 并行执行
+│   ├── react_agent.py            ReActAgent — Thought→Action→Observation 循环
+│   ├── agent_tools.py            工具: rag_search / sql_search / tender / company
+│   ├── agent_state.py            AgentState — 执行轨迹 + 断点持久化
+│   ├── tool_registry.py          ToolRouter — 三级路由 (Rule→Embedding→LLM)
+│   ├── task_cache.py             TaskAnalysis 缓存 (SQLite top-50)
+│   └── context_resolver.py       指代消解 (Rule First, LLM Fallback)
+│
+└── app/data/                     ── Data Layer ── 存储、检索、处理
+    ├── storage/                  ChromaDB / Milvus / Redis 后端
+    ├── pipeline/                 5 阶段检索 Pipeline (preprocess→retrieve→fuse→merge→expand→rerank)
+    ├── sql/                      ReadOnlySQLGateway: generate → validate → execute → audit
+    ├── schema/                   Evidence + Citation 统一输出格式
+    ├── memory/                   LangGraph Memory (Buffer + Summary, SQLite 持久化)
+    ├── embedding.py              EmbeddingService (BGE/M3E/GTE, HF 镜像加速)
+    ├── generator.py              LLMGenerator — 多厂商 API 统一 _call_llm 接口
+    ├── langchain_llm.py          HunyuanChatModel LangChain 适配器
+    ├── retriever.py              HybridRetriever — 检索入口
+    ├── sql_engine.py             SQLEngine 兼容层 → ReadOnlySQLGateway
+    ├── query_rewriter.py         3 层 Query 改写 (口语→书面语 + 冗余精简 + 同义词)
+    └── *_chunk_builder.py        法规结构化切块 (Parent-Child Chunking)
 ```
 
 ### 请求流程
 
 ```
 用户问题
-  → Session 管理 (Redis 获取/创建 + 指代消解)
-    → 断点续跑检查 (存在未完成 checkpoint? → 自动恢复)
-      → 路由判定 (ThinkRouter)
-          ├─ greeting/thanks    → 直接响应 (0 LLM 调用)
-          ├─ 低置信度/0 task    → 降级 BinaryRouter → SQL or RAG
-          ├─ 1 task             → BinaryRouter → SQL or RAG (兼容输出)
-          └─ 2+ tasks           → ToolPlanning → PlannerExecutor DAG 执行
-            → LLM 生成最终答案
-              → 实体提取 → 保存 Session → 清理 Checkpoint
+  → Session 管理 (Redis 获取/创建 + context_resolver 指代消解)
+    → 路由判定 (AutoRouter)
+        ├─ greeting/thanks     → 直接响应 (0 LLM 调用)
+        ├─ stat_query          → SQL 引擎 → SQLite 执行
+        ├─ single_step         → RAG 检索 → LLM 生成
+        └─ multi_step          → TaskAnalysis → ToolRouter → Planner DAG 执行
+          → LLM 聚合生成最终答案
+            → 实体提取 → 保存 Session
 ```
 
 ## 快速开始
@@ -198,7 +204,7 @@ print(agent.last_state.tool_call_count)  # {"search_regulations": 2}
 
 ```python
 from app.agent.planner import PlannerExecutor
-from app.core.router import PlannerRouter
+from app.agent.router import PlannerRouter
 
 router = PlannerRouter(llm=llm)
 plan = await router.plan("工程类和货物类去年的中标金额对比")
@@ -301,18 +307,14 @@ python eval_retrieval_accuracy.py
 ├── config.py                   pydantic-settings 配置
 ├── config.yaml                 统一配置文件
 ├── requirements.txt            Python 依赖
-├── init_db.py                  招标数据导入 (Excel → SQLite + ChromaDB)
-├── init_pdf.py                 PDF 法规导入 (结构化切块 → ChromaDB)
+├── init_db.py                  招标数据导入 (Excel → SQLite + VectorStore)
+├── init_pdf.py                 PDF 法规导入 (结构化切块 → VectorStore)
 ├── ask_cli.py                  命令行交互客户端
 ├── eval_retrieval_accuracy.py  检索精度评估
 ├── app/
-│   ├── api/                    FastAPI 路由 + Schema
-│   ├── core/                   检索引擎 / 路由 / LLM / SQL / 查询改写
-│   ├── agent/                  Agent 模式 (ReAct + Planner + State + Tools)
-│   ├── pipeline/               可观测检索 Pipeline
-│   ├── storage/                ChromaDB + Redis
-│   ├── schema/                 元数据规范化
-│   └── utils/                  工具函数
+│   ├── api/                    API Layer — FastAPI 路由 + Schema + Session
+│   ├── agent/                  Agent Layer — 路由/规划/工具/指代消解
+│   └── data/                   Data Layer — 存储/Pipeline/SQL/Schema/Memory/Embedding
 ├── data/
 │   ├── bid_data.xlsx           招标项目数据 (~8000条)
 │   ├── bid_data.db             SQLite 数据库
@@ -320,7 +322,6 @@ python eval_retrieval_accuracy.py
 │   ├── colloquial_map.json     口语→书面语映射 (66条)
 │   └── eval_questions/         评估问答集
 ├── model_benchmark/            模型基准测试工具 (独立)
-├── checkpoints/                断点文件目录
 └── chroma_db/                  向量数据库 (本地生成)
 ```
 

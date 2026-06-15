@@ -2,7 +2,7 @@
 
 import os
 from pydantic_settings import BaseSettings
-from app.core.config_loader import config_loader
+from app.data.config_loader import config_loader
 
 
 # 启动时加载 YAML
@@ -76,6 +76,92 @@ class Settings(BaseSettings):
     @property
     def hf_endpoint(self) -> str:
         return _yaml("embedding.hf_endpoint", "https://hf-mirror.com")
+
+    # =========================================================================
+    # 向量库配置
+    # =========================================================================
+    @property
+    def vector_store_backend(self) -> str:
+        return _yaml("vector_store.backend", "chroma")
+
+    @property
+    def chroma_persist_dir(self) -> str:
+        return _yaml("vector_store.chroma.persist_dir", "./chroma_db")
+
+    @property
+    def milvus_uri(self) -> str:
+        return _yaml("vector_store.milvus.uri", "http://127.0.0.1:19530")
+
+    @property
+    def milvus_token(self) -> str:
+        return _yaml("vector_store.milvus.token", "")
+
+    @property
+    def milvus_database(self) -> str:
+        return _yaml("vector_store.milvus.database", "bid_qa")
+
+    @property
+    def milvus_timeout(self) -> int:
+        return int(_yaml("vector_store.milvus.timeout", 30))
+
+    @property
+    def milvus_metric_type(self) -> str:
+        return _yaml("vector_store.milvus.metric_type", "COSINE")
+
+    @property
+    def milvus_dense_field(self) -> str:
+        return _yaml("vector_store.milvus.dense_field", "dense_vector")
+
+    @property
+    def milvus_sparse_field(self) -> str:
+        return _yaml("vector_store.milvus.sparse_field", "sparse_vector")
+
+    @property
+    def milvus_primary_field(self) -> str:
+        return _yaml("vector_store.milvus.primary_field", "id")
+
+    @property
+    def milvus_content_field(self) -> str:
+        return _yaml("vector_store.milvus.content_field", "content")
+
+    @property
+    def milvus_output_fields(self) -> list:
+        return _yaml("vector_store.milvus.output_fields", ["content", "title", "source", "law_name", "article_id", "chunk_type", "parent_id", "metadata"])
+
+    @property
+    def milvus_hnsw_m(self) -> int:
+        return int(_yaml("vector_store.milvus.hnsw_m", 16))
+
+    @property
+    def milvus_hnsw_ef_construction(self) -> int:
+        return int(_yaml("vector_store.milvus.hnsw_ef_construction", 200))
+
+    @property
+    def milvus_bm25_k1(self) -> float:
+        return float(_yaml("vector_store.milvus.bm25_k1", 1.2))
+
+    @property
+    def milvus_bm25_b(self) -> float:
+        return float(_yaml("vector_store.milvus.bm25_b", 0.75))
+
+    # =========================================================================
+    # SQL 引擎配置
+    # =========================================================================
+    @property
+    def sql_statement_timeout(self) -> int:
+        return int(_yaml("sql.statement_timeout", 10))
+
+    @property
+    def sql_max_rows(self) -> int:
+        return int(_yaml("sql.max_rows", 200))
+
+    @property
+    def sql_max_joins(self) -> int:
+        return int(_yaml("sql.max_joins", 4))
+
+    @property
+    def sql_max_subqueries(self) -> int:
+        return int(_yaml("sql.max_subqueries", 4))
 
     # =========================================================================
     # Reranker 配置
@@ -195,6 +281,10 @@ class Settings(BaseSettings):
         return _yaml("agent.checkpoint.dir", "./checkpoints")
 
     @property
+    def checkpoint_db_path(self) -> str:
+        return _yaml("agent.checkpoint.db_path", "./data/checkpoints.db")
+
+    @property
     def agent_tools(self) -> list:
         """返回所有已启用的工具配置"""
         tools = _yaml("agent.tools", [])
@@ -241,10 +331,6 @@ class Settings(BaseSettings):
     @property
     def pdf_dir(self) -> str:
         return _yaml("data.pdf_dir", "./data/pdfs")
-
-    @property
-    def chroma_persist_dir(self) -> str:
-        return _yaml("data.chroma_persist_dir", "./chroma_db")
 
     @property
     def colloquial_map_path(self) -> str:

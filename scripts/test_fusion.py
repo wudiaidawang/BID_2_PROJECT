@@ -21,7 +21,7 @@ print()
 print("=" * 60)
 print("TEST 1: QueryRewriter (前10题)")
 print("=" * 60)
-from app.core.query_rewriter import query_rewriter
+from app.data.query_rewriter import query_rewriter
 
 rewrite_changes = 0
 for tc in test_cases[:10]:
@@ -42,7 +42,7 @@ print()
 print("=" * 60)
 print("TEST 2: BinaryRouter 规则判定 (前20题)")
 print("=" * 60)
-from app.core.router import BinaryRouter
+from app.agent.router import BinaryRouter
 
 router = BinaryRouter()
 router._warmup()
@@ -63,7 +63,7 @@ print()
 print("=" * 60)
 print("TEST 3: HybridRetriever 检索 (前5题)")
 print("=" * 60)
-from app.core.retriever import HybridRetriever
+from app.data.retriever import HybridRetriever
 
 retriever = HybridRetriever()
 

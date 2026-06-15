@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config import settings
-from app.storage.chroma_store import ChromaStore
+from app.data.storage import get_vector_store
 
 
 # init_db.py
@@ -37,7 +37,7 @@ def main():
     print("注意：法规库请运行 python init_pdf.py")
     print("=" * 60)
 
-    client = ChromaStore()
+    client = get_vector_store()
 
     print("\n重建招标库...")
     if Path(settings.data_path_bids).exists():

@@ -13,9 +13,9 @@ os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.core.retriever import HybridRetriever
-from app.core.router import BinaryRouter
-from app.core.embedding import EmbeddingService
+from app.data.retriever import HybridRetriever
+from app.agent.router import BinaryRouter
+from app.data.embedding import EmbeddingService
 
 EVAL_DIR = "./data/eval_questions"
 HIT_THRESHOLD = 0.70  # 余弦相似度命中阈值
