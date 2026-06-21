@@ -1,4 +1,0 @@
-# 模型测试 — 本地敏感文件
-.env
-output/
-__pycache__/

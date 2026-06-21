@@ -1,0 +1,25 @@
+﻿qa\_id,question,answer,expected\_chunk\_ids,chunk\_count,chunk\_type,category
+qa\_0700,《招标投标法》第三十七条关于评标委员会的规定，完整的条文内容是什么？,【parent内容】+【child0详细解释】+【child1补充说明】,"\[parent\_招标投标法\_37\_xxx, parent\_招标投标法\_37\_xxx\_child0, parent\_招标投标法\_37\_xxx\_child1]",3,parent-child,regulation
+qa\_0701,《招标投标法》第三十七条中，评标委员会成员人数和专家比例要求分别是什么？,成员人数为五人以上单数，技术、经济专家不得少于三分之二,"\[parent\_招标投标法\_37\_xxx, parent\_招标投标法\_37\_xxx\_child0]",2,parent-child,regulation
+qa\_0702,请详细解释《招标投标法》第三十七条关于评标委员会组成的规定,完整条文及详细解读,"\[parent\_招标投标法\_37\_xxx, parent\_招标投标法\_37\_xxx\_child0, parent\_招标投标法\_37\_xxx\_child1]",3,parent-child,regulation
+qa\_0703,《招标投标法》第十条关于招标方式的规定，请给出完整条文,招标分为公开招标和邀请招标的完整规定,"\[parent\_招标投标法\_10\_xxx, parent\_招标投标法\_10\_xxx\_child0]",2,parent-child,regulation
+qa\_0704,什么是公开招标？什么是邀请招标？请引用《招标投标法》第十条的完整规定,公开招标和邀请招标的定义及区别,"\[parent\_招标投标法\_10\_xxx, parent\_招标投标法\_10\_xxx\_child0]",2,parent-child,regulation
+qa\_0705,《招标投标法》第二十五条关于投标人的规定，请给出完整条文及解释,投标人的定义及科研项目特殊规定,"\[parent\_招标投标法\_25\_xxx, parent\_招标投标法\_25\_xxx\_child0]",2,parent-child,regulation
+qa\_0706,《招标投标法》第二十六条对投标人资格条件有什么要求？,具备承担招标项目的能力和规定资格条件,"\[parent\_招标投标法\_26\_xxx, parent\_招标投标法\_26\_xxx\_child0]",2,parent-child,regulation
+qa\_0707,《招标投标法》第三十一条关于联合体投标的规定，请给出完整条文,联合体投标的资格要求、共同投标协议、连带责任等,"\[parent\_招标投标法\_31\_xxx, parent\_招标投标法\_31\_xxx\_child0, parent\_招标投标法\_31\_xxx\_child1]",3,parent-child,regulation
+qa\_0708,联合体投标需要满足什么条件？请引用《招标投标法》第三十一条,各方具备相应能力、签订共同协议、承担连带责任,"\[parent\_招标投标法\_31\_xxx, parent\_招标投标法\_31\_xxx\_child0]",2,parent-child,regulation
+qa\_0709,"《招标投标法》第三十三条关于投标人不得以低于成本报价竞标的规定，请解释""成本""的含义",指投标人的个别成本,"\[parent\_招标投标法\_33\_xxx, parent\_招标投标法\_33\_xxx\_child0]",2,parent-child,regulation
+qa\_0710,《招标投标法》第三十四条、第三十五条关于开标的规定是什么？,开标时间、地点、主持人等规定,"\[parent\_招标投标法\_34\_xxx, parent\_招标投标法\_35\_xxx, parent\_招标投标法\_34\_xxx\_child0]",3,parent-child,regulation
+qa\_0711,开标应当由谁主持？投标人需要做什么？请引用《招标投标法》相关条文,招标人主持，投标人检查密封情况或公证机构检查,"\[parent\_招标投标法\_35\_xxx, parent\_招标投标法\_36\_xxx, parent\_招标投标法\_36\_xxx\_child0]",3,parent-child,regulation
+qa\_0712,《招标投标法》第三十六条关于开标程序的规定，请给出完整条文,当众拆封、宣读投标人名称、投标价格等,"\[parent\_招标投标法\_36\_xxx, parent\_招标投标法\_36\_xxx\_child0]",2,parent-child,regulation
+qa\_0713,《招标投标法》第三十八条关于评标保密的规定是什么？,严格保密、不得非法干预,"\[parent\_招标投标法\_38\_xxx, parent\_招标投标法\_38\_xxx\_child0]",2,parent-child,regulation
+qa\_0714,评标委员会成员不得有哪些行为？请引用《招标投标法》第四十四条,私下接触投标人、收受财物、透露评标情况等,"\[parent\_招标投标法\_44\_xxx, parent\_招标投标法\_44\_xxx\_child0]",2,parent-child,regulation
+qa\_0715,《招标投标法》第四十条关于评标委员会职责的规定，请给出完整条文,提出书面评标报告、推荐中标候选人、可授权直接确定中标人,"\[parent\_招标投标法\_40\_xxx, parent\_招标投标法\_40\_xxx\_child0, parent\_招标投标法\_40\_xxx\_child1]",3,parent-child,regulation
+qa\_0716,中标人的投标应当符合什么条件？请引用《招标投标法》第四十一条,最大限度满足综合评价标准或满足实质性要求且价格最低,"\[parent\_招标投标法\_41\_xxx, parent\_招标投标法\_41\_xxx\_child0]",2,parent-child,regulation
+qa\_0717,《招标投标法》第四十二条关于否决所有投标的规定是什么？,所有投标不符合要求可以否决，依法必须招标项目应重新招标,"\[parent\_招标投标法\_42\_xxx, parent\_招标投标法\_42\_xxx\_child0]",2,parent-child,regulation
+qa\_0718,在确定中标人前，招标人不得与投标人就哪些内容进行谈判？请引用《招标投标法》第四十三条,投标价格、投标方案等实质性内容,"\[parent\_招标投标法\_43\_xxx, parent\_招标投标法\_43\_xxx\_child0]",2,parent-child,regulation
+qa\_0719,《招标投标法》第四十五条关于中标通知书的规定，请给出完整条文,向中标人发出通知书，通知未中标人，具有法律效力,"\[parent\_招标投标法\_45\_xxx, parent\_招标投标法\_45\_xxx\_child0]",2,parent-child,regulation
+qa\_0720,招标人和中标人应当自中标通知书发出之日起多少日内订立书面合同？请引用《招标投标法》第四十六条,三十日内，合同主要条款应与招标文件和中标人投标文件一致,"\[parent\_招标投标法\_46\_xxx, parent\_招标投标法\_46\_xxx\_child0]",2,parent-child,regulation
+qa\_0721,《招标投标法》第四十七条关于书面报告的规定是什么？,十五日内向行政监督部门提交招标投标情况的书面报告,"\[parent\_招标投标法\_47\_xxx, parent\_招标投标法\_47\_xxx\_child0]",2,parent-child,regulation
+qa\_0722,中标人可以将中标项目分包吗？请引用《招标投标法》第四十八条,可以，但接受分包人应具备资格条件，不得再次分包,"\[parent\_招标投标法\_48\_xxx, parent\_招标投标法\_48\_xxx\_child0]",2,parent-child,regulation
+qa\_0723,《招标投标法》第五十二条关于招标人泄露保密信息的处罚规定是什么？,警告、罚款、处分、追究刑事责任,"\[parent\_招标投标法\_52\_xxx, parent\_招标投标法\_52\_xxx\_child0]",2,parent-child,regulation
