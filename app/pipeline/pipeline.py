@@ -195,7 +195,7 @@ class SearchPipeline:
 
         # ── Stage 4: Expand (parent context) ──
         expanded = StageRunner("expand", self.tracer).run(
-            lambda m: self.parent_expander.expand(m, "regulations"), merged
+            lambda m: self.parent_expander.expand(m, "policy"), merged
         )
 
         # ── Stage 5: Rerank ──
@@ -267,7 +267,7 @@ class SearchPipeline:
         # 标注 source_type（运行时字段，用于 reranker 权重提升）
         from app.schema.metadata import infer_source_type
         for r in fused:
-            r["source_type"] = infer_source_type(collection, r.get("metadata", {}))
+            r["source_type"] = infer_source_type(collection, r)  # 传完整 chunk，兼容扁平/嵌套结构
 
         return fused if fused else (vec_results[:top_k])
 
@@ -334,11 +334,10 @@ class SearchPipeline:
         return self._all_docs_cache[collection]
 
     def get_stats(self) -> dict:
-        return {
-            "bids": self._store.get_count("bids"),
-            "regulations": self._store.get_count("regulations"),
-            "policy": self._store.get_count("policy"),
-        }
+        stats = {}
+        for c in settings.collections:
+            stats[c["name"]] = self._store.get_count(c["name"])
+        return stats
 
     def invalidate_cache(self):
         """清空缓存"""

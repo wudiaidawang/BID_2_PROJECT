@@ -38,8 +38,7 @@ class EmbeddingService:
                 result = self._try_remote(texts)
                 return result
             except Exception as e:
-                print(f"[Embedding] Remote failed: {e}, falling back to local")
-                self._use_remote = False
+                print(f"[Embedding] Remote failed: {e}, using local for this batch")
 
         vectors = self._get_local_model().encode(texts, show_progress_bar=False)
         return vectors.tolist()

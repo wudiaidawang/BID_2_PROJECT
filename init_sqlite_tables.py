@@ -87,7 +87,10 @@ def populate_enterprise_from_bids(conn):
     cols = [c[1] for c in conn.execute("PRAGMA table_info(bids)").fetchall()]
     print(f"  bids 表字段: {cols}")
 
-    conn.execute("DELETE FROM enterprise")
+    existing = conn.execute("SELECT COUNT(*) FROM enterprise").fetchone()[0]
+    if existing > 0:
+        print(f"  enterprise 已有 {existing} 条数据，跳过聚合 (安全模式)")
+        return
 
     # 按 supplier 聚合 (bids表实际字段: project_name, category, publish_date, amount, supplier, city)
     sql = """
@@ -164,7 +167,10 @@ def populate_price_from_excel(conn):
             "search_keyword": str(r.get('搜索关键词', '')),
         })
 
-    conn.execute("DELETE FROM price")
+    existing = conn.execute("SELECT COUNT(*) FROM price").fetchone()[0]
+    if existing > 0:
+        print(f"  price 已有 {existing} 条数据，跳过导入 (安全模式)")
+        return
     pd.DataFrame(rows).to_sql("price", conn, if_exists="append", index=False)
     conn.commit()
     print(f"  入库 {len(rows)} 条")
@@ -198,7 +204,10 @@ def populate_product_from_excel(conn):
             "search_keyword": str(r.get('搜索关键词', '')),
         })
 
-    conn.execute("DELETE FROM product")
+    existing = conn.execute("SELECT COUNT(*) FROM product").fetchone()[0]
+    if existing > 0:
+        print(f"  product 已有 {existing} 条数据，跳过导入 (安全模式)")
+        return
     pd.DataFrame(rows).to_sql("product", conn, if_exists="append", index=False)
     conn.commit()
     print(f"  入库 {len(rows)} 条")

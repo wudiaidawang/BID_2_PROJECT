@@ -106,8 +106,10 @@ class MilvusStore:
                 ids.append(f"{collection}_{i}")
 
         self._ensure_collection(collection)
-        self.delete_collection(collection)
-        self._ensure_collection(collection)
+        existing = self.get_count(collection)
+        if existing > 0:
+            print(f"[Milvus] '{collection}' 已有 {existing} 条数据，跳过重建 (安全模式)")
+            return
 
         self.add_documents(collection, retrieval_texts, texts, metadatas, ids)
         print(f"[Milvus] Rebuilt '{collection}' with {len(retrieval_texts)} documents")
@@ -127,37 +129,75 @@ class MilvusStore:
         return normalize_chunks(results)
 
     def get_all_documents(self, collection: str) -> List[Dict]:
-        """分页获取 collection 全部文档（每页 1000 条）"""
-        results = []
-        page_size = 1000
+        """分页获取 collection 全部文档。
+
+        策略: 先轻量查询拿所有 ID（outputFields=["id"]），再按 ID 批量
+        取完整文档（每批 50 条）。避免 offset+全字段查询在文本较大的
+        collection 上触发 Milvus "query results exceed the limit size" 错误。
+        """
+        # Step 1: 轻量取所有 ID
+        all_ids = []
         offset = 0
+        page_size = 10000
         try:
             while True:
-                page = self.query(collection, "", limit=page_size, offset=offset)
-                if not page:
+                payload = self._base_payload(collection)
+                payload.update({
+                    "filter": "id != \"\"",
+                    "limit": page_size,
+                    "offset": offset,
+                    "outputFields": ["id"],
+                })
+                response = self._post("/v2/vectordb/entities/query", payload)
+                if not isinstance(response, list) or not response:
                     break
-                results.extend(page)
-                if len(page) < page_size:
+                all_ids.extend([e["id"] for e in response])
+                if len(response) < page_size:
                     break
                 offset += page_size
         except Exception as e:
-            print(f"[Milvus] get_all_documents error (offset={offset}): {e}")
+            print(f"[Milvus] get_all_documents ID fetch error: {e}")
+            return []
+
+        # Step 2: 按 ID 分批取完整文档
+        results = []
+        batch_size = 50
+        for i in range(0, len(all_ids), batch_size):
+            batch_ids = all_ids[i:i + batch_size]
+            docs = self.get_by_ids(collection, batch_ids)
+            results.extend(docs)
         return results
 
     def get_count(self, collection: str) -> int:
+        """分页累加获取 collection 真实文档总数。
+
+        之前的 bug: limit=1 导致 len(result) 永远 ≤ 1。
+        修复: 分页查询，只用 outputFields=["id"] 避免文本字段过大导致
+        Milvus "query results exceed the limit size" 错误。
+        每页 10000 条，累加至不足一页为止。
+        """
         try:
-            q_payload = self._base_payload(collection)
-            q_payload["filter"] = "id != \"\""
-            q_payload["limit"] = 1
-            q_payload["outputFields"] = ["id"]
-            result = self._post("/v2/vectordb/entities/query", q_payload)
-            return len(result) if isinstance(result, list) else 0
+            total = 0
+            offset = 0
+            page_size = 10000
+            while True:
+                payload = self._base_payload(collection)
+                payload.update({
+                    "filter": "id != \"\"",
+                    "limit": page_size,
+                    "offset": offset,
+                    "outputFields": ["id"],  # 只取 id，最小化响应体积
+                })
+                response = self._post("/v2/vectordb/entities/query", payload)
+                if not isinstance(response, list):
+                    break
+                total += len(response)
+                if len(response) < page_size:
+                    break
+                offset += page_size
+            return total
         except Exception:
-            try:
-                results = self.query(collection, "", limit=100000)
-                return len(results)
-            except Exception:
-                return 0
+            return 0
 
     def delete_collection(self, collection: str):
         try:
@@ -340,6 +380,16 @@ class MilvusStore:
         return results
 
     def _entity_to_doc(self, entity: Dict, score: Optional[float] = None) -> Dict:
+        """将 Milvus 实体转为规范文档 Dict。
+
+        之前的 bug: 除 id/retrieval_text/text 外的所有字段（含 chunk_type/law_name/
+        article_id 等关键字段）全部嵌套在 metadata 子字典中，导致调用方直接访问
+        doc["chunk_type"] 返回空。gen_eval_benchmark_v2.py 的抽样逻辑依赖这些
+        顶层字段做 chunk 分类，因此导出后 QA 生成完全失败。
+
+        修复: 将 CANONICAL_FIELDS 定义的关键字段同时保留在顶层和 metadata 子字典中，
+        既支持 doc["chunk_type"] 也支持 doc["metadata"]["chunk_type"]，向后兼容。
+        """
         data = dict(entity)
         doc_id = data.pop("id", data.pop(settings.milvus_primary_field, ""))
         retrieval_text = data.pop("retrieval_text", data.pop(settings.milvus_content_field, ""))
@@ -348,6 +398,7 @@ class MilvusStore:
         data.pop("dense_vector", None)
         data.pop("sparse_vector", None)
 
+        # 解析 JSON metadata blob，合并到 data
         raw_meta = data.pop("metadata", None)
         if isinstance(raw_meta, str):
             try:
@@ -357,13 +408,31 @@ class MilvusStore:
         if isinstance(raw_meta, dict):
             data.update(raw_meta)
 
-        return {
+        # 已知关键字段 — 同时保留在顶层和 metadata 子字典中（向后兼容）
+        KNOWN_KEYS = (
+            "title", "source_doc", "chunk_type", "chunk_order", "chunk_hash",
+            "token_count", "law_name", "article_id", "parent_id",
+            "project_name", "supplier", "region", "publish_date",
+            "category", "data_version",
+        )
+        doc = {
             "id": str(doc_id),
             "retrieval_text": retrieval_text,
             "text": text,
-            "metadata": data,
             "score": float(score) if score is not None else 0.0,
         }
+        meta_out = {}
+        for key in KNOWN_KEYS:
+            val = str(data.pop(key, "")) if data.get(key) is not None else ""
+            doc[key] = val
+            meta_out[key] = val
+
+        # 剩余未知字段合并到 metadata 子字典
+        if data:
+            meta_out.update(data)
+        doc["metadata"] = meta_out
+
+        return doc
 
     def _truncate_text(self, text: str, max_bytes: int = 65000) -> str:
         """Truncate text to fit within max_bytes UTF-8 bytes (Milvus VarChar limit)"""

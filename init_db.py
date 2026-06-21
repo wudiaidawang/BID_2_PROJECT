@@ -50,7 +50,7 @@ def main():
 
     print("\n" + "=" * 60)
     print(f"初始化完成!")
-    print(f"  招标库: {client.get_count('panxin_bid_rag_v1')} 条")
+    print(f"  招标库: {client.get_count('bids')} 条")
     print("=" * 60)
     print("\n提示: 请运行 python init_policy_collection.py 导入法规库")
 

@@ -3,11 +3,12 @@
 eval_benchmark_v2 生成器 —— 从 policy_chunks_export.json 生成 1000 个 QA 对
 
 分布:
-  pdf_law_parent:   500 (single-chunk)
-  pdf_law_child:    100 (single-chunk)
-  pdf_case_sliding: 250 (single-chunk)
-  pdf_law_sliding:   50 (single-chunk)
-  cross_chunk:      100 (adjacent parent pair)
+  pdf_law_parent:      420 (single-chunk)
+  pdf_law_child:        80 (single-chunk)
+  pdf_case_paragraph:  200 (single-chunk, 实务段落归并)
+  policy_doc:           50 (single-chunk)
+  opinion_news:         80 (single-chunk)
+  cross_chunk:         100 (adjacent parent pair)
 
 难度: easy 40% / medium 40% / hard 20%
 
@@ -51,13 +52,13 @@ BATCH_DELAY = 1.5       # 批次间间隔 (秒)
 
 # QA 分布
 DISTRIBUTION = {
-    "pdf_law_parent":   420,
-    "pdf_law_child":     80,
-    "pdf_case_sliding": 200,
-    "pdf_law_sliding":    0,
-    "policy_doc":        50,
-    "opinion_news":      80,
-    "cross_chunk":      100,
+    "pdf_law_parent":      420,
+    "pdf_law_child":        80,
+    "pdf_case_paragraph":  200,
+    "pdf_law_sliding":       0,
+    "policy_doc":           50,
+    "opinion_news":         80,
+    "cross_chunk":         100,
 }
 TOTAL_TARGET = 930
 
@@ -177,9 +178,9 @@ def sample_chunks(chunks: List[dict], dry_run: bool = False, total_limit: Option
     sampled["pdf_law_child"] = child_sample
     stats["pdf_law_child"] = {"total": n_child, "actual": len(child_sample)}
 
-    # --- pdf_case_sliding ---
-    case_chunks = by_type.get("pdf_case_sliding", [])
-    n_case = DISTRIBUTION["pdf_case_sliding"]
+    # --- pdf_case_paragraph (实务段落归并，替代旧 pdf_case_sliding) ---
+    case_chunks = by_type.get("pdf_case_paragraph", [])
+    n_case = DISTRIBUTION["pdf_case_paragraph"]
     if total_limit:
         n_case = max(1, int(n_case * total_limit / TOTAL_TARGET))
     # 按 source_doc 分组，保证案例多样性
@@ -198,8 +199,8 @@ def sample_chunks(chunks: List[dict], dry_run: bool = False, total_limit: Option
         n = min(n, len(pool), remaining)
         case_sample.extend(random.sample(pool, n))
         remaining -= n
-    sampled["pdf_case_sliding"] = case_sample
-    stats["pdf_case_sliding"] = {"total": n_case, "actual": len(case_sample), "by_case": {k: len([c for c in case_sample if c.get("source_doc")==k]) for k in case_names}}
+    sampled["pdf_case_paragraph"] = case_sample
+    stats["pdf_case_paragraph"] = {"total": n_case, "actual": len(case_sample), "by_case": {k: len([c for c in case_sample if c.get("source_doc")==k]) for k in case_names}}
 
     # --- pdf_law_sliding ---
     sliding_chunks = by_type.get("pdf_law_sliding", [])
@@ -242,7 +243,7 @@ def sample_chunks(chunks: List[dict], dry_run: bool = False, total_limit: Option
 
     # 汇总所有被选中的 chunk（用于进度跟踪）
     all_selected = []
-    for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_sliding", "pdf_law_sliding", "policy_doc", "opinion_news"]:
+    for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_paragraph", "pdf_law_sliding", "policy_doc", "opinion_news"]:
         all_selected.extend(sampled.get(ct, []))
     # cross_chunk 的 chunks 也在 parent_sample 里，不需重复
 
@@ -561,7 +562,7 @@ class QAGenerator:
         all_qas = list(self.progress.get("generated_qas", []))
         qa_counter = len(all_qas)
 
-        for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_sliding", "pdf_law_sliding", "policy_doc", "opinion_news"]:
+        for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_paragraph", "pdf_law_sliding", "policy_doc", "opinion_news"]:
             items = sampled.get(ct, [])
             if not items:
                 continue

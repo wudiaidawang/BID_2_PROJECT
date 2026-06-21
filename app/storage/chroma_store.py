@@ -165,7 +165,10 @@ class ChromaStore:
                 metadatas.append(clean_record)
                 ids.append(f"{collection}_{i}")
 
-        # 3. 重建
-        self.delete_collection(collection)
+        # 3. 安全模式: 已有数据则跳过，不清空重建
+        existing = self.get_count(collection)
+        if existing > 0:
+            print(f"[Chroma] '{collection}' 已有 {existing} 条数据，跳过重建 (安全模式)")
+            return
         self.add_documents(collection, texts, metadatas, ids)
-        print(f"Rebuilt '{collection}' with {len(texts)} documents")
+        print(f"[Chroma] Imported '{collection}' with {len(texts)} documents")

@@ -18,8 +18,7 @@ SSH_USER = "admin"
 
 FORWARDS = [
     (19531, "127.0.0.1", 19531, "Milvus"),
-    (8001, "127.0.0.1", 8001, "Reranker"),
-    (8002, "127.0.0.1", 8002, "Embedding"),
+    (8210, "127.0.0.1", 8210, "Embedding"),
 ]
 
 RECONNECT_DELAY = 5  # 断线后等待秒数再重连

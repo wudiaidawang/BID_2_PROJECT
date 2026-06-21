@@ -29,7 +29,8 @@ CHUNK_TYPES = {
     "pdf_law_parent":       "PDF法律条文父chunk (policy)",
     "pdf_law_child":        "PDF法律条文子chunk (policy)",
     "pdf_law_sliding":      "PDF法律条文滑动窗口 (policy)",
-    "pdf_case_sliding":     "PDF案例分析滑动窗口 (policy)",
+    "pdf_case_sliding":     "PDF案例分析滑动窗口 (policy, 旧)",
+    "pdf_case_paragraph":   "PDF案例分析段落归并 (policy, 实务用)",
 }
 
 # ── 规范字段定义 ──
@@ -97,26 +98,40 @@ FIELD_ALIASES: Dict[str, str] = {
 
 
 def normalize_chunk(chunk: Dict) -> Dict:
-    """规范化 chunk 字段，确保 retrieval_text / text / metadata 三层就位"""
-    # 1. 统一 metadata
+    """规范化 chunk 字段，确保 retrieval_text / text / metadata 三层就位。
+
+    兼容两种结构:
+      - 新扁平结构: chunk_type/law_name 等直接在顶层 (来自 _entity_to_doc 修复后)
+      - 旧嵌套结构: 关键字段在 metadata 子字典中 (历史兼容)
+    """
+    # 1. 统一 metadata — 兼容旧嵌套结构
     meta = chunk.get("metadata") or chunk.get("data") or {}
     chunk["metadata"] = meta
 
-    # 2. 应用别名
+    # 2. 将顶层已知字段同步到 meta (使后续推断逻辑同时可见)
+    KNOWN_TOPLEVEL = (
+        "chunk_type", "law_name", "article_id", "parent_id",
+        "source_doc", "chunk_order", "chunk_hash",
+    )
+    for key in KNOWN_TOPLEVEL:
+        if key in chunk and key not in meta:
+            meta[key] = chunk[key]
+
+    # 3. 应用别名
     for old_key, new_key in FIELD_ALIASES.items():
         if old_key in meta and new_key not in meta:
             meta[new_key] = meta[old_key]
         if old_key in chunk and new_key not in chunk:
             chunk[new_key] = chunk[old_key]
 
-    # 3. 确保 retrieval_text 和 text 都有值
+    # 4. 确保 retrieval_text 和 text 都有值
     if not chunk.get("retrieval_text"):
         chunk["retrieval_text"] = chunk.get("text", "")
     if not chunk.get("text"):
         chunk["text"] = chunk.get("retrieval_text", "")
 
-    # 4. chunk_type 推断
-    if not meta.get("chunk_type"):
+    # 5. chunk_type 推断
+    if not meta.get("chunk_type") and not chunk.get("chunk_type"):
         if meta.get("parent_id"):
             meta["chunk_type"] = "child"
         elif meta.get("article_id"):
@@ -132,8 +147,10 @@ def normalize_chunks(chunks: List[Dict]) -> List[Dict]:
     return [normalize_chunk(c) for c in chunks]
 
 
-def infer_source_type(collection: str, metadata: dict) -> str:
+def infer_source_type(collection: str, chunk: dict) -> str:
     """运行时推演 source_type，不入库、不重新向量化。
+
+    接收完整 chunk dict（兼容扁平结构和旧嵌套结构），同时检查顶层和 metadata 子字典。
 
     三级分类（法条原文 vs 解读手册 vs 案例舆情）：
       bid                     → "bid"
@@ -141,14 +158,23 @@ def infer_source_type(collection: str, metadata: dict) -> str:
       regulation_child        → "regulation_article"   法条原文（结构化子块）
       regulation_sliding      → "regulation_article"   法条原文（滑动窗口）
       pdf_law_*               → "regulation_article"   法条原文（PDF 法律）
-      pdf_case_sliding        → "regulation_case"      案例解读
+      pdf_case_*              → "regulation_case"      案例解读（含 paragraph/sliding）
       opinion_news            → "regulation_opinion"   舆情
       policy_doc              → "regulation_policy"    政策文件
     """
-    ct = str(metadata.get("chunk_type", ""))
+    meta = chunk.get("metadata", {}) if isinstance(chunk.get("metadata"), dict) else {}
+
+    def _get(key: str) -> str:
+        """优先从顶层取，fallback 到 metadata 子字典"""
+        val = chunk.get(key, "")
+        if not val and meta:
+            val = meta.get(key, "")
+        return str(val) if val else ""
+
+    ct = _get("chunk_type")
 
     # bids 类（按业务字段判断）
-    if metadata.get("project_name") or metadata.get("supplier"):
+    if _get("project_name") or _get("supplier"):
         return "bid"
     if ct == "bid_project":
         return "bid"
@@ -156,12 +182,12 @@ def infer_source_type(collection: str, metadata: dict) -> str:
     # regulation 子类
     if ct.startswith("pdf_case_"):
         return "regulation_case"
-    if ct == "opinion_news" or str(metadata.get("category", "")) == "opinion":
+    if ct == "opinion_news" or _get("category") == "opinion":
         return "regulation_opinion"
     if ct == "policy_doc":
         return "regulation_policy"
     # pdf_law_*, regulation_*, sliding, parent, child, 及其他 → 法条原文
-    if collection == "panxin_bid_rag_v1" or ct.startswith("regulation_") or ct.startswith("pdf_law_") or metadata.get("law_name"):
+    if collection == "panxin_bid_rag_v1" or ct.startswith("regulation_") or ct.startswith("pdf_law_") or _get("law_name"):
         return "regulation_article"
     # fallback
     return "regulation_article"

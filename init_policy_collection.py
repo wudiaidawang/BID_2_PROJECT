@@ -5,6 +5,7 @@
 category 字段区分: "policy" (政策法规) / "opinion" (舆情新闻)
 """
 
+import hashlib
 import sys
 import json
 from pathlib import Path
@@ -30,8 +31,8 @@ PDF_CONFIGS = [
     {"path": "中华人民共和国政府采购法实施条例.pdf", "name": "中华人民共和国政府采购法实施条例", "author": "", "mode": "law_article"},
     {"path": "政府采购货物和服务招标投标管理办法.pdf", "name": "政府采购货物和服务招标投标管理办法", "author": "", "mode": "law_article"},
     {"path": "工程建设项目施工招标投标办法.pdf", "name": "工程建设项目施工招标投标办法", "author": "", "mode": "law_article"},
-    # 法律解读/案例类 → 滑动窗口切块
-    {"path": "招标投标法律解读与风险防范实务.pdf", "name": "招标投标法律解读与风险防范实务", "author": "白如银", "mode": "sliding"},
+    # 法律解读/案例类 → 滑动窗口切块（实务使用段落归并）
+    {"path": "招标投标法律解读与风险防范实务.pdf", "name": "招标投标法律解读与风险防范实务", "author": "白如银", "mode": "paragraph"},
     {"path": "串通投标、受贿案.pdf", "name": "串通投标、受贿案", "author": "", "mode": "sliding"},
     {"path": "运输服务公司串通投标不正当竞争纠纷案.pdf", "name": "运输服务公司串通投标不正当竞争纠纷案", "author": "", "mode": "sliding"},
     {"path": "建设工程施工合同纠纷案.pdf", "name": "建设工程施工合同纠纷案", "author": "", "mode": "sliding"},
@@ -61,6 +62,35 @@ def sliding_window_chunk(text: str, chunk_size: int = 500, overlap: int = 100,
                 chunk = f"【{source_label}】\n{chunk}"
             chunks.append(chunk)
         start = end - overlap if end < len(text) else end
+    return chunks
+
+
+def chunk_by_paragraphs(full_text: str, pdf_name: str,
+                       target_chars: int = 500, min_para_chars: int = 50) -> List[str]:
+    """段落归并切块（案例/解读类PDF，替代滑动窗口）
+
+    流程: \\n\\n分自然段 → 过滤短段 → 相邻段归并至 ~500字
+    检索文本注入书名头: 《pdf_name》\\n{chunk}
+    """
+    paragraphs = [p.strip() for p in full_text.split('\n\n') if len(p.strip()) > min_para_chars]
+    print(f"      有效段落: {len(paragraphs)}")
+
+    chunks = []
+    current = ""
+    for p in paragraphs:
+        if len(current) + len(p) < target_chars:
+            current = (current + "\n\n" + p).strip() if current else p
+        else:
+            if current:
+                chunks.append(current)
+            current = p
+    if current:
+        chunks.append(current)
+
+    print(f"      归并后: {len(chunks)} chunks, "
+          f"size min={min(len(c) for c in chunks)}, "
+          f"max={max(len(c) for c in chunks)}, "
+          f"avg={sum(len(c) for c in chunks)//len(chunks):.0f}")
     return chunks
 
 
@@ -239,6 +269,28 @@ def load_policy_collection(client):
                         m["data_version"] = "2026-06-18_v1"
                     client.add_documents("policy", all_rt, all_texts, metadatas, ids)
                     print(f"    入库 {len(all_rt)} 条 (结构化)")
+            elif cfg["mode"] == "paragraph":
+                # ★ 段落归并切块 — 实务类PDF专用
+                chunks = chunk_by_paragraphs(full_text, cfg["name"])
+                rts, txts, metas, ids = [], [], [], []
+                for i, chunk in enumerate(chunks):
+                    chunk_hash = hashlib.md5(chunk.encode()).hexdigest()[:8]
+                    rts.append(f"《{cfg['name']}》\n{chunk}")     # 检索文本注入书名
+                    txts.append(chunk)                             # 纯原文
+                    metas.append({
+                        "source_doc": cfg["name"],
+                        "chunk_type": "pdf_case_paragraph",
+                        "chunk_order": str(i),
+                        "chunk_hash": chunk_hash,
+                        "law_name": cfg["name"],                   # ★ parent级匹配关键
+                        "article_id": "",
+                        "category": "policy",
+                        "data_version": "2026-06-22_v2",
+                        "token_count": str(len(chunk)),
+                    })
+                    ids.append(f"pdf_{cfg['name']}_para_{i:04d}")
+                client.add_documents("policy", rts, txts, metas, ids)
+                print(f"    入库 {len(chunks)} 条 (段落归并)")
             else:
                 chunks = sliding_window_chunk(full_text, 500, 200, source_label=cfg["name"])
                 rts, txts, metas, ids = [], [], [], []
@@ -270,13 +322,7 @@ def main():
 
     client = get_vector_store()
 
-    # 清空重建
-    try:
-        client.delete_collection("policy")
-        print("[清理] 已清空旧 policy collection")
-    except Exception:
-        pass
-
+    # ★ 安全模式: 不清空已有数据，仅确保 collection 存在 + 增量导入
     load_policy_collection(client)
 
 
