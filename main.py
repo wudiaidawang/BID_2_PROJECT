@@ -31,9 +31,13 @@ async def lifespan(app: FastAPI):
     print("\n[1/7] 加载 SQL 引擎...")
     app.state.sql_engine = SQLEngine()
 
-    # [2/7] Redis
+    # [2/7] Redis (可选 — 连接失败自动降级，不影响主流程)
     print("\n[2/7] 连接 Redis...")
     await redis_client._get_client()
+    if redis_client.available:
+        print(f"  Redis 已连接 ({settings.redis_host}:{settings.redis_port})")
+    else:
+        print(f"  ⚠ Redis 不可用 — 会话持久化已禁用，问答功能正常")
 
     # [3/7] LLM 生成器
     print("\n[3/7] 加载 LLM 生成器...")
@@ -170,7 +174,7 @@ async def root():
             "BGE-Reranker 精排",
             "3层查询改写: 口语→书面语 + 冗余精简 + 同义词替换",
             "4个Agent工具: search_regulations / get_article / sql_query / summarize",
-            "多轮对话 (Redis)",
+            "多轮对话 (Redis, 可选)",
         ],
         "endpoints": [
             {"path": "POST /api/v1/ask", "description": "问答接口"},

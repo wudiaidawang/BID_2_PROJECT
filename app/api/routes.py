@@ -3,7 +3,9 @@
 
 import time
 import os
+import json
 from fastapi import APIRouter, Request
+from fastapi.responses import StreamingResponse
 
 from app.api.schemas import AskRequest, AskResponse, SourceInfo, HealthResponse
 from app.core.session_manager import SessionManager
@@ -78,6 +80,115 @@ async def ask(request: Request, req: AskRequest):
         request, req, route, session_id, rewritten_question, history,
         memory_context, start_time
     )
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/chat/stream — 流式问答（SSE/NDJSON）
+# ---------------------------------------------------------------------------
+
+@router.post("/chat/stream")
+async def chat_stream(request: Request):
+    """流式问答接口 — 逐 token 返回 NDJSON，适配 Streamlit 前端"""
+    body = await request.json()
+    session_id_in = body.get("session_id")
+    user_message = (body.get("user_message") or body.get("question") or "").strip()
+    if not user_message:
+        async def _err():
+            yield json.dumps({"type": "error", "content": "输入为空"}, ensure_ascii=False) + "\n"
+        return StreamingResponse(_err(), media_type="application/x-ndjson")
+
+    # 1. 会话管理
+    session_id, is_new = await session_manager.get_or_create_session(session_id_in)
+    history = await session_manager.get_history(session_id, last_n=settings.max_history)
+
+    # 2. 查询改写
+    rewritten = await session_manager.rewrite_query_with_context(session_id, user_message)
+
+    # 3. 路由判定
+    route = await request.app.state.router.route(
+        rewritten, session_id=session_id, session_manager=session_manager
+    )
+
+    # 4. 获取检索器 & 生成器
+    retriever = request.app.state.retriever
+    generator = request.app.state.generator
+    memory = getattr(request.app.state, 'memory', None)
+    memory_ctx = ""
+    if memory:
+        mc = memory.load_context(session_id, rewritten)
+        memory_ctx = mc.get("full_context", "")
+
+    async def event_stream():
+        full_answer = ""
+
+        try:
+            # ── 直接响应（问候/致谢） ──
+            if route.get("mode") == "direct":
+                answer = route.get("direct_answer", "您好！我是招投标智能助手，请问有什么可以帮您？")
+                full_answer = answer
+                yield json.dumps({"type": "assistant", "content": answer}, ensure_ascii=False) + "\n"
+
+            # ── SQL 路径 ──
+            elif route.get("is_sql"):
+                print(f"[Stream SQL] 拦截统计需求: {user_message}")
+                if route.get("sql_template"):
+                    print(f"[Stream SQL] 模板匹配度={route.get('match_score', 0):.3f}")
+                    db_data = sql_engine._execute_local_sql(route["sql_template"])
+                else:
+                    _, db_data = await sql_engine.execute_query(user_message)
+
+                sql_failed = (
+                    isinstance(db_data, list) and len(db_data) == 0
+                ) or any("error" in str(r).lower() for r in (db_data or []))
+
+                if sql_failed:
+                    print("[Stream SQL] SQL失败,降级RAG")
+                    results = retriever.search_unified(query=rewritten, top_k=5)
+                    async for typ, token in generator._call_llm_stream(
+                        messages=[{"role": "system", "content": generator._system_prompt()},
+                                  {"role": "user", "content": generator._build_prompt(
+                                      rewritten, results, "unified", history, memory_ctx)}]
+                    ):
+                        full_answer += token
+                        yield json.dumps({"type": typ, "content": token}, ensure_ascii=False) + "\n"
+                else:
+                    # 让 LLM 把 SQL 结果转成自然语言
+                    summary_prompt = f"用户问题：{user_message}\n\n数据库查询结果：{db_data}\n\n请用自然语言把查询结果总结给用户。"
+                    async for typ, token in generator._call_llm_stream(prompt=summary_prompt):
+                        full_answer += token
+                        yield json.dumps({"type": typ, "content": token}, ensure_ascii=False) + "\n"
+
+            # ── RAG 路径 ──
+            else:
+                print(f"[Stream RAG] 混合检索: {rewritten}")
+                results = retriever.search_unified(query=rewritten, top_k=5)
+                async for typ, token in generator.generate_stream(
+                    query=user_message, context=results, collection="unified",
+                    history=history, memory_context=memory_ctx
+                ):
+                    full_answer += token
+                    yield json.dumps({"type": typ, "content": token}, ensure_ascii=False) + "\n"
+
+        except Exception as e:
+            print(f"[Stream] 错误: {e}")
+            yield json.dumps({"type": "error", "content": str(e)}, ensure_ascii=False) + "\n"
+
+        # 5. 保存会话
+        try:
+            results_for_entity = retriever.search_unified(query=rewritten, top_k=3) if not route.get("is_sql") else []
+            entities = await session_manager.extract_entities(rewritten, full_answer, results_for_entity)
+            await session_manager.add_turn(session_id, user_message, full_answer, entities)
+            if memory:
+                memory.save_turn(session_id, user_message, full_answer, entities)
+                await memory.maybe_summarize(session_id)
+        except Exception as e:
+            print(f"[Stream] 保存会话失败: {e}")
+
+        # 发送结束信号（包含 session_id）
+        yield json.dumps({"type": "done", "session_id": session_id}, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(event_stream(), media_type="application/x-ndjson",
+                            headers={"X-Session-Id": session_id})
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +281,7 @@ async def _handle_binary(
             except Exception:
                 db_data = [{"error": "SQL template execution failed"}]
         else:
-            _, db_data = sql_engine.execute_query(req.question)
+            _, db_data = await sql_engine.execute_query(req.question)
 
         # 容错降级
         sql_failed = (
@@ -361,6 +472,25 @@ def _build_sources(results: list, top_k: int, collection: str = "unified") -> li
 # 其他端点
 # ---------------------------------------------------------------------------
 
+@router.get("/sessions/{session_id}")
+async def get_session_info(request: Request, session_id: str):
+    """获取会话详情和消息历史"""
+    session = await session_manager.get_session(session_id)
+    if not session:
+        return {"session_id": session_id, "messages": []}
+
+    messages = []
+    for turn in session.get("history", []):
+        messages.append({"type": "user", "content": turn.get("question", "")})
+        messages.append({"type": "assistant", "content": turn.get("answer", "")})
+
+    return {
+        "session_id": session_id,
+        "title": session.get("last_question", "New Chat")[:30],
+        "messages": messages,
+    }
+
+
 @router.delete("/session/{session_id}")
 async def delete_session(request: Request, session_id: str):
     """删除会话"""
@@ -377,6 +507,13 @@ async def delete_session(request: Request, session_id: str):
     if memory:
         memory.forget_session(session_id)
     return {"status": "deleted", "session_id": session_id}
+
+
+@router.get("/sessions")
+async def list_sessions(request: Request):
+    """获取所有会话列表"""
+    sessions = await session_manager.list_sessions()
+    return {"sessions": sessions}
 
 
 @router.get("/health", response_model=HealthResponse)

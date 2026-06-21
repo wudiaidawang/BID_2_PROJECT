@@ -13,11 +13,11 @@ import time
 from typing import List, Dict, Optional, Callable
 
 from app.pipeline.preprocessor import QueryPreprocessor
-from app.pipeline.retrievers import VectorRetriever, BM25Retriever
+from app.pipeline.retrievers import VectorRetriever, BM25Retriever, ServerBM25Retriever
 from app.pipeline.fusion import RRFFusion, WeightedFusion
 from app.pipeline.expanders import ParentContextExpander, NoopExpander
 from app.pipeline.rerankers import BgeReranker
-from app.storage.chroma_store import ChromaStore
+from app.storage import get_vector_store
 from config import settings
 
 
@@ -130,9 +130,9 @@ class SearchPipeline:
         )
 
         # ── 阶段2: 检索器 ──
-        self._store = ChromaStore()
+        self._store = get_vector_store()
         self.vector = VectorRetriever(self._store)
-        self.bm25 = BM25Retriever()
+        self.bm25 = ServerBM25Retriever(self._store)
 
         # ── 阶段3: 融合策略 ──
         self.rrf = RRFFusion()
@@ -156,7 +156,7 @@ class SearchPipeline:
     # ═════════════════════════════════════════════════════════════
 
     def search_unified(self, query: str, top_k: int = 5) -> List[Dict]:
-        """统一跨库检索 —— regulations + bids 双库"""
+        """统一跨库检索 —— regulations + bids + policy 三库"""
         if not query:
             return []
 
@@ -168,7 +168,7 @@ class SearchPipeline:
         # ── Stage 2: Retrieve + Fuse per collection ──
         def _search_both(normalized_q):
             all_candidates = []
-            for collection in ["regulations", "bids"]:
+            for collection in [c["name"] for c in settings.collections]:
                 try:
                     col_results = self._retrieve_and_fuse(
                         normalized_q, query, collection, top_k * 3
@@ -178,7 +178,7 @@ class SearchPipeline:
                     print(f"  [Pipeline] collection '{collection}' error: {e}")
                     continue
             if not all_candidates:
-                raise RuntimeError("Both collections returned empty")
+                raise RuntimeError("All collections returned empty")
             return all_candidates
 
         all_candidates = StageRunner("retrieve", self.tracer).run(
@@ -241,16 +241,12 @@ class SearchPipeline:
     def _retrieve_and_fuse(self, normalized: str, original: str,
                            collection: str, top_k: int) -> List[Dict]:
         """对单个 collection 执行 vector + BM25 召回 + 融合"""
-        all_docs = self._get_all_docs(collection)
-        if not all_docs:
-            return self.vector.search(normalized, collection, top_k)
-
         # Vector 召回
         vec_results = self.vector.search(normalized, collection,
                                          settings.vector_recall)
 
-        # BM25 召回
-        bm25_results = self.bm25.search(normalized, collection, all_docs,
+        # BM25 召回 —— 走服务端 Milvus sparse_vector
+        bm25_results = self.bm25.search(normalized, collection,
                                         settings.bm25_recall)
 
         # 融合（带断路器）—— 输入 = vec + bm25 候选数
@@ -267,6 +263,11 @@ class SearchPipeline:
                 lambda _: self.rrf.merge(vec_results, bm25_results, k=settings.rrf_k)[:top_k],
                 fusion_input_hint
             )
+
+        # 标注 source_type（运行时字段，用于 reranker 权重提升）
+        from app.schema.metadata import infer_source_type
+        for r in fused:
+            r["source_type"] = infer_source_type(collection, r.get("metadata", {}))
 
         return fused if fused else (vec_results[:top_k])
 
@@ -294,11 +295,37 @@ class SearchPipeline:
 
         documents = []
         for d in candidates[:settings.reranker_candidate_pool]:
-            doc_text = d.get("parent_content") or d.get("text", "")
+            doc_text = d.get("parent_content") or d.get("retrieval_text", d.get("text", ""))
             documents.append(doc_text[:settings.reranker_max_input_length])
 
         indices = self.reranker.rerank(query, documents, top_k)
-        return [candidates[i] for i in indices if i < len(candidates)]
+        reranked = [candidates[i] for i in indices if i < len(candidates)]
+
+        # ── source_type 权重提升 (post-rerank score boost) ──
+        if settings.source_type_boost_enabled:
+            weights = settings.source_type_weights
+            for r in reranked:
+                boost = weights.get(r.get("source_type", ""), 1.0)
+                if boost != 1.0:
+                    r["score"] = r.get("score", 0.0) * boost
+            reranked.sort(key=lambda x: x.get("score", 0), reverse=True)
+
+        # ── 条款号精确匹配 boost ──
+        query_article = self._extract_query_article_id(query)
+        if query_article:
+            ARTICLE_BOOST = 1.2
+            for r in reranked:
+                aid = str(r.get("metadata", {}).get("article_id", ""))
+                if aid and aid == query_article:
+                    r["score"] = r.get("score", 0.0) * ARTICLE_BOOST
+            reranked.sort(key=lambda x: x.get("score", 0), reverse=True)
+
+        return reranked[:top_k]
+
+    def _extract_query_article_id(self, query: str) -> str:
+        """从 query 中提取条款号（统一为阿拉伯数字），用于后处理 boost"""
+        from app.utils.chinese_number import chinese_number_converter
+        return chinese_number_converter.extract_article_number(query)
 
     def _get_all_docs(self, collection: str) -> List[Dict]:
         """获取 collection 全部文档（带缓存）"""
@@ -310,6 +337,7 @@ class SearchPipeline:
         return {
             "bids": self._store.get_count("bids"),
             "regulations": self._store.get_count("regulations"),
+            "policy": self._store.get_count("policy"),
         }
 
     def invalidate_cache(self):

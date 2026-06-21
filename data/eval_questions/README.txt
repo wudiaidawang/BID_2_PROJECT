@@ -1,23 +1,44 @@
-评估问答集目录
-================
+评估问答集 & 报告 — 版本对齐
 
-此目录用于存放评估用的问答对文件。
+================================================
+V2 (当前)
+  问答对: eval_benchmark_v2.json  (898 题, 三级命中体系)
+  报告:   eval_recall_report_v2.json
+  分析:   eval_recall_report_v2_analysis.md
 
-文件格式：
-- JSON 数组，每个元素包含 question（问题）和 expected_answer（期望答案关键词/原文）
-- 支持多个 .json 文件，评估时会合并加载
+V1 (旧版)
+  问答对: eval_benchmark_v1.json  (457 题, 单级精确命中)
+  报告:   eval_recall_report_v1.json
 
-示例格式见 data/template.json.backup。
+================================================
+运行评测:
+  python run_recall_eval_full.py
+  输出: eval_recall_report_v2.json
 
-使用方式：
-  将你的问答 .json 文件放入此目录，然后运行：
-  python eval_retrieval_accuracy.py
-  python test_accuracy.py
-
-数据结构说明：
+V2 数据格式 (eval_benchmark_v2.json):
   {
-    "question": "问题文本",          // 必填
-    "expected_answer": "答案文本",    // 必填，用于提取关键词验证检索结果
-    "source": "来源标识",            // 可选
-    "full_chunk": "完整原文段落"      // 可选
+    "qa_pairs": [
+      {
+        "id": "qa_v2_0001",
+        "question": "问题文本",
+        "answer": "参考答案",
+        "source_chunks": ["parent_xxx_27_1_1234"],
+        "chunk_count": 1,
+        "category": "pdf_law_parent"
+      }
+    ]
+  }
+
+V1 数据格式 (eval_benchmark_v1.json):
+  {
+    "qa_pairs": [
+      {
+        "qa_id": "qa_0001",
+        "question": "问题文本",
+        "answer": "参考答案",
+        "expected_chunk_ids": ["bids_0"],
+        "chunk_count": 1,
+        "chunk_type": "bid_project"
+      }
+    ]
   }

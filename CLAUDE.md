@@ -11,9 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 pip install -r requirements.txt
 
-# Initialize data stores (order matters)
-python init_db.py      # Load bid_data.xlsx into ChromaDB 'bids' collection
-python init_pdf.py     # Chunk PDFs into ChromaDB 'regulations' collection
+# Initialize data stores
+python init_db.py              # Load bid_data.xlsx into 'bids' collection
+python init_policy_collection.py  # Chunk all PDFs into 'policy' collection
 
 # Start the API server
 python main.py         # Runs on 0.0.0.0:8000 by default, with hot-reload

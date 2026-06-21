@@ -7,7 +7,7 @@
 
 from typing import List, Dict, Set
 
-from app.storage.chroma_store import ChromaStore
+from app.storage import get_vector_store
 from app.schema.metadata import normalize_chunk
 from config import settings
 
@@ -32,8 +32,8 @@ class ParentContextExpander:
     按 article_id 去重。
     """
 
-    def __init__(self, chroma_store: ChromaStore = None):
-        self._store = chroma_store or ChromaStore()
+    def __init__(self, store=None):
+        self._store = store or get_vector_store()
         self._enabled = settings.legal_parent_context_enabled
         self._parent_cache: Dict[str, Dict[str, Dict]] = {}
 
@@ -51,7 +51,7 @@ class ParentContextExpander:
         non_child_results = []
         for r in results:
             meta = r.get("metadata") or r.get("data", {})
-            if meta.get("chunk_type") == "child":
+            if str(meta.get("chunk_type", "")).endswith("_child"):
                 child_results.append(r)
             else:
                 non_child_results.append(r)
@@ -109,51 +109,24 @@ class ParentContextExpander:
         if not parent_ids:
             return {}
 
-        if collection not in self._parent_cache:
-            self._load_parent_cache(collection)
-
-        cached = self._parent_cache.get(collection, {})
-        missing = parent_ids - set(cached.keys())
+        cache = self._parent_cache.setdefault(collection, {})
+        missing = parent_ids - set(cache.keys())
 
         if missing:
             self._query_missing(missing, collection)
 
-        cache = self._parent_cache.get(collection, {})
         return {pid: cache.get(pid, {}) for pid in parent_ids}
-
-    def _load_parent_cache(self, collection: str):
-        """预加载所有 parent chunks 到缓存"""
-        try:
-            all_docs = self._store.get_all_documents(collection)
-        except Exception:
-            self._parent_cache[collection] = {}
-            return
-
-        cache = {}
-        for doc in all_docs:
-            meta = doc.get("metadata", {})
-            if meta.get("chunk_type") == "parent":
-                cache[doc["id"]] = doc
-
-        self._parent_cache[collection] = cache
-        if cache:
-            print(f"[ParentExpander] Cached {len(cache)} parents from '{collection}'")
 
     def _query_missing(self, missing_ids: Set[str], collection: str):
         try:
-            col = self._store.get_collection(collection)
-            result = col.get(ids=list(missing_ids))
+            docs = self._store.get_by_ids(collection, list(missing_ids))
         except Exception:
             return
 
-        if result and result.get("ids"):
+        if docs:
             cache = self._parent_cache.setdefault(collection, {})
-            for i, doc_id in enumerate(result["ids"]):
-                cache[doc_id] = {
-                    "id": doc_id,
-                    "text": result["documents"][i] if result.get("documents") else "",
-                    "metadata": result["metadatas"][i] if result.get("metadatas") else {},
-                }
+            for doc in docs:
+                cache[doc["id"]] = doc
 
     def invalidate_cache(self, collection: str = None):
         if collection:

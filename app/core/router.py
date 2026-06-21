@@ -118,14 +118,10 @@ class BinaryRouter:
         self._embedding_service = EmbeddingService()
 
         sql_questions = [t["question"] for t in SQL_TEMPLATES]
-        sql_vectors = self._embedding_service.model.encode(
-            sql_questions, show_progress_bar=False
-        )
+        sql_vectors = self._embedding_service.embed_batch(sql_questions)
         self._template_vectors = [np.array(v) for v in sql_vectors]
 
-        compliance_vectors = self._embedding_service.model.encode(
-            COMPLIANCE_TEMPLATES, show_progress_bar=False
-        )
+        compliance_vectors = self._embedding_service.embed_batch(COMPLIANCE_TEMPLATES)
         self._compliance_vectors = [np.array(v) for v in compliance_vectors]
 
         self._ready = True

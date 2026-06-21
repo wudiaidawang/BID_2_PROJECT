@@ -23,6 +23,19 @@ class QueryRewriter:
         self.enable_redundancy = settings.qr_redundancy_removal
         self.enable_synonym = settings.qr_synonym_expansion
 
+        # 法规名称保护列表 — 这些专有名词不参与任何改写
+        self._protected_names = [
+            "中华人民共和国招标投标法", "招标投标法", "中华人民共和国政府采购法",
+            "政府采购法", "中华人民共和国民法典", "民法典", "中华人民共和国合同法",
+            "招标投标法实施条例", "政府采购法实施条例",
+            "工程建设项目招标投标管理办法", "招标拍卖挂牌出让国有土地使用权规定",
+            "建设工程质量管理条例", "建筑工程施工许可管理办法",
+            "工程建设项目施工招标投标办法", "评标委员会和评标办法暂行规定",
+            "电子招标投标办法", "必须招标的工程项目规定",
+            "招标投标条例", "采购法", "合同法",
+        ]
+        self._protected_names = sorted(self._protected_names, key=len, reverse=True)
+
         # ── 第一层：标点规范化 ──
         self.punctuation_map = {
             "？": "?", "！": "!", "；": ";", "：": ":",
@@ -92,14 +105,21 @@ class QueryRewriter:
         )
 
     def rewrite(self, question: str) -> str:
-        """执行改写管道：标点规范 → 冗余精简 → 口语转书面语 → 同义词替换"""
+        """执行改写管道：标点规范 → 条款号规范化 → 冗余精简 → 口语转书面语 → 同义词替换"""
         if not question or not isinstance(question, str):
             return question or ""
 
         result = question
 
-        # 0. 标点规范化
+        # 0. 标点规范化（始终执行）
         result = self._normalize_punctuation(result)
+
+        # 0.5 条款号规范化：中文数字 → 阿拉伯数字（始终执行，避免"第三十七条"和"第37条"不一致）
+        result = self._normalize_article_numbers(result)
+
+        # 如果包含法规名称，跳过后续改写（保护专有名词不被改坏）
+        if self._contains_protected_name(result):
+            return result
 
         # 1. 冗余精简
         if self.enable_redundancy:
@@ -124,10 +144,29 @@ class QueryRewriter:
 
         return result
 
+    def _contains_protected_name(self, text: str) -> bool:
+        """检查文本中是否包含法规名称（含简称）"""
+        for name in self._protected_names:
+            if name in text:
+                return True
+        return False
+
     def _normalize_punctuation(self, text: str) -> str:
         for cn, en in self.punctuation_map.items():
             text = text.replace(cn, en)
         return text
+
+    def _normalize_article_numbers(self, text: str) -> str:
+        """将条款号中的中文数字统一转为阿拉伯数字（如"第三十七条"→"第37条"）"""
+        from app.utils.chinese_number import chinese_number_converter
+        result = text
+        # 匹配"第X条"模式，其中X为纯中文数字
+        for match in re.finditer(r'第([一二三四五六七八九十百千]+)条', text):
+            chinese = match.group(1)
+            arabic = chinese_number_converter.to_arabic(chinese)
+            if arabic != chinese:
+                result = result.replace(f"第{chinese}条", f"第{arabic}条")
+        return result
 
     def _remove_redundancy(self, text: str) -> str:
         result = text

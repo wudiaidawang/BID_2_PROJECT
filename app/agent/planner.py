@@ -321,6 +321,94 @@ class PlannerExecutor:
 
         return None
 
+    # ── 检索任务合并 ────────────────────────────────
+
+    def _try_merge_retrieval(
+        self, steps: List[PlannedStep], task_map: Dict[str, PlannedTask]
+    ) -> Optional[Dict]:
+        """尝试合并多个 search_regulations 步骤为一次检索。
+
+        合并条件：
+        1. 至少 2 个来自不同 task 的 search_regulations 步骤
+        2. 这些 task 之间无依赖（DAG 已保证 ready 的任务均已解耦）
+        """
+        # 收集 search_regulations 步骤，每个 task 只取第一个
+        task_search: Dict[str, PlannedStep] = {}
+        for s in steps:
+            if s.tool_name == "search_regulations" and s.task_id:
+                if s.task_id not in task_search:
+                    task_search[s.task_id] = s
+
+        if len(task_search) <= 1:
+            return None  # 不足 2 个独立 task，不合并
+
+        # 构建合并查询
+        query_parts = []
+        merged_task_ids = []
+        original_queries = {}
+        for tid in sorted(task_search.keys()):
+            s = task_search[tid]
+            task = task_map.get(tid)
+            goal = task.goal if task else ""
+            q = s.params.get("query", goal)
+            original_queries[tid] = q
+            if goal and goal != q:
+                query_parts.append(f"要求{len(query_parts)+1}（{goal}）：{q}")
+            else:
+                query_parts.append(q)
+            merged_task_ids.append(tid)
+
+        merged_query = "；同时".join(query_parts) if len(query_parts) <= 2 else \
+                       "。".join(f"{i}. {p}" for i, p in enumerate(query_parts, 1))
+
+        return {
+            "merged_query": merged_query,
+            "merged_task_ids": merged_task_ids,
+            "original_steps": task_search,
+            "original_queries": original_queries,
+        }
+
+    async def _execute_merged_search(
+        self, merge_info: Dict
+    ) -> List[StepResult]:
+        """执行合并检索并将结果分发为各 task 的独立 StepResult"""
+        merged_query = merge_info["merged_query"]
+        merged_task_ids = merge_info["merged_task_ids"]
+        original_steps = merge_info["original_steps"]
+        merged_tasks_str = ", ".join(merged_task_ids)
+
+        t_start = time.time()
+        try:
+            tool = self.tools["search_regulations"]
+            result = await tool.run(query=merged_query)
+            duration_ms = (time.time() - t_start) * 1000
+            print(f"  [Merge] {len(merged_task_ids)} 任务合并检索 ({merged_tasks_str}), "
+                  f"耗时 {duration_ms:.0f}ms")
+        except Exception as e:
+            duration_ms = (time.time() - t_start) * 1000
+            print(f"  [Merge] 合并检索失败: {e}")
+            merged_results = []
+            for tid in merged_task_ids:
+                s = original_steps[tid]
+                merged_results.append(StepResult(
+                    step_num=s.step_num, task_id=tid,
+                    tool_name="search_regulations", success=False,
+                    error=str(e), duration_ms=duration_ms,
+                ))
+            return merged_results
+
+        # 为每个 task 创建独立的 StepResult（共享同一份检索结果）
+        merged_results = []
+        for tid in merged_task_ids:
+            s = original_steps[tid]
+            merged_results.append(StepResult(
+                step_num=s.step_num, task_id=tid,
+                tool_name="search_regulations", success=True,
+                result=str(result), duration_ms=duration_ms / len(merged_task_ids),
+            ))
+
+        return merged_results
+
     # ── 核心执行流程 ──────────────────────────────────
 
     async def execute(
@@ -405,7 +493,7 @@ class PlannerExecutor:
                 self._last_state = state
                 raise DAGDeadlockError(remaining_tasks, completed_tasks)
 
-            # 收集所有就绪任务的步骤，跨任务并行执行
+            # 收集所有就绪任务的步骤
             ready_steps = []
             for tid in sorted(ready_tasks):
                 ready_steps.extend(task_steps.get(tid, []))
@@ -415,8 +503,22 @@ class PlannerExecutor:
                 step_counter += 1
                 s.step_num = step_counter
 
-            print(f"  [DAG] 本轮就绪任务: {ready_tasks}, {len(ready_steps)} 步并行")
-            batch_results = await self._execute_parallel(ready_steps)
+            # ── 检索合并：多个独立 task 都是 search_regulations → 合并为一次检索 ──
+            merge_info = self._try_merge_retrieval(ready_steps, task_map)
+            if merge_info:
+                merged_task_ids = set(merge_info["merged_task_ids"])
+                merged_steps = [s for s in ready_steps
+                               if s.task_id in merged_task_ids
+                               and s.tool_name == "search_regulations"]
+                non_merged = [s for s in ready_steps if s not in merged_steps]
+
+                merged_results = await self._execute_merged_search(merge_info)
+                non_merged_results = await self._execute_parallel(non_merged) if non_merged else []
+                batch_results = merged_results + non_merged_results
+            else:
+                print(f"  [DAG] 本轮就绪任务: {ready_tasks}, {len(ready_steps)} 步并行")
+                batch_results = await self._execute_parallel(ready_steps)
+
             all_results.extend(batch_results)
 
             # 标记完成

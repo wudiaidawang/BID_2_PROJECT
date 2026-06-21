@@ -12,9 +12,11 @@ from app.core.legal_structure_parser import LawDocument, ChapterInfo, ArticleInf
 class ParentChunkBuilder:
     """将结构化法律文档转为 parent chunks"""
 
-    def __init__(self, source: str = "", header_injection: bool = True):
+    def __init__(self, source: str = "", header_injection: bool = True,
+                 chunk_type: str = "parent"):
         self.source = source
         self.header_injection = header_injection
+        self.chunk_type = chunk_type
         self._counter = 0
 
     def build(self, documents: List[LawDocument]) -> List[Dict]:
@@ -46,7 +48,7 @@ class ParentChunkBuilder:
 
     def _build_parent(self, law_name: str, chapter: str,
                       art: ArticleInfo) -> Dict:
-        """构建单个 parent chunk"""
+        """构建单个 parent chunk —— retrieval_text / text 解耦"""
         content = art.content
         chunk_id = self._make_chunk_id(law_name, art.article_id, content)
 
@@ -58,30 +60,31 @@ class ParentChunkBuilder:
         else:
             embedding_header = full_header
 
-        # ChromaDB 存储的文本：header + 正文
-        if self.header_injection:
-            store_text = f"{embedding_header}\n{content}"
-        else:
-            store_text = content
+        # retrieval_text = header + 正文 → 参与向量化和 BM25
+        retrieval_text = f"{embedding_header}\n{content}" if self.header_injection else content
+        # text = 原始正文 → 用户展示，无 header 污染
+        text = content
 
         return {
             "chunk_id": chunk_id,
-            "chunk_type": "parent",
+            "chunk_type": self.chunk_type,
             "parent_id": "",
             "law_name": law_name,
             "chapter": chapter,
             "article": art.article_text,
             "article_id": art.article_id,
-            "content": store_text,
-            "header_for_embedding": full_header,   # 完整 header（供 child chunks 继承 + 显示用）
+            "retrieval_text": retrieval_text,
+            "text": text,
+            "header_for_embedding": full_header,   # 完整 header（供 child chunks 继承）
             "raw_content": content,                # 不含 header 的原始法条内容
             "metadata": {
-                "source": self.source,
+                "source_doc": self.source,
                 "law_name": law_name,
                 "chapter": chapter,
                 "article": art.article_text,
                 "article_id": art.article_id,
-                "chunk_type": "parent",
+                "chunk_type": self.chunk_type,
+                "chunk_order": str(art.article_id),
                 "parent_id": "",
             }
         }

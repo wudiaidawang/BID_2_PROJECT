@@ -35,6 +35,7 @@ async def test(question: str):
         deps = f" depends_on={t.get('depends_on', [])}" if t.get('depends_on') else ""
         print(f"  {t['task_id']}: {t['goal']}{deps}")
 
+
     # Plan 层
     plan_steps = plan.get('plan', [])
     print(f"\n[Plan层] {len(plan_steps)} 步骤")

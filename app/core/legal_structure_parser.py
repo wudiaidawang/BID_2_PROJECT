@@ -28,23 +28,29 @@ ARTICLE_BOUNDARY_PATTERN = re.compile(
 # 子项匹配: （一）（二）... 或 (一)(二)...
 SUBSECTION_PATTERN = re.compile(r'[（(]([一二三四五六七八九十\d]+)[）)]')
 
-# 文档标题模式 — 严格匹配中国法律命名规范
+# 文档标题模式 — 匹配中国法律命名规范
+# 注意: Python 3 的 \w 默认匹配 Unicode 汉字，必须用 [a-zA-Z0-9_] 替代
 DOC_TITLE_PATTERNS = [
-    # 中华人民共和国X法 / 中华人民共和国X条例
-    re.compile(r'^中华人民共和国.+[法条例]$'),
-    # 关于...的通知/意见/函
-    re.compile(r'^关于.{4,}[通知意见函]$'),
-    # X法 / X条例 / X办法 / X细则 — 必须简洁（6-18字符，不含标点符号）
-    re.compile(r'^[^\s，。；！？、：（）\(\)\d\w]{4,14}(法|条例|办法|细则)$'),
+    # 中华人民共和国X法 / 中华人民共和国X条例 / 中华人民共和国X办法
+    re.compile(r'^中华人民共和国.+[法条例办法]$'),
+    # 关于...的通知/意见/函/规定
+    re.compile(r'^关于.{4,}[通知意见函规定]$'),
+    # X法 / X条例 / X办法 / X细则 / X规定 / X通知 / X暂行办法 / X实施办法
+    # 上限 16：过长的匹配多为正文行被误判（如"...采用综合评分法"）
+    re.compile(r'^[^\s，。；！？、：（）\(\)\da-zA-Z0-9_]{2,16}(暂行|实施)?(法|条例|办法|细则|规定|通知)$'),
 ]
 
-# 标题内禁止关键词
+# 标题内禁止关键词（用于排除明显非标题的行）
 TITLE_BLACKLIST = [
-    '第', '条', '款', '项', '目', '节',
-    '目录', '索引', '附录', '前言',
+    # 结构标识 — 法条、目录行不是法律标题
+    # "条" 不在黑名单中：ARTICLE_BOUNDARY_PATTERN 已拦截 "第X条"，
+    # 而 "条例" 是合法的标题后缀（如 "政府采购法实施条例"）
+    '第', '款', '节',
+    # 按"第X项/第X目"格式排除（不影响标题中含"项目""条目"的字）
+    '目录', '索引', '附录', '前言', '编写说明',
     '出版', 'ISBN', 'CIP',
-    '违反', '不得', '应当', '可以', '必须',  # 常用法律动词（非标题特征）
-    '规定', '处理', '处罚',                     # 可能误匹配"规定"后缀
+    # 常见法律正文动词 — 只排除独立成句的情况
+    '违反', '不得', '应当', '可以', '必须',
 ]
 
 
@@ -134,6 +140,9 @@ class LegalStructureParser:
                 if self._should_skip(stripped):
                     continue
 
+                # 清理标题噪声（PDF 提取残留的破折号、编号等）
+                clean_title = self._clean_title(stripped)
+
                 if found_first_title and current_doc["lines"]:
                     content = '\n'.join(current_doc["lines"])
                     if len(content) > 200:
@@ -141,7 +150,7 @@ class LegalStructureParser:
                 elif not found_first_title:
                     found_first_title = True
 
-                current_doc = {"title": stripped, "lines": []}
+                current_doc = {"title": clean_title, "lines": []}
             elif found_first_title:
                 current_doc["lines"].append(stripped)
 
@@ -155,25 +164,27 @@ class LegalStructureParser:
 
     def _is_document_title(self, line: str) -> bool:
         """判断是否为文档标题（严格模式）"""
-        if len(line) < 8 or len(line) > 40:
+        # 先清理 PDF 噪声，再检查长度（避免 "--XX办法" 因前缀占位被拒）
+        cleaned = self._clean_title(line)
+        if len(cleaned) < 8 or len(cleaned) > 40:
             return False
-        if re.match(r'^\d+$', line):
+        if re.match(r'^\d+$', cleaned):
             return False
         # 排除结构标识
-        if CHAPTER_PATTERN.match(line):
+        if CHAPTER_PATTERN.match(cleaned):
             return False
-        if ARTICLE_BOUNDARY_PATTERN.match(line):
+        if ARTICLE_BOUNDARY_PATTERN.match(cleaned):
             return False
         # 排除含黑名单词的行
         for kw in TITLE_BLACKLIST:
-            if kw in line:
+            if kw in cleaned:
                 return False
         # 排除 TOC 关键词
         for kw in self.TOC_KEYWORDS:
-            if kw in line:
+            if kw in cleaned:
                 return False
         for pattern in DOC_TITLE_PATTERNS:
-            if pattern.search(line):
+            if pattern.search(cleaned):
                 return True
         return False
 
@@ -183,6 +194,16 @@ class LegalStructureParser:
             if kw in title:
                 return True
         return False
+
+    @staticmethod
+    def _clean_title(title: str) -> str:
+        """清理 PDF 提取残留的标题噪声（破折号、编号前缀等）"""
+        # 去掉前导噪声: --, ——, —, -, §, 数字编号等
+        cleaned = title.lstrip('-—－#§0123456789.、 \t')
+        # 如果清理后为空或太短，返回原标题
+        if len(cleaned) < 4:
+            return title
+        return cleaned
 
     # ── 单部法律解析 ──────────────────────────────────────
 

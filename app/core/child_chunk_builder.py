@@ -14,11 +14,12 @@ from config import settings
 class ChildChunkBuilder:
     """将超长 parent chunks 拆分为 child chunks"""
 
-    def __init__(self):
+    def __init__(self, chunk_type: str = "child"):
         self.threshold = settings.legal_child_split_threshold
         self.target_size = settings.legal_child_target_size
         self.overlap = settings.legal_child_overlap
         self.header_enabled = settings.legal_header_injection_enabled
+        self.chunk_type = chunk_type
 
     def build(self, parents: List[Dict]) -> List[Dict]:
         """为所有 parent chunks 生成 child chunks"""
@@ -184,7 +185,7 @@ class ChildChunkBuilder:
         return result if result else segments
 
     def _make_children(self, segments: List[str], parent: Dict) -> List[Dict]:
-        """为拆分后的段构建 child chunk 对象"""
+        """为拆分后的段构建 child chunk 对象 —— retrieval_text / text 解耦"""
         children = []
         parent_id = parent["chunk_id"]
         header = parent.get("header_for_embedding", "")
@@ -195,30 +196,31 @@ class ChildChunkBuilder:
 
             chunk_id = f"{parent_id}_child{i}"
 
-            # embedding 文本 = header + 子块内容
-            if self.header_enabled and header:
-                store_text = f"{header}\n{seg}"
-            else:
-                store_text = seg
+            # retrieval_text = header + 子块内容 → 参与向量化和 BM25
+            retrieval_text = f"{header}\n{seg}" if (self.header_enabled and header) else seg
+            # text = 子块原文 → 用户展示
+            text = seg
 
             children.append({
                 "chunk_id": chunk_id,
-                "chunk_type": "child",
+                "chunk_type": self.chunk_type,
                 "parent_id": parent_id,
                 "law_name": parent["law_name"],
                 "chapter": parent["chapter"],
                 "article": parent["article"],
                 "article_id": parent["article_id"],
-                "content": store_text,
+                "retrieval_text": retrieval_text,
+                "text": text,
                 "raw_content": seg,
                 "header_for_embedding": header,
                 "metadata": {
-                    "source": parent["metadata"].get("source", ""),
+                    "source_doc": parent["metadata"].get("source_doc", ""),
                     "law_name": parent["law_name"],
                     "chapter": parent["chapter"],
                     "article": parent["article"],
                     "article_id": parent["article_id"],
-                    "chunk_type": "child",
+                    "chunk_type": self.chunk_type,
+                    "chunk_order": f"{parent['article_id']}_child{i}",
                     "parent_id": parent_id,
                 }
             })

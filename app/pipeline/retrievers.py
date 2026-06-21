@@ -10,8 +10,7 @@ import numpy as np
 from typing import List, Dict, Optional
 from rank_bm25 import BM25Okapi
 
-from app.storage.chroma_store import ChromaStore
-from app.core.embedding import EmbeddingService
+from app.storage import get_vector_store
 from app.schema.metadata import normalize_chunks
 from config import settings
 
@@ -24,10 +23,10 @@ def chinese_tokenize(text: str) -> List[str]:
 
 
 class VectorRetriever:
-    """纯向量检索 —— 封装 ChromaDB 查询"""
+    """纯向量检索 —— 自动适配 ChromaDB / Milvus 后端"""
 
-    def __init__(self, chroma_store: ChromaStore = None):
-        self.store = chroma_store or ChromaStore()
+    def __init__(self, store=None):
+        self.store = store or get_vector_store()
 
     def search(self, query: str, collection: str, top_k: int = None) -> List[Dict]:
         """向量检索，返回统一 schema 的 chunk 列表"""
@@ -40,6 +39,21 @@ class VectorRetriever:
         return self.store.get_all_documents(collection)
 
 
+class ServerBM25Retriever:
+    """服务端 BM25 关键词检索 —— 走 Milvus sparse_vector 字段，零客户端开销"""
+
+    def __init__(self, store=None):
+        self.store = store or get_vector_store()
+
+    def search(self, query: str, collection: str, top_k: int = None) -> List[Dict]:
+        k = top_k or settings.bm25_recall
+        try:
+            results = self.store.search_keyword(collection, query, top_k=k)
+        except Exception:
+            return []
+        return normalize_chunks(results)
+
+
 class BM25Retriever:
     """纯 BM25 关键词检索 —— 管理索引缓存"""
 
@@ -48,8 +62,8 @@ class BM25Retriever:
         self._texts: Dict[str, List[str]] = {}
 
     def build_index(self, collection: str, documents: List[Dict]):
-        """为 collection 构建 BM25 索引"""
-        texts = [d.get("text", "") for d in documents]
+        """为 collection 构建 BM25 索引 —— 使用 retrieval_text"""
+        texts = [d.get("retrieval_text", d.get("text", "")) for d in documents]
         if not texts:
             return
         tokenized = [chinese_tokenize(t) for t in texts]

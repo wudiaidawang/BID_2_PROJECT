@@ -144,7 +144,7 @@ class SQLQueryTool(BaseTool):
         try:
             from app.core.sql_engine import SQLEngine
             engine = SQLEngine()
-            sql, data = engine.execute_query(query)
+            sql, data = await engine.execute_query(query)
             if data:
                 return f"SQL查询: {sql}\n结果: {data}"
             return f"SQL查询: {sql}\n结果: 未查询到数据"

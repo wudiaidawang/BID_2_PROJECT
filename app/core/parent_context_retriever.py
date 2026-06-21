@@ -54,7 +54,7 @@ class ParentContextRetriever:
 
         for r in results:
             meta = r.get("metadata", {}) or r.get("data", {})
-            if meta.get("chunk_type") == "child":
+            if str(meta.get("chunk_type", "")).endswith("_child"):
                 child_results.append(r)
             else:
                 non_child_results.append(r)
@@ -115,61 +115,29 @@ class ParentContextRetriever:
 
     def _batch_get_parents(self, parent_ids: Set[str],
                            collection: str) -> Dict[str, Dict]:
-        """批量从 ChromaDB 查询 parent chunks"""
+        """按 ID 精准查询 parent chunks（按需加载，不做全量预取）"""
         if not parent_ids:
             return {}
 
-        # 先从缓存读取
-        if collection not in self._parent_cache:
-            self._load_parent_cache(collection)
+        cache = self._parent_cache.setdefault(collection, {})
+        missing = parent_ids - set(cache.keys())
 
-        cached = self._parent_cache.get(collection, {})
-        missing = parent_ids - set(cached.keys())
-
-        # 缓存缺失时，逐个查询
         if missing:
             self._query_missing_parents(missing, collection)
 
-        return {
-            pid: self._parent_cache.get(collection, {}).get(pid, {})
-            for pid in parent_ids
-        }
-
-    def _load_parent_cache(self, collection: str):
-        """预加载所有 parent chunks 到缓存"""
-        try:
-            all_docs = self._store.get_all_documents(collection)
-        except Exception:
-            self._parent_cache[collection] = {}
-            return
-
-        cache = {}
-        for doc in all_docs:
-            meta = doc.get("metadata", {})
-            if meta.get("chunk_type") == "parent":
-                cache[doc["id"]] = doc
-
-        self._parent_cache[collection] = cache
-        parent_count = len(cache)
-        if parent_count > 0:
-            print(f"[ParentContext] Cached {parent_count} parents from '{collection}'")
+        return {pid: cache.get(pid, {}) for pid in parent_ids}
 
     def _query_missing_parents(self, missing_ids: Set[str], collection: str):
         """查询缓存中缺失的 parent chunks"""
         try:
-            col = self._store.get_collection(collection)
-            result = col.get(ids=list(missing_ids))
+            docs = self._store.get_by_ids(collection, list(missing_ids))
         except Exception:
             return
 
-        if result and result.get("ids"):
+        if docs:
             cache = self._parent_cache.setdefault(collection, {})
-            for i, doc_id in enumerate(result["ids"]):
-                cache[doc_id] = {
-                    "id": doc_id,
-                    "text": result["documents"][i] if result.get("documents") else "",
-                    "metadata": result["metadatas"][i] if result.get("metadatas") else {},
-                }
+            for doc in docs:
+                cache[doc["id"]] = doc
 
     def invalidate_cache(self, collection: str = None):
         """使缓存失效（知识库更新后调用）"""
