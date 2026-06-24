@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 强制规则：远程服务器操作前必须读记忆
+
+任何涉及 `47.117.173.99`、远程 SSH、端口 8210/8001/8002/19531、Milvus、embedding、reranker 的操作，**必须先 Read 完整内存文件** `C:\Users\13249\.claude\projects\E--BID-3-PROJECT-langchain\memory\remote-services-setup.md`。禁止凭 MEMORY.md 标题摘要或模糊印象直接操作。违反此条是上一会话的严重失误（端口猜错、自己写假服务），不得再犯。
+
 ## Project Overview
 
 招投标智能问答系统 (Bidding & Tendering Intelligent Q&A System) — a RAG + SQL dual-engine Q&A service built on FastAPI. Answers both statistical questions (e.g., "how many bids last year?") via SQLite and regulatory/compliance questions via hybrid retrieval from PDF law books.

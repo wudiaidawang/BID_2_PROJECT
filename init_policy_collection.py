@@ -18,6 +18,7 @@ import pandas as pd
 from config import settings
 from app.storage import get_vector_store
 from app.core.legal_structure_parser import LegalStructureParser
+from app.core.appendix_detector import remove_appendix_articles, get_detection_report
 from app.core.parent_chunk_builder import ParentChunkBuilder
 from app.core.child_chunk_builder import ChildChunkBuilder
 
@@ -117,7 +118,19 @@ def chunk_by_structure(full_text: str, pdf_name: str):
     doc_stats = parser.get_statistics(documents)
 
     print(f"    解析: {doc_stats['law_count']}部法律, {doc_stats['chapter_count']}章, {doc_stats['article_count']}条")
-    if doc_stats["article_count"] == 0:
+
+    # 附录/模板过滤 — 在 Chunk 前移除表单、附录、格式文本
+    report = get_detection_report(documents)
+    documents = remove_appendix_articles(documents)
+    if "FILTERED" in report:
+        print(f"    {report.split(chr(10))[0]}")
+        for line in report.split(chr(10))[1:]:
+            if line.strip():
+                print(f"    {line}")
+
+    # 过滤后重新统计，无 article 则跳过
+    post_stats = parser.get_statistics(documents)
+    if post_stats["article_count"] == 0:
         return None
 
     parent_builder = ParentChunkBuilder(source=pdf_name, header_injection=True,
