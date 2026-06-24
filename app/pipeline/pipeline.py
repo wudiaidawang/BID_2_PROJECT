@@ -13,7 +13,7 @@ import time
 from typing import List, Dict, Optional, Callable
 
 from app.pipeline.preprocessor import QueryPreprocessor
-from app.pipeline.retrievers import VectorRetriever, BM25Retriever, ServerBM25Retriever
+from app.pipeline.retrievers import VectorRetriever, BM25Retriever
 from app.pipeline.fusion import RRFFusion, WeightedFusion
 from app.pipeline.expanders import ParentContextExpander, NoopExpander
 from app.pipeline.rerankers import BgeReranker
@@ -132,7 +132,7 @@ class SearchPipeline:
         # ── 阶段2: 检索器 ──
         self._store = get_vector_store()
         self.vector = VectorRetriever(self._store)
-        self.bm25 = ServerBM25Retriever(self._store)
+        self.bm25 = BM25Retriever()
 
         # ── 阶段3: 融合策略 ──
         self.rrf = RRFFusion()
@@ -245,8 +245,9 @@ class SearchPipeline:
         vec_results = self.vector.search(normalized, collection,
                                          settings.vector_recall)
 
-        # BM25 召回 —— 走服务端 Milvus sparse_vector
-        bm25_results = self.bm25.search(normalized, collection,
+        # BM25 召回 —— 本地 jieba 分词，不依赖 Milvus 内置分析器
+        all_docs = self._get_all_docs(collection)
+        bm25_results = self.bm25.search(normalized, collection, all_docs,
                                         settings.bm25_recall)
 
         # 融合（带断路器）—— 输入 = vec + bm25 候选数

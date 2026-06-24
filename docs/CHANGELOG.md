@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-06-25 — BM25 本地化 + Benchmark 修复（详见 [CHANGELOG_2026-06-25_BM25本地化与Benchmark修复](CHANGELOG_2026-06-25_BM25本地化与Benchmark修复.md)）
+
+- BM25 从 Milvus 内置字符 n-gram 切换为本地 jieba 分词检索
+- V4 Benchmark ID 修复 3 条，1000 条全部与 Milvus 一致
+- 空白门控附录检测器集成到切块流程
+
+---
+
 ## 2026-06-24 — BM25 恢复 + 召回评测 V4（详见 [CHANGELOG_2026-06-24_BM25恢复与召回评测V4](CHANGELOG_2026-06-24_BM25恢复与召回评测V4.md)）
 
 - BM25 检索恢复（SSH 隧道重连）

@@ -4,7 +4,7 @@ RAG + SQL 双引擎招投标智能问答平台 — 基于 FastAPI，Milvus 向�
 
 ## 功能特性
 
-- **Milvus 向量库**：3 个 collection（bids / regulations / policy），HNSW Dense + BM25 Sparse 双向量检索，SSH 隧道连接远程服务
+- **Milvus 向量库**：3 个 collection（bids / regulations / policy），HNSW Dense 向量检索 + 本地 jieba BM25 关键词检索，SSH 隧道连接远程服务
 - **BGE-M3 远程 Embedding**：1024 维，Embedding / Reranker 均走远程模型服务 API，失败自动 fallback 本地
 - **fast/think 双模路由**：FastRouter 关键词+三路投票直判 SQL/RAG (0~1 LLM)，ThinkRouter TaskAnalysis 分解 → 按实际 task 数量自适应分流 Planner DAG (1~2 LLM)
 - **6 大数据分类**：政策信息 + 招标公告 + 舆情信息 + 企业画像 + 价格信息 + 商品参数，覆盖招投标全链条
@@ -326,7 +326,7 @@ search_unified(query)
   ├─ Stage 1: preprocess  → 中文数字规范化 + 口语→书面语 + 同义词扩展
   │
   ├─ Stage 2: retrieve    → 对每个 collection (regulations, bids, policy) 分别执行:
-  │    per-collection:       vector(Milvus HNSW, recall=50) + BM25(Milvus Sparse, recall=50)
+  │    per-collection:       vector(Milvus HNSW, recall=50) + BM25(本地 jieba 分词, recall=50)
   │                          → fusion (RRF 或 Weighted) → 各库 top_k*3 候选项
   │                          → 三库候选项合并 (extend)
   │    ★ 分库召回 — 各库独立检索，结果层合并
@@ -349,7 +349,7 @@ search_unified(query)
 ## 评估
 
 ```bash
-# V4 评测（1001 题，RRF 融合 + BGE-Reranker 精排）
+# V4 评测（1000 题，RRF 融合 + BGE-Reranker 精排）
 python run_recall_eval_full.py
 
 # 生成评测集
@@ -364,7 +364,7 @@ python gen_eval_benchmark_v2.py    # V2 生成器
 | V1 | 457 | 单级 exact | -- | ❌ 已废弃 |
 | V2 | 898 | 三级 (exact/parent/soft) | -- | ⚠️ 含截断 law_name 问题 |
 | V3 | 772 | 四级 (exact/parent/soft/cosine) | -- | ⚠️ 126 题因滑动窗口重切失效 |
-| **V4** | **1001** | RRF + BGE-Reranker | **90.0%** | ✅ 当前主力 |
+| **V4** | **1000** | RRF + BGE-Reranker | **90.0%** | ✅ 当前主力 |
 
 ### V4 评测报告 (2026-06-24)
 
@@ -391,7 +391,7 @@ python gen_eval_benchmark_v2.py    # V2 生成器
 
 | 文件 | 说明 |
 |------|------|
-| `eval_benchmark_v4.json` | V4 问答对（1001 题） |
+| `eval_benchmark_v4.json` | V4 问答对（1000 题） |
 | `eval_benchmark_v4_clean_law.json` | V4 清洁版（law_name 已修正） |
 | `eval_benchmark_v3.json` | V3 问答对（772 题） |
 | `eval_benchmark_v2.json` | V2 问答对（898 题） |
@@ -437,7 +437,7 @@ python gen_eval_benchmark_v2.py    # V2 生成器
 ├── gen_eval_benchmark_v2.py    V2 评测集生成
 ├── app/
 │   ├── api/                    FastAPI 路由 + Schema
-│   ├── core/                   检索引擎 / 路由 / LLM / SQL / 查询改写 / Memory
+│   ├── core/                   检索引擎 / 路由 / LLM / SQL / 查询改写 / Memory / 附录检测
 │   │   ├── memory/             Memory 模块 (Buffer + Summary + Entity)
 │   │   └── model_client.py     远程模型服务客户端 (embedding / rerank)
 │   ├── agent/                  Agent 模式 (ReAct + Planner + State + Tools)
@@ -455,6 +455,7 @@ python gen_eval_benchmark_v2.py    # V2 生成器
 │   ├── eval_questions/         评估问答集 (V2/V3/V4)
 │   └── QA_report/               召回评测报告 (V2/V3/V4)
 ├── frontend/                   前端界面
+├── tools/                      诊断与验证工具
 ├── init_scripts/               辅助初始化脚本
 ├── checkpoints/                断点文件目录
 ├── chroma_db/                  向量数据库 (ChromaDB 模式)

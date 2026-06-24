@@ -1,7 +1,7 @@
 {
   "version": "v4",
   "description": "基于 policy collection chunks 生成的召回评估问答集 (1000题)",
-  "total": 1001,
+  "total": 1000,
   "stats": {
     "by_chunk_type": {
       "pdf_law_parent": 451,
@@ -9710,7 +9710,7 @@
       "source_chunks": [
         "parent_及教学资源招标采购管理办法_6_2886_8657_child1"
       ],
-      "expected_chunk_id": "parent_及教学资源招标采购管理办法_6_2886_8657_child1",
+      "expected_chunk_id": "parent_及教学资源招标采购管理办法_6_2886_8657_child0",
       "acceptable_chunk_ids": [],
       "type": "pdf_law_child",
       "category": "法规原文",
@@ -11069,27 +11069,6 @@
       "is_regulatory_strict": true
     },
     {
-      "id": "qa_v4_0527",
-      "question": "政府采购投诉处理结果的公告需要包含哪些基本项目和内容？",
-      "answer": "投诉处理结果公告应包含项目编号、项目名称、相关当事人、基本情况、处理依据及结果、其他补充等内容。",
-      "source_chunks": [
-        "parent_《中华人民共和国政府采购法实施条例》等有_22_4397_6456_child7"
-      ],
-      "expected_chunk_id": "parent_《中华人民共和国政府采购法实施条例》等有_22_4397_6456_child7",
-      "acceptable_chunk_ids": [],
-      "type": "pdf_law_child",
-      "category": "法规原文",
-      "sub_category": "政府采购法",
-      "chunk_type": "pdf_law_child",
-      "span": "single",
-      "article_id": "22",
-      "law_name": "中华人民共和国政府采购法实施条例",
-      "difficulty": "hard",
-      "expected_source_type": "法规原文",
-      "expected_answer_text": "投诉处理结果公告应包含项目编号、项目名称、相关当事人、基本情况、处理依据及结果、其他补充等内容。",
-      "is_regulatory_strict": true
-    },
-    {
       "id": "qa_v4_0528",
       "question": "中央国家机关政府采购电子卖场中，供应商存在哪些行为会被认定为违规？",
       "answer": "供应商存在质量配置或售后服务不符合规定、盗用其他电商logo底纹或水印图片、价格明显高于相同或同等配置产品价格、不符合政府采购原则等行为会被认定为违规。",
@@ -11262,9 +11241,9 @@
       "question": "《中华人民共和国政府采购法实施条例》第三十一条规定的重点审查包含哪几类审查及各自的审查方向？",
       "answer": "《中华人民共和国政府采购法实施条例》第三十一条规定的重点审查包括非歧视性审查和竞争性审查，前者主要审查是否指向特定供应商或产品，后者主要审查是否确保充分竞争。",
       "source_chunks": [
-        "parent_《中华人民共和国政府采购法实施条例》等有关法_31_4022_3381_child0"
+        "parent_《中华人民共和国政府采购法实施条例》等有_31_4022_3381_child0"
       ],
-      "expected_chunk_id": "parent_《中华人民共和国政府采购法实施条例》等有关法_31_4022_3381_child0",
+      "expected_chunk_id": "parent_《中华人民共和国政府采购法实施条例》等有_31_4022_3381_child0",
       "acceptable_chunk_ids": [],
       "type": "pdf_law_child",
       "category": "法规原文",
