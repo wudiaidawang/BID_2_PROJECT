@@ -9962,7 +9962,7 @@
       "source_chunks": [
         "parent_机电产品国际招标投标'双随机一公开'监管_19_1419_1282_child0"
       ],
-      "expected_chunk_id": "parent_机电产品国际招标投标'双随机一公开'监管_19_1419_1282_child0",
+      "expected_chunk_id": "parent_政府采购货物和服务招标投标“双随机一公开”监管办法_19_1419_1282_child0",
       "acceptable_chunk_ids": [],
       "type": "pdf_law_child",
       "category": "法规原文",
@@ -20928,7 +20928,7 @@
       "source_chunks": [
         "pdf_招标投标法律解读与风险防范_para_0659"
       ],
-      "expected_chunk_id": "pdf_招标投标法律解读与风险防范_para_0659",
+      "expected_chunk_id": "pdf_招标投标法律解读与风险防范实务_para_0659",
       "acceptable_chunk_ids": [],
       "type": "pdf_case_paragraph",
       "category": "案例",
@@ -20949,7 +20949,7 @@
       "source_chunks": [
         "pdf_招标投标法律解读与风险防范_para_0492"
       ],
-      "expected_chunk_id": "pdf_招标投标法律解读与风险防范_para_0492",
+      "expected_chunk_id": "pdf_招标投标法律解读与风险防范实务_para_0492",
       "acceptable_chunk_ids": [],
       "type": "pdf_case_paragraph",
       "category": "案例",
