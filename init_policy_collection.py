@@ -94,10 +94,26 @@ def chunk_by_paragraphs(full_text: str, pdf_name: str,
     return chunks
 
 
+# 大合集PDF中因跨行换行导致截断的法规名 → 完整名称映射
+_TRUNCATED_NAME_FIXES = {
+    "和服务定点采购管理办法": "中央国家机关政府采购中心货物和服务定点采购管理办法",
+    "及评标专家管理办法": "铁路建设工程评标专家库及评标专家管理办法",
+    "与招投标挂钩办法": "铁路建设工程质量安全事故与招投标挂钩办法",
+}
+
+
 def chunk_by_structure(full_text: str, pdf_name: str):
     """Parent-Child结构化切块（法律条文类PDF）"""
     parser = LegalStructureParser()
     documents = parser.parse(full_text, pdf_name)
+
+    # 修正截断的法规名
+    for doc in documents:
+        if doc.law_name in _TRUNCATED_NAME_FIXES:
+            old = doc.law_name
+            doc.law_name = _TRUNCATED_NAME_FIXES[old]
+            print(f"    修正: {old} → {doc.law_name}")
+
     doc_stats = parser.get_statistics(documents)
 
     print(f"    解析: {doc_stats['law_count']}部法律, {doc_stats['chapter_count']}章, {doc_stats['article_count']}条")
@@ -184,6 +200,8 @@ def load_policy_collection(client):
                 retrieval_texts.append(rt)
                 texts.append(rt)  # Excel 数据 retrieval_text = text（无 header 注入）
                 clean = {k: (str(v) if pd.notna(v) else "") for k, v in record.items()}
+                clean["title"] = clean.get("政策标题", "")
+                clean["law_name"] = clean.get("政策标题", "")
                 clean["category"] = "policy"
                 clean["chunk_type"] = "policy_doc"
                 clean["data_version"] = "2026-06-18_v1"
@@ -221,6 +239,8 @@ def load_policy_collection(client):
                 clean["category"] = "opinion"
                 clean["chunk_type"] = "opinion_news"
                 clean["data_version"] = "2026-06-18_v1"
+                clean["title"] = clean.get("舆情标题", "")
+                clean["law_name"] = clean.get("舆情标题", "")
                 clean["source_doc"] = "opinion_data.xlsx"
                 clean["chunk_order"] = str(i)
                 metas.append(clean)

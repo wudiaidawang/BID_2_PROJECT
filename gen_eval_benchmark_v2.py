@@ -40,9 +40,8 @@ CHUNKS_PATH = Path(__file__).parent / "data" / "eval_questions" / "policy_chunks
 OUTPUT_PATH = Path(__file__).parent / "data" / "eval_questions" / "eval_benchmark_v2.json"
 PROGRESS_PATH = Path(__file__).parent / "data" / "eval_questions" / ".qa_gen_progress_v2.json"
 
-# API 配置 (Hunyuan, OpenAI 兼容)
-API_BASE_URL = "https://tokenhub.tencentmaas.com/v1"
-API_MODEL = "hy3-preview"
+# API 配置 — 从 config.yaml 读取当前 provider（由 llm.provider 字段控制）
+# 如需切换，修改 config.yaml 的 llm.provider 即可
 
 # 生成参数
 BATCH_SIZE = 8          # 每批发送的 chunk 数
@@ -291,9 +290,12 @@ class QAGenerator:
     def _init_client(self):
         from config import settings
         api_key = settings.llm_api_key
+        api_url = settings.llm_api_url
+        base_url = api_url.replace("/chat/completions", "")
         if not api_key:
-            raise RuntimeError("LLM_API_KEY 未设置（请在 config.yaml 中配置）")
-        return OpenAI(base_url=API_BASE_URL, api_key=api_key)
+            raise RuntimeError(f"LLM_API_KEY 未设置（provider={settings.llm_provider}）")
+        self._model = settings.llm_model
+        return OpenAI(base_url=base_url, api_key=api_key)
 
     def _load_progress(self) -> dict:
         if PROGRESS_PATH.exists():
@@ -310,7 +312,7 @@ class QAGenerator:
         for attempt in range(MAX_RETRIES):
             try:
                 resp = self.client.chat.completions.create(
-                    model=API_MODEL,
+                    model=self._model,
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
@@ -318,8 +320,13 @@ class QAGenerator:
                     temperature=0.7,
                     max_tokens=4096,
                     timeout=120,
+                    extra_body={"thinking": {"type": "disabled"}},
                 )
-                return resp.choices[0].message.content
+                content = resp.choices[0].message.content
+                # GLM-4.5 思考模式可能 content 为空，回退到 reasoning_content
+                if not content:
+                    content = getattr(resp.choices[0].message, "reasoning_content", "")
+                return content
             except Exception as e:
                 print(f"  LLM 调用失败 (尝试 {attempt+1}/{MAX_RETRIES}): {e}")
                 if attempt < MAX_RETRIES - 1:

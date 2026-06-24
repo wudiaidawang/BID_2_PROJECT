@@ -78,7 +78,7 @@ class Settings(BaseSettings):
 
     @property
     def reranker_service_url(self) -> str:
-        return _yaml("embedding.reranker_service_url", "http://127.0.0.1:8001")
+        return _yaml("embedding.reranker_service_url", "http://127.0.0.1:8210")
 
     @property
     def hf_endpoint(self) -> str:

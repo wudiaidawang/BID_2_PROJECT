@@ -1,8 +1,9 @@
-"""Recall evaluation V2 — 三级命中体系: parent / exact / soft.
+"""Recall evaluation V3 — 四级命中体系: parent / exact / soft / cosine.
 
 Primary:  parent_hit (父块命中) — same article_id+law_name, regulation-type chunk
 Secondary: exact_hit (精确 chunk 匹配) — data quality indicator
 Soft:     semantic equiv (法条 vs 解读同条) — reported separately, NOT counted as Miss
+Cosine:   cosine ≥ 0.85 (语义相近但 ID 不同) — fallback hit, NOT counted as Miss
 """
 import asyncio
 import json
@@ -11,15 +12,20 @@ import sys
 import time
 from collections import defaultdict
 
+import numpy as np
+
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 
-QA_PATH = "data/eval_questions/eval_benchmark_v2.json"
+from app.core.model_client import remote_embed
+
+QA_PATH = "data/eval_questions/eval_benchmark_v4.json"
 TOP_K = 5
+COSINE_THRESHOLD = 0.85
 COLLECTIONS = ["policy"]
 
 
 def _adapt_v2_qa(qa: dict) -> dict:
-    """将 eval_benchmark_v2 格式转为评测脚本内部格式"""
+    """将 eval_benchmark 格式转为评测脚本内部格式"""
     return {
         "qa_id": qa["id"],
         "question": qa["question"],
@@ -41,10 +47,9 @@ def load_qa_pairs():
 # ═══════════════════════════════════════════════════════════════
 
 def resolve_expected_chunks(qa_pairs, store):
-    """Batch-query Milvus for all expected_chunk_ids → parent/article info.
+    """Batch-query Milvus for all expected_chunk_ids → parent/article info + retrieval_text.
     Falls back to parsing IDs for metadata encoded in chunk ID format.
     """
-    import re
     all_ids = set()
     for qa in qa_pairs:
         all_ids.update(qa["expected_chunk_ids"])
@@ -65,6 +70,7 @@ def resolve_expected_chunks(qa_pairs, store):
                     "article_id": str(meta.get("article_id", "")),
                     "law_name": str(meta.get("law_name", "")),
                     "chunk_type": str(meta.get("chunk_type", "")),
+                    "retrieval_text": str(doc.get("retrieval_text", "")),
                 }
         except Exception as e:
             print(f"  [WARN] get_by_ids on '{collection}': {e}")
@@ -139,6 +145,50 @@ def _parse_chunk_id(chunk_id: str) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════
+# Phase 1.5: Pre-compute expected chunk embeddings
+# ═══════════════════════════════════════════════════════════════
+
+def precompute_expected_embeddings(id_resolution: dict, batch_size: int = 200) -> dict:
+    """Batch-encode retrieval_text for all expected chunks → {chunk_id: np.array}."""
+    chunk_ids = []
+    texts = []
+    for cid, info in id_resolution.items():
+        rt = info.get("retrieval_text", "")
+        if rt:
+            chunk_ids.append(cid)
+            texts.append(rt)
+
+    if not texts:
+        return {}
+
+    print(f"  Pre-computing embeddings for {len(texts)} expected chunks...")
+    embeddings_map = {}
+
+    for i in range(0, len(texts), batch_size):
+        batch_ids = chunk_ids[i:i + batch_size]
+        batch_texts = texts[i:i + batch_size]
+        try:
+            vecs = remote_embed(batch_texts, timeout=300)
+            for cid, vec in zip(batch_ids, vecs):
+                embeddings_map[cid] = np.array(vec, dtype=np.float32)
+        except Exception as e:
+            print(f"  [WARN] embed batch {i//batch_size}: {e}")
+            continue
+        if (i + batch_size) % 600 == 0 or (i + batch_size) >= len(texts):
+            print(f"    ... {min(i + batch_size, len(texts))}/{len(texts)}")
+
+    return embeddings_map
+
+
+def _cosine(a: np.ndarray, b: np.ndarray) -> float:
+    """Cosine similarity between two vectors."""
+    denom = float(np.linalg.norm(a) * np.linalg.norm(b))
+    if denom == 0:
+        return 0.0
+    return float(np.dot(a, b) / denom)
+
+
+# ═══════════════════════════════════════════════════════════════
 # Phase 2: Hit classification
 # ═══════════════════════════════════════════════════════════════
 
@@ -170,50 +220,60 @@ def classify_hit(retrieved_chunk, expected_id, expected_info):
     if ret_id == expected_id:
         return "exact"
 
-    # For article-level matching, both sides need article_id + law_name
     exp_article = expected_info.get("article_id", "")
     exp_law = expected_info.get("law_name", "")
-    if not exp_article or not exp_law:
-        return None
-
     ret_meta = retrieved_chunk.get("metadata", {})
     ret_article = str(ret_meta.get("article_id", ""))
     ret_law = str(ret_meta.get("law_name", ""))
-    if ret_article != exp_article or ret_law != exp_law:
+
+    # Article-level matching (有 article_id 的结构化法条)
+    if exp_article and exp_law:
+        if ret_article != exp_article or ret_law != exp_law:
+            return None
+
+        exp_st = _derive_source_type(expected_info.get("chunk_type", ""))
+        ret_st = retrieved_chunk.get("source_type", "")
+
+        if exp_st == ret_st:
+            return "parent"   # 同一来源类型 → 权威匹配
+        else:
+            return "soft"     # 不同来源类型 → 语义等价（如法条 vs 案例解读）
+
+    # Document-level matching (无 article_id 但有 law_name: policy_doc / opinion_news / pdf_case)
+    if not exp_article and exp_law:
+        if ret_law == exp_law:
+            return "parent"   # 同文档 → 父块匹配
         return None
 
-    # Same article → compare source_type granularity
-    exp_st = _derive_source_type(expected_info.get("chunk_type", ""))
-    ret_st = retrieved_chunk.get("source_type", "")
-
-    if exp_st == ret_st:
-        return "parent"   # 同一来源类型 → 权威匹配
-    else:
-        return "soft"     # 不同来源类型 → 语义等价（如法条 vs 案例解读）
+    return None
 
 
 # ═══════════════════════════════════════════════════════════════
 # Phase 3: Core evaluation
 # ═══════════════════════════════════════════════════════════════
 
-async def evaluate(qa_pairs, id_resolution):
+async def evaluate(qa_pairs, id_resolution, expected_embeddings=None):
     from app.pipeline.pipeline import SearchPipeline
 
     pipeline = SearchPipeline()
+    if expected_embeddings is None:
+        expected_embeddings = {}
 
     # Accumulators
     parent_hit1 = 0; parent_hit5 = 0
     exact_hit1 = 0; exact_hit5 = 0
+    cosine_hit1 = 0; cosine_hit5 = 0
     recall_sum = 0.0; mrr_sum = 0.0
-    soft_only = 0  # questions with ONLY soft hits (no parent/exact)
+    soft_only = 0  # questions with ONLY soft hits (no parent/exact/cosine)
     miss_count = 0
     total = 0
 
-    by_cc = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
-    by_cat = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
-    by_st = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
+    by_cc = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"ch1":0,"ch5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
+    by_cat = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"ch1":0,"ch5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
+    by_st = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"ch1":0,"ch5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
 
     soft_hits = []
+    cosine_hits_list = []
     misses = []
 
     start = time.time()
@@ -238,6 +298,17 @@ async def evaluate(qa_pairs, id_resolution):
 
         retrieved = results[:TOP_K]
 
+        # Batch-encode retrieved retrieval_texts for cosine fallback
+        ret_embeddings = []
+        if expected_embeddings:
+            ret_texts = [r.get("retrieval_text", r.get("text", "")) for r in retrieved]
+            if any(ret_texts):
+                try:
+                    vecs = remote_embed(ret_texts, timeout=60)
+                    ret_embeddings = [np.array(v, dtype=np.float32) for v in vecs]
+                except Exception:
+                    ret_embeddings = []
+
         # Per-expected-chunk best hit level
         per_expected = {}
         for eid in expected_ids:
@@ -255,13 +326,23 @@ async def evaluate(qa_pairs, id_resolution):
                 if level == "soft" and best_level is None:
                     best_level = "soft"; best_rank = rank
 
+            # Cosine fallback: when classify_hit finds nothing, try semantic similarity
+            if best_level is None and ret_embeddings and eid in expected_embeddings:
+                exp_vec = expected_embeddings[eid]
+                for rank, r_vec in enumerate(ret_embeddings, 1):
+                    if _cosine(exp_vec, r_vec) >= COSINE_THRESHOLD:
+                        best_level = "cosine"; best_rank = rank
+                        break
+
             per_expected[eid] = {"best": best_level, "rank": best_rank}
 
         # Aggregate per question
         best_levels = [v["best"] for v in per_expected.values()]
         has_exact = "exact" in best_levels
         has_parent = "exact" in best_levels or "parent" in best_levels
-        has_only_soft = not has_parent and "soft" in best_levels
+        has_cosine = "cosine" in best_levels
+        has_any_hit = has_parent or has_cosine
+        has_only_soft = not has_parent and not has_cosine and "soft" in best_levels
         total_found = sum(1 for l in best_levels if l in ("exact", "parent"))
 
         # Parent-hit @K
@@ -284,6 +365,16 @@ async def evaluate(qa_pairs, id_resolution):
                 exact_hit1 += 1
             exact_hit5 += 1
 
+        # Cosine-hit @K
+        first_ch_rank = 0
+        if has_cosine:
+            first_ch_rank = min(
+                (v["rank"] for v in per_expected.values()
+                 if v["best"] == "cosine"), default=0)
+            if first_ch_rank == 1:
+                cosine_hit1 += 1
+            cosine_hit5 += 1
+
         # Recall@K (parent-level)
         recall_k = total_found / len(expected_ids) if expected_ids else 0.0
         recall_sum += recall_k
@@ -292,7 +383,7 @@ async def evaluate(qa_pairs, id_resolution):
         mrr = 1.0 / first_ph_rank if first_ph_rank > 0 else 0.0
         mrr_sum += mrr
 
-        # Soft / Miss tracking
+        # Soft / Cosine / Miss tracking
         if has_only_soft:
             soft_only += 1
             soft_hits.append({
@@ -301,7 +392,14 @@ async def evaluate(qa_pairs, id_resolution):
                 "expected": expected_ids,
                 "retrieved": [r.get("id", "") for r in retrieved],
             })
-        elif not has_parent:
+        elif not has_parent and has_cosine:
+            cosine_hits_list.append({
+                "qa_id": qid, "question": question[:80],
+                "category": category, "chunk_count": chunk_count,
+                "expected": expected_ids,
+                "retrieved": [r.get("id", "") for r in retrieved],
+            })
+        elif not has_any_hit:
             miss_count += 1
             misses.append({
                 "qa_id": qid, "question": question[:80],
@@ -321,14 +419,17 @@ async def evaluate(qa_pairs, id_resolution):
             if has_exact:
                 if first_eh_rank == 1: d["eh1"] += 1
                 d["eh5"] += 1
+            if has_cosine:
+                if first_ch_rank == 1: d["ch1"] += 1
+                d["ch5"] += 1
             if has_only_soft: d["soft"] += 1
-            if not has_parent: d["miss"] += 1
+            if not has_any_hit: d["miss"] += 1
 
         if (i + 1) % 50 == 0:
             elapsed = time.time() - start
             print(f"  [{i+1}/{len(qa_pairs)}] parent_hit@5: {parent_hit5}/{total}={parent_hit5/total*100:.1f}% "
                   f"exact_hit@5: {exact_hit5}/{total}={exact_hit5/total*100:.1f}% "
-                  f"soft: {soft_only} miss: {miss_count} ({elapsed:.0f}s)")
+                  f"cosine_hit@5: {cosine_hit5} soft: {soft_only} miss: {miss_count} ({elapsed:.0f}s)")
 
     elapsed = time.time() - start
     print(f"  Done in {elapsed:.0f}s ({elapsed/total:.2f}s/query)")
@@ -339,10 +440,11 @@ async def evaluate(qa_pairs, id_resolution):
 
     t = total
     report = {
-        "benchmark": "eval_benchmark_v2",
+        "benchmark": "eval_benchmark_v4",
         "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
         "total_evaluated": t,
         "top_k": TOP_K,
+        "cosine_threshold": COSINE_THRESHOLD,
         "overall": {
             "_primary": "parent_hit — 父块命中（同一法条/文章）",
             "parent_hit@1": pct(parent_hit1, t),
@@ -352,6 +454,9 @@ async def evaluate(qa_pairs, id_resolution):
             "_secondary": "exact_hit — 精确 chunk ID 匹配（数据质量指标）",
             "exact_hit@1": pct(exact_hit1, t),
             "exact_hit@5": pct(exact_hit5, t),
+            "_cosine": f"cosine_hit — 余弦 ≥ {COSINE_THRESHOLD}（语义相近但ID不同），不计入Miss",
+            "cosine_hit@1": pct(cosine_hit1, t),
+            "cosine_hit@5": pct(cosine_hit5, t),
             "_soft": "soft_hit — 语义等价（同条但不同源），不计入 Miss",
             "soft_hits_only": f"{soft_only}/{t} = {soft_only/t*100:.1f}%",
             "_miss": "true miss — 无任何命中",
@@ -361,12 +466,14 @@ async def evaluate(qa_pairs, id_resolution):
             "total_unique_chunks": len(id_resolution),
             "with_parent_id": sum(1 for v in id_resolution.values() if v["parent_id"]),
             "with_article_id": sum(1 for v in id_resolution.values() if v["article_id"]),
+            "with_retrieval_text": sum(1 for v in id_resolution.values() if v.get("retrieval_text")),
             "no_article_or_parent": sum(1 for v in id_resolution.values() if not v["article_id"] and not v["parent_id"]),
         },
         "by_chunk_count": {},
         "by_category": {},
         "by_source_type": {},
         "soft_hits": soft_hits,
+        "cosine_hits": cosine_hits_list,
         "misses": misses,
     }
 
@@ -379,6 +486,8 @@ async def evaluate(qa_pairs, id_resolution):
                 "parent_hit@5": pct(d["ph5"], n),
                 "exact_hit@1": pct(d["eh1"], n),
                 "exact_hit@5": pct(d["eh5"], n),
+                "cosine_hit@1": pct(d["ch1"], n),
+                "cosine_hit@5": pct(d["ch5"], n),
                 "recall@5": avg(d["rs"], n),
                 "mrr": avg(d["mrr"], n),
                 "soft_only": f"{d['soft']}/{n}",
@@ -405,13 +514,19 @@ async def main():
     print(f"  Resolved {len(id_resolution)} unique chunk IDs")
     with_article = sum(1 for v in id_resolution.values() if v["article_id"])
     with_parent = sum(1 for v in id_resolution.values() if v["parent_id"])
-    print(f"  With article_id: {with_article}, With parent_id: {with_parent}")
+    with_rt = sum(1 for v in id_resolution.values() if v.get("retrieval_text"))
+    print(f"  With article_id: {with_article}, With parent_id: {with_parent}, With retrieval_text: {with_rt}")
 
-    print(f"\nRunning evaluation V2 (top_k={TOP_K})...")
-    report = await evaluate(qa_pairs, id_resolution)
+    # Pre-compute embeddings for cosine fallback
+    print("\nPre-computing expected chunk embeddings...")
+    expected_embeddings = precompute_expected_embeddings(id_resolution)
+    print(f"  Embeddings: {len(expected_embeddings)}")
+
+    print(f"\nRunning evaluation V2 (top_k={TOP_K}, cosine_threshold={COSINE_THRESHOLD})...")
+    report = await evaluate(qa_pairs, id_resolution, expected_embeddings)
 
     print("\n" + "=" * 60)
-    print("RECALL EVALUATION V2 — 三级命中体系")
+    print("RECALL EVALUATION V2 — 四级命中体系")
     print("=" * 60)
     for metric, value in report["overall"].items():
         if metric.startswith("_"):
@@ -428,6 +543,7 @@ async def main():
         print(f"  chunk_count={key} (n={vals['count']}):")
         print(f"    parent_hit@1={vals['parent_hit@1']}  parent_hit@5={vals['parent_hit@5']}")
         print(f"    exact_hit@1={vals['exact_hit@1']}  exact_hit@5={vals['exact_hit@5']}")
+        print(f"    cosine_hit@1={vals['cosine_hit@1']}  cosine_hit@5={vals['cosine_hit@5']}")
         print(f"    recall@5={vals['recall@5']}  mrr={vals['mrr']}")
         print(f"    soft_only={vals['soft_only']}  miss={vals['miss']}")
 
@@ -435,12 +551,14 @@ async def main():
     for key, vals in sorted(report["by_category"].items()):
         print(f"  {key} (n={vals['count']}):")
         print(f"    parent_hit@5={vals['parent_hit@5']}  exact_hit@5={vals['exact_hit@5']}")
+        print(f"    cosine_hit@5={vals['cosine_hit@5']}")
         print(f"    soft_only={vals['soft_only']}  miss={vals['miss']}")
 
     print(f"\n--- By source_type ---")
     for key, vals in sorted(report["by_source_type"].items()):
         print(f"  {key} (n={vals['count']}):")
         print(f"    parent_hit@5={vals['parent_hit@5']}  exact_hit@5={vals['exact_hit@5']}")
+        print(f"    cosine_hit@5={vals['cosine_hit@5']}")
         print(f"    soft_only={vals['soft_only']}  miss={vals['miss']}")
 
     print(f"\n--- Soft Hits ({len(report['soft_hits'])}): Not counted as Miss ---")
@@ -449,13 +567,19 @@ async def main():
         print(f"    expected: {sh['expected']}")
         print(f"    retrieved: {sh['retrieved']}")
 
+    print(f"\n--- Cosine Hits ({len(report['cosine_hits'])}): Cosine ≥ {COSINE_THRESHOLD} ---")
+    for ch in report["cosine_hits"][:10]:
+        print(f"  {ch['qa_id']}: {ch['question'][:60]}")
+        print(f"    expected: {ch['expected']}")
+        print(f"    retrieved: {ch['retrieved']}")
+
     print(f"\n--- Misses ({len(report['misses'])}): True misses ---")
     for m in report["misses"][:10]:
         print(f"  {m['qa_id']}: {m['question'][:60]}")
         print(f"    expected: {m['expected']}")
         print(f"    retrieved: {m['retrieved']}")
 
-    report_path = "data/eval_questions/eval_recall_report_v2.json"
+    report_path = "data/QA_report/eval_recall_report_v4.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
     print(f"\nSaved: {report_path}")

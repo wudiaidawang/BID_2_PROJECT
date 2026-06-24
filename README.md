@@ -166,7 +166,7 @@ python ask_cli.py
 |------|------|------|
 | `bids` | 8,789 | 招标项目 Excel |
 | `regulations` | ~7,300 | 2 本 PDF 法规 (Parent-Child 结构化 + 自然段归并) |
-| `policy` | ~9,800 | 政策 Excel + 舆情 Excel + 10 个 PDF |
+| `policy` | 8,225 | 政策 Excel + 舆情 Excel + 10 个 PDF + 大合集法律法规全书 |
 
 ### SQLite 数据库 (data/bid_data.db)
 
@@ -349,22 +349,56 @@ search_unified(query)
 ## 评估
 
 ```bash
-# V2 评测（898 题，三级命中体系：article-level / parent-level / child-level）
+# V4 评测（1001 题，RRF 融合 + BGE-Reranker 精排）
 python run_recall_eval_full.py
 
-# 生成 V2 评测集
-python gen_eval_benchmark_v2.py
+# 生成评测集
+python gen_eval_benchmark_v4.py    # V4 生成器（11 字段，增强提示词，断点续跑）
+python gen_eval_benchmark_v2.py    # V2 生成器
 ```
 
-评测文件位于 `data/eval_questions/`：
+### Benchmark 版本演进
+
+| 版本 | 题数 | 命中体系 | parent_hit@5 | 状态 |
+|------|------|----------|-------------|------|
+| V1 | 457 | 单级 exact | -- | ❌ 已废弃 |
+| V2 | 898 | 三级 (exact/parent/soft) | -- | ⚠️ 含截断 law_name 问题 |
+| V3 | 772 | 四级 (exact/parent/soft/cosine) | -- | ⚠️ 126 题因滑动窗口重切失效 |
+| **V4** | **1001** | RRF + BGE-Reranker | **90.0%** | ✅ 当前主力 |
+
+### V4 评测报告 (2026-06-24)
+
+| 指标 | 值 |
+|------|-----|
+| parent_hit@5 | **90.0%** |
+| exact_hit@5 | 80.4% |
+| MRR | 0.6788 |
+| Miss 率 | 6.2% |
+
+按类别 parent_hit@5：
+
+| 类别 | 数量 | 命中率 |
+|------|------|--------|
+| opinion_news | 86 | **100%** |
+| pdf_case_paragraph | 215 | 93.0% |
+| pdf_law_parent | 558 | 90.7% |
+| policy_doc | 54 | 88.9% |
+| pdf_law_child | 88 | 69.3% |
+
+### 评测文件
+
+问答对位于 `data/eval_questions/`，报告位于 `data/QA_report/`：
 
 | 文件 | 说明 |
 |------|------|
-| `eval_benchmark_v2.json` | V2 问答对（898题，三级命中体系） |
-| `eval_recall_report_v2.json` | V2 评测报告 |
-| `eval_recall_report_v2_analysis.md` | V2 根因分析报告 |
-| `eval_benchmark_v1.json` | V1 问答对（457题，单级命中体系） |
-| `eval_recall_report_v1.json` | V1 评测报告 |
+| `eval_benchmark_v4.json` | V4 问答对（1001 题） |
+| `eval_benchmark_v4_clean_law.json` | V4 清洁版（law_name 已修正） |
+| `eval_benchmark_v3.json` | V3 问答对（772 题） |
+| `eval_benchmark_v2.json` | V2 问答对（898 题） |
+| `QA_report/eval_recall_report_v4.json` | **V4 完整评估报告** |
+| `QA_report/eval_recall_report_v3.json` | V3 评估报告 |
+| `QA_report/eval_recall_report_v2.json` | V2 评估报告 |
+| `policy_chunks_export.json` | 当前 Milvus 8,225 chunks 导出 |
 
 ## 配置总览
 
@@ -398,7 +432,8 @@ python gen_eval_benchmark_v2.py
 ├── init_sqlite_tables.py       SQLite enterprise/price/product 建表 + 聚合导入
 ├── rechunk_shiwu.py            实务 PDF 重新切分 (自然段归并)
 ├── ask_cli.py                  命令行交互客户端
-├── run_recall_eval_full.py     V2 检索精度评估
+├── run_recall_eval_full.py     召回评测（支持 V2/V3/V4）
+├── gen_eval_benchmark_v4.py    V4 评测集生成（11 字段，断点续跑）
 ├── gen_eval_benchmark_v2.py    V2 评测集生成
 ├── app/
 │   ├── api/                    FastAPI 路由 + Schema
@@ -417,7 +452,8 @@ python gen_eval_benchmark_v2.py
 │   ├── raw/                    Excel 原始数据 (policy / opinion / enterprise / price / product)
 │   ├── scrapers/               Web 爬虫脚本 (6 大数据分类)
 │   ├── colloquial_map.json     口语→书面语映射 (66条)
-│   └── eval_questions/         评估问答集 (V1 + V2)
+│   ├── eval_questions/         评估问答集 (V2/V3/V4)
+│   └── QA_report/               召回评测报告 (V2/V3/V4)
 ├── frontend/                   前端界面
 ├── init_scripts/               辅助初始化脚本
 ├── checkpoints/                断点文件目录

@@ -1,44 +1,19 @@
-评估问答集 & 报告 — 版本对齐
+评估问答集 & 报告
 
-================================================
-V2 (当前)
-  问答对: eval_benchmark_v2.json  (898 题, 三级命中体系)
-  报告:   eval_recall_report_v2.json
-  分析:   eval_recall_report_v2_analysis.md
+版本演进:
+  V1 (已废弃) — 457题, 单级精确命中体系 (exact only)
+  V2 (已评测) — 772题, 三级命中体系 (exact/parent/soft), 含截断law_name问题
+  V3 (待评测) — 772题, 四级命中体系 (exact/parent/soft/cosine)
+             — 修复: 截断law_name(3个→完整) + opinion/policy 同步law_name
+             — 新增: 余弦相似度命中 (cosine_hit, threshold=0.85)
 
-V1 (旧版)
-  问答对: eval_benchmark_v1.json  (457 题, 单级精确命中)
-  报告:   eval_recall_report_v1.json
+文件对照:
+  问答对 (V2): eval_benchmark_v2.json
+  问答对 (V3): eval_benchmark_v3.json
+  报告 (V2):   eval_recall_report_v2.json
+  报告 (V3):   eval_recall_report_v3.json  (待生成)
 
-================================================
 运行评测:
   python run_recall_eval_full.py
-  输出: eval_recall_report_v2.json
-
-V2 数据格式 (eval_benchmark_v2.json):
-  {
-    "qa_pairs": [
-      {
-        "id": "qa_v2_0001",
-        "question": "问题文本",
-        "answer": "参考答案",
-        "source_chunks": ["parent_xxx_27_1_1234"],
-        "chunk_count": 1,
-        "category": "pdf_law_parent"
-      }
-    ]
-  }
-
-V1 数据格式 (eval_benchmark_v1.json):
-  {
-    "qa_pairs": [
-      {
-        "qa_id": "qa_0001",
-        "question": "问题文本",
-        "answer": "参考答案",
-        "expected_chunk_ids": ["bids_0"],
-        "chunk_count": 1,
-        "chunk_type": "bid_project"
-      }
-    ]
-  }
+  读取: config.yaml 中的 benchmark_file 路径
+  输出: eval_recall_report_v3.json

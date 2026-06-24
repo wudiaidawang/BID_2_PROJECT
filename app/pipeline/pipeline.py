@@ -285,12 +285,11 @@ class SearchPipeline:
 
     def _do_rerank(self, query: str, candidates: List[Dict],
                    top_k: int) -> List[Dict]:
-        """BGE Reranker 精排"""
+        """BGE Reranker 精排 —— 远程优先，零本地加载"""
         if len(candidates) <= 1:
             return candidates[:top_k]
 
-        model = self.reranker._get_model()
-        if model is None:
+        if not settings.reranker_enabled:
             return candidates[:top_k]
 
         documents = []

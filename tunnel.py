@@ -2,8 +2,7 @@
 
 转发:
   19531 → Milvus
-  8001  → Reranker
-  8002  → Embedding
+  8210  → Embedding + Reranker
 """
 import socket
 import sys
@@ -87,6 +86,9 @@ def connect_ssh(password):
         timeout=10,
         banner_timeout=10,
     )
+    # 保持连接活跃，每30秒发心跳
+    transport = client.get_transport()
+    transport.set_keepalive(30)
     return client
 
 

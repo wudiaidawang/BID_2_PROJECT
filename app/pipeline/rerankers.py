@@ -57,7 +57,7 @@ class BgeReranker:
         if len(documents) <= 1:
             return list(range(min(top_k, len(documents))))
 
-        # 远程优先
+        # 远程优先 —— 不提前加载本地模型
         if self._use_remote:
             try:
                 ranked = self._try_remote_rerank(query, documents, top_k)
@@ -66,6 +66,8 @@ class BgeReranker:
             except Exception as e:
                 print(f"[BgeReranker] Remote rerank failed: {e}, falling back to local")
                 self._use_remote = False
+                print("[BgeReranker] Loading local model as fallback...")
+                self._get_model()  # 仅在远程失败时才加载本地模型
 
         # 本地 fallback
         model = self._get_model()

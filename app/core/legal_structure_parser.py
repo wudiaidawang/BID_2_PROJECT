@@ -36,8 +36,8 @@ DOC_TITLE_PATTERNS = [
     # 关于...的通知/意见/函/规定
     re.compile(r'^关于.{4,}[通知意见函规定]$'),
     # X法 / X条例 / X办法 / X细则 / X规定 / X通知 / X暂行办法 / X实施办法
-    # 上限 16：过长的匹配多为正文行被误判（如"...采用综合评分法"）
-    re.compile(r'^[^\s，。；！？、：（）\(\)\da-zA-Z0-9_]{2,16}(暂行|实施)?(法|条例|办法|细则|规定|通知)$'),
+    # 上限 24：容纳长法规名（如"中央国家机关政府采购和服务定点采购管理"16字+后缀"办法"2字）
+    re.compile(r'^[^\s，。；！？、：（）\(\)\da-zA-Z0-9_]{2,24}(暂行|实施)?(法|条例|办法|细则|规定|通知)$'),
 ]
 
 # 标题内禁止关键词（用于排除明显非标题的行）
@@ -51,7 +51,14 @@ TITLE_BLACKLIST = [
     '出版', 'ISBN', 'CIP',
     # 常见法律正文动词 — 只排除独立成句的情况
     '违反', '不得', '应当', '可以', '必须',
+    # 章节名误识别为法规标题（以"规定""办法"等为后缀但实为章节名）
+    '一般规定', '串通投标',
 ]
+
+# TOC 条目模式: 法名 + 连续分隔符 + 页码 (如 "招标投标法........................1")
+TOC_ENTRY_PATTERN = re.compile(
+    r'^(.+?)[\s.\-—－…]{3,}\d+\s*$'
+)
 
 
 # ── 数据结构 ──────────────────────────────────────────────
@@ -95,6 +102,7 @@ class LegalStructureParser:
 
     def __init__(self):
         self._cn = chinese_number_converter
+        self._toc_names: set = set()
 
     # ── 公共入口 ──────────────────────────────────────────
 
@@ -108,6 +116,9 @@ class LegalStructureParser:
         """
         if not text:
             return []
+
+        # 先扫描目录页，提取完整法规名（用于后续截断标题的修正）
+        self._toc_names = self._parse_toc(text)
 
         documents = self._split_by_document_title(text)
         result = []
@@ -124,24 +135,45 @@ class LegalStructureParser:
     # ── 文档切分 ──────────────────────────────────────────
 
     def _split_by_document_title(self, text: str) -> List[Tuple[str, str]]:
-        """按文档标题将混合文本切分为独立法律"""
+        """按文档标题将混合文本切分为独立法律
+
+        支持跨行标题: 当 PDF 提取将长标题断为两行时（如
+        "铁路建设工程质量安全事故\n与招投标挂钩办法"），
+        自动合并后识别。
+        """
         lines = text.split('\n')
         documents = []
         current_doc = {"title": "", "lines": []}
         found_first_title = False
+        i = 0
 
-        for line in lines:
-            stripped = line.strip()
+        while i < len(lines):
+            stripped = lines[i].strip()
             if not stripped:
+                i += 1
                 continue
 
+            title = None
+
             if self._is_document_title(stripped):
+                title = stripped
+            elif i + 1 < len(lines):
+                # 尝试跨行合并: 当前行可能是标题前半段
+                next_stripped = lines[i + 1].strip()
+                if next_stripped and self._is_partial_title_start(stripped):
+                    joined = stripped + next_stripped
+                    if self._is_document_title(joined):
+                        title = joined
+                        i += 1  # 跳过下一行（已合并）
+
+            if title is not None:
                 # 跳过目录等伪标题
-                if self._should_skip(stripped):
+                if self._should_skip(title):
+                    i += 1
                     continue
 
-                # 清理标题噪声（PDF 提取残留的破折号、编号等）
-                clean_title = self._clean_title(stripped)
+                clean_title = self._clean_title(title)
+                clean_title = self._match_full_title(clean_title)
 
                 if found_first_title and current_doc["lines"]:
                     content = '\n'.join(current_doc["lines"])
@@ -154,6 +186,8 @@ class LegalStructureParser:
             elif found_first_title:
                 current_doc["lines"].append(stripped)
 
+            i += 1
+
         # 保存最后一个文档
         if found_first_title and current_doc["lines"]:
             content = '\n'.join(current_doc["lines"])
@@ -162,11 +196,31 @@ class LegalStructureParser:
 
         return documents
 
+    def _is_partial_title_start(self, line: str) -> bool:
+        """判断是否为跨行标题的前半段（不含标题后缀，纯中文）"""
+        cleaned = self._clean_title(line)
+        if len(cleaned) < 4 or len(cleaned) > 50:
+            return False
+        # 不含标题后缀
+        for suffix in ['法', '条例', '办法', '细则', '规定', '通知', '公告', '意见', '函']:
+            if cleaned.endswith(suffix):
+                return False
+        # 不含结构标识
+        if ARTICLE_BOUNDARY_PATTERN.search(cleaned):
+            return False
+        if CHAPTER_PATTERN.search(cleaned):
+            return False
+        for kw in TITLE_BLACKLIST:
+            if kw in cleaned:
+                return False
+        # 纯中文行（允许空格）
+        return bool(re.match(r'^[一-鿿\s]{4,50}$', cleaned))
+
     def _is_document_title(self, line: str) -> bool:
         """判断是否为文档标题（严格模式）"""
         # 先清理 PDF 噪声，再检查长度（避免 "--XX办法" 因前缀占位被拒）
         cleaned = self._clean_title(line)
-        if len(cleaned) < 8 or len(cleaned) > 40:
+        if len(cleaned) < 4 or len(cleaned) > 60:
             return False
         if re.match(r'^\d+$', cleaned):
             return False
@@ -197,18 +251,64 @@ class LegalStructureParser:
 
     @staticmethod
     def _clean_title(title: str) -> str:
-        """清理 PDF 提取残留的标题噪声（破折号、编号前缀等）"""
+        """清理 PDF 提取残留的标题噪声（前导和尾部破折号、编号、页码等）"""
         # 去掉前导噪声: --, ——, —, -, §, 数字编号等
         cleaned = title.lstrip('-—－#§0123456789.、 \t')
-        # 如果清理后为空或太短，返回原标题
+        # 去掉尾部噪声: 连续的点、破折号、空格和页码数字 (TOC 行如 "招标投标法........................1")
+        cleaned = re.sub(r'[\s.\-—－…]+\d*[\s.\-—－…]*$', '', cleaned)
+        cleaned = cleaned.strip()
         if len(cleaned) < 4:
             return title
         return cleaned
 
+    # ── TOC 解析与截断修正 ──────────────────────────────────
+
+    def _parse_toc(self, text: str) -> set:
+        """扫描前 ~500 行，提取目录中的完整法规名列表"""
+        lines = text.split('\n')[:500]
+        toc_names = set()
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if any(kw in stripped for kw in self.TOC_KEYWORDS):
+                continue
+            match = TOC_ENTRY_PATTERN.search(stripped)
+            if match:
+                name = self._clean_title(match.group(1).strip())
+                if len(name) >= 6:
+                    if any(name.endswith(s) for s in
+                           ['法', '条例', '办法', '细则', '规定', '通知', '公告', '意见', '函']):
+                        toc_names.add(name)
+        return toc_names
+
+    def _match_full_title(self, truncated_title: str) -> str:
+        """通过目录模糊匹配，修正 PDF 提取导致的截断标题"""
+        if not self._toc_names:
+            return truncated_title
+        # 已以完整前缀开头的不需要修正
+        if truncated_title.startswith(('中华人民共和国', '关于')):
+            return truncated_title
+        # 长标题也无需修正
+        if len(truncated_title) >= 12:
+            return truncated_title
+        import difflib
+        matches = difflib.get_close_matches(
+            truncated_title, list(self._toc_names), n=1, cutoff=0.5
+        )
+        if matches and matches[0] != truncated_title:
+            return matches[0]
+        return truncated_title
+
     # ── 单部法律解析 ──────────────────────────────────────
 
     def _parse_single_law(self, law_name: str, content: str) -> LawDocument:
-        """解析单部法律的章-条结构"""
+        """解析单部法律的章-条结构
+
+        支持两种结构:
+        1. 有章节: 按"第X章"切分后逐章解析
+        2. 无章节: 直接从全文解析法条（短法规、办法等）
+        """
         law = LawDocument(law_name=law_name)
 
         # 去除目录块（"目 录" 到第一个 "第X章" 之间的内容）
@@ -217,10 +317,23 @@ class LegalStructureParser:
         # 按 "第X章" 切分
         chapter_blocks = self._split_by_chapter(content)
 
-        for ch_text, ch_title, articles_text in chapter_blocks:
-            chapter = self._parse_chapter(ch_text, ch_title, articles_text)
-            if chapter:
-                law.chapters.append(chapter)
+        if chapter_blocks:
+            for ch_text, ch_title, articles_text in chapter_blocks:
+                chapter = self._parse_chapter(ch_text, ch_title, articles_text)
+                if chapter:
+                    law.chapters.append(chapter)
+        else:
+            # 无章节法律: 直接从全文解析法条
+            articles = self._split_by_article(content)
+            if articles:
+                # 创建虚拟章节（无章号）
+                chapter = ChapterInfo(chapter_id=0, chapter_text="")
+                for art_header, art_content in articles:
+                    art_info = self._parse_article(art_header, art_content)
+                    if art_info and len(art_info.content) >= 10:
+                        chapter.articles.append(art_info)
+                if chapter.articles:
+                    law.chapters.append(chapter)
 
         return law
 
