@@ -28,10 +28,11 @@ class VectorRetriever:
     def __init__(self, store=None):
         self.store = store or get_vector_store()
 
-    def search(self, query: str, collection: str, top_k: int = None) -> List[Dict]:
+    def search(self, query: str, collection: str, top_k: int = None,
+               query_vec: List[float] = None) -> List[Dict]:
         """向量检索，返回统一 schema 的 chunk 列表"""
         k = top_k or settings.vector_recall
-        results = self.store.search(collection, query, top_k=k)
+        results = self.store.search(collection, query, top_k=k, query_vec=query_vec)
         return normalize_chunks(results)
 
     def get_all(self, collection: str) -> List[Dict]:

@@ -10,6 +10,7 @@ SearchPipeline — 检索管线编排器
 """
 
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional, Callable
 
 from app.pipeline.preprocessor import QueryPreprocessor
@@ -156,7 +157,7 @@ class SearchPipeline:
     # ═════════════════════════════════════════════════════════════
 
     def search_unified(self, query: str, top_k: int = 5) -> List[Dict]:
-        """统一跨库检索 —— regulations + bids + policy 三库"""
+        """统一跨库检索 —— bids + policy 双库并行"""
         if not query:
             return []
 
@@ -165,18 +166,27 @@ class SearchPipeline:
             lambda q: self.preprocessor.process(q), query
         )
 
-        # ── Stage 2: Retrieve + Fuse per collection ──
+        # ★ 查询向量只算一次，双库复用
+        from app.core.embedding import EmbeddingService
+        query_vec = EmbeddingService().embed_query(normalized)
+
+        # ── Stage 2: Retrieve + Fuse per collection（双库并行）──
         def _search_both(normalized_q):
+            collections = [c["name"] for c in settings.collections]
             all_candidates = []
-            for collection in [c["name"] for c in settings.collections]:
-                try:
-                    col_results = self._retrieve_and_fuse(
-                        normalized_q, query, collection, top_k * 3
-                    )
-                    all_candidates.extend(col_results)
-                except Exception as e:
-                    print(f"  [Pipeline] collection '{collection}' error: {e}")
-                    continue
+            with ThreadPoolExecutor(max_workers=len(collections)) as executor:
+                futures = {
+                    executor.submit(
+                        self._retrieve_and_fuse,
+                        normalized_q, query, col, top_k * 3, query_vec
+                    ): col for col in collections
+                }
+                for future in as_completed(futures):
+                    col = futures[future]
+                    try:
+                        all_candidates.extend(future.result())
+                    except Exception as e:
+                        print(f"  [Pipeline] collection '{col}' error: {e}")
             if not all_candidates:
                 raise RuntimeError("All collections returned empty")
             return all_candidates
@@ -239,11 +249,13 @@ class SearchPipeline:
     # ═════════════════════════════════════════════════════════════
 
     def _retrieve_and_fuse(self, normalized: str, original: str,
-                           collection: str, top_k: int) -> List[Dict]:
+                           collection: str, top_k: int,
+                           query_vec: List[float] = None) -> List[Dict]:
         """对单个 collection 执行 vector + BM25 召回 + 融合"""
         # Vector 召回
         vec_results = self.vector.search(normalized, collection,
-                                         settings.vector_recall)
+                                         settings.vector_recall,
+                                         query_vec=query_vec)
 
         # BM25 召回 —— 本地 jieba 分词，不依赖 Milvus 内置分析器
         all_docs = self._get_all_docs(collection)

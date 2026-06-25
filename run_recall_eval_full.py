@@ -11,6 +11,7 @@ import os
 import sys
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 
@@ -252,6 +253,109 @@ def classify_hit(retrieved_chunk, expected_id, expected_info):
 # Phase 3: Core evaluation
 # ═══════════════════════════════════════════════════════════════
 
+
+def _eval_one(qa: dict, pipeline, id_resolution: dict,
+              expected_embeddings: dict) -> dict:
+    """处理单条 QA：检索 + 命中分类（线程安全）"""
+    qid = qa["qa_id"]
+    question = qa["question"]
+    expected_ids = qa["expected_chunk_ids"]
+    chunk_count = qa["chunk_count"]
+    category = qa.get("category", "unknown")
+    first_info = id_resolution.get(expected_ids[0], {})
+    exp_st = _derive_source_type(first_info.get("chunk_type", ""))
+
+    # Search
+    try:
+        results = pipeline.search_unified(question, top_k=TOP_K)
+    except Exception as e:
+        print(f"  ERROR [{qid}]: {e}")
+        results = []
+
+    retrieved = results[:TOP_K]
+    retrieved_ids = [r.get("id", "") for r in retrieved]
+
+    # Batch-encode retrieved texts for cosine fallback
+    ret_embeddings = []
+    if expected_embeddings:
+        ret_texts = [r.get("retrieval_text", r.get("text", "")) for r in retrieved]
+        if any(ret_texts):
+            try:
+                vecs = remote_embed(ret_texts, timeout=60)
+                ret_embeddings = [np.array(v, dtype=np.float32) for v in vecs]
+            except Exception:
+                ret_embeddings = []
+
+    # Per-expected-chunk best hit level
+    per_expected = {}
+    for eid in expected_ids:
+        einfo = id_resolution.get(eid, {"parent_id": "", "article_id": "", "law_name": "", "chunk_type": ""})
+        einfo = dict(einfo)
+        einfo["chunk_id"] = eid
+        best_level = None
+        best_rank = None
+
+        for rank, r in enumerate(retrieved, 1):
+            level = classify_hit(r, eid, einfo)
+            if level == "exact":
+                best_level = "exact"; best_rank = rank; break
+            if level == "parent" and best_level != "exact":
+                best_level = "parent"; best_rank = rank
+            if level == "soft" and best_level is None:
+                best_level = "soft"; best_rank = rank
+
+        if best_level is None and ret_embeddings and eid in expected_embeddings:
+            exp_vec = expected_embeddings[eid]
+            for rank, r_vec in enumerate(ret_embeddings, 1):
+                if _cosine(exp_vec, r_vec) >= COSINE_THRESHOLD:
+                    best_level = "cosine"; best_rank = rank
+                    break
+
+        per_expected[eid] = {"best": best_level, "rank": best_rank}
+
+    # Aggregate per question
+    best_levels = [v["best"] for v in per_expected.values()]
+    has_exact = "exact" in best_levels
+    has_parent = has_exact or "parent" in best_levels
+    has_cosine = "cosine" in best_levels
+    has_any_hit = has_parent or has_cosine
+    has_only_soft = not has_parent and not has_cosine and "soft" in best_levels
+    total_found = sum(1 for l in best_levels if l in ("exact", "parent"))
+
+    first_ph_rank = 0
+    if has_parent:
+        first_ph_rank = min(
+            (v["rank"] for v in per_expected.values()
+             if v["best"] in ("exact", "parent")), default=0)
+
+    first_eh_rank = 0
+    if has_exact:
+        first_eh_rank = min(
+            (v["rank"] for v in per_expected.values()
+             if v["best"] == "exact"), default=0)
+
+    first_ch_rank = 0
+    if has_cosine:
+        first_ch_rank = min(
+            (v["rank"] for v in per_expected.values()
+             if v["best"] == "cosine"), default=0)
+
+    recall_k = total_found / len(expected_ids) if expected_ids else 0.0
+    mrr = 1.0 / first_ph_rank if first_ph_rank > 0 else 0.0
+
+    return {
+        "qid": qid, "question": question, "expected_ids": expected_ids,
+        "chunk_count": chunk_count, "category": category, "exp_st": exp_st,
+        "has_exact": has_exact, "has_parent": has_parent,
+        "has_cosine": has_cosine, "has_any_hit": has_any_hit,
+        "has_only_soft": has_only_soft,
+        "first_ph_rank": first_ph_rank, "first_eh_rank": first_eh_rank,
+        "first_ch_rank": first_ch_rank, "total_found": total_found,
+        "recall_k": recall_k, "mrr": mrr,
+        "retrieved_ids": retrieved_ids,
+    }
+
+
 async def evaluate(qa_pairs, id_resolution, expected_embeddings=None):
     from app.pipeline.pipeline import SearchPipeline
 
@@ -259,14 +363,17 @@ async def evaluate(qa_pairs, id_resolution, expected_embeddings=None):
     if expected_embeddings is None:
         expected_embeddings = {}
 
+    # 预热：单条搜索触发 BM25 索引构建 + 文档缓存，避免后续并行时竞态
+    print("  Warming up BM25 indices...")
+    pipeline.search_unified("测试", top_k=1)
+    print("  Warm-up done")
+
     # Accumulators
     parent_hit1 = 0; parent_hit5 = 0
     exact_hit1 = 0; exact_hit5 = 0
     cosine_hit1 = 0; cosine_hit5 = 0
     recall_sum = 0.0; mrr_sum = 0.0
-    soft_only = 0  # questions with ONLY soft hits (no parent/exact/cosine)
-    miss_count = 0
-    total = 0
+    soft_only = 0; miss_count = 0; total = 0
 
     by_cc = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"ch1":0,"ch5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
     by_cat = defaultdict(lambda: {"t":0,"ph1":0,"ph5":0,"eh1":0,"eh5":0,"ch1":0,"ch5":0,"rs":0.0,"mrr":0.0,"soft":0,"miss":0})
@@ -277,159 +384,82 @@ async def evaluate(qa_pairs, id_resolution, expected_embeddings=None):
     misses = []
 
     start = time.time()
-    for i, qa in enumerate(qa_pairs):
-        qid = qa["qa_id"]
-        question = qa["question"]
-        expected_ids = qa["expected_chunk_ids"]
-        chunk_count = qa["chunk_count"]
-        category = qa.get("category", "unknown")
-        cc_key = str(chunk_count)
+    n_total = len(qa_pairs)
+    completed = 0
 
-        # Determine expected source_type for grouping (from first expected chunk)
-        first_info = id_resolution.get(expected_ids[0], {})
-        exp_st = _derive_source_type(first_info.get("chunk_type", ""))
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {
+            executor.submit(_eval_one, qa, pipeline, id_resolution, expected_embeddings): i
+            for i, qa in enumerate(qa_pairs)
+        }
+        for future in as_completed(futures):
+            r = future.result()
+            qid = r["qid"]; question = r["question"]
+            chunk_count = r["chunk_count"]; category = r["category"]
+            exp_st = r["exp_st"]; expected_ids = r["expected_ids"]
+            cc_key = str(chunk_count)
 
-        # Search
-        try:
-            results = pipeline.search_unified(question, top_k=TOP_K)
-        except Exception as e:
-            print(f"  ERROR [{qid}]: {e}")
-            results = []
+            total += 1; completed += 1
+            recall_sum += r["recall_k"]; mrr_sum += r["mrr"]
 
-        retrieved = results[:TOP_K]
+            if r["has_parent"]:
+                parent_hit5 += 1
+                if r["first_ph_rank"] == 1:
+                    parent_hit1 += 1
+            if r["has_exact"]:
+                exact_hit5 += 1
+                if r["first_eh_rank"] == 1:
+                    exact_hit1 += 1
+            if r["has_cosine"]:
+                cosine_hit5 += 1
+                if r["first_ch_rank"] == 1:
+                    cosine_hit1 += 1
 
-        # Batch-encode retrieved retrieval_texts for cosine fallback
-        ret_embeddings = []
-        if expected_embeddings:
-            ret_texts = [r.get("retrieval_text", r.get("text", "")) for r in retrieved]
-            if any(ret_texts):
-                try:
-                    vecs = remote_embed(ret_texts, timeout=60)
-                    ret_embeddings = [np.array(v, dtype=np.float32) for v in vecs]
-                except Exception:
-                    ret_embeddings = []
+            if r["has_only_soft"]:
+                soft_only += 1
+                soft_hits.append({
+                    "qa_id": qid, "question": question[:80],
+                    "category": category, "chunk_count": chunk_count,
+                    "expected": expected_ids,
+                    "retrieved": r["retrieved_ids"],
+                })
+            elif not r["has_parent"] and r["has_cosine"]:
+                cosine_hits_list.append({
+                    "qa_id": qid, "question": question[:80],
+                    "category": category, "chunk_count": chunk_count,
+                    "expected": expected_ids,
+                    "retrieved": r["retrieved_ids"],
+                })
+            elif not r["has_any_hit"]:
+                miss_count += 1
+                misses.append({
+                    "qa_id": qid, "question": question[:80],
+                    "chunk_count": chunk_count, "category": category,
+                    "expected": expected_ids,
+                    "retrieved": r["retrieved_ids"],
+                })
 
-        # Per-expected-chunk best hit level
-        per_expected = {}
-        for eid in expected_ids:
-            einfo = id_resolution.get(eid, {"parent_id": "", "article_id": "", "law_name": "", "chunk_type": ""})
-            einfo["chunk_id"] = eid
-            best_level = None
-            best_rank = None
+            for d in [by_cc[cc_key], by_cat[category], by_st[exp_st]]:
+                d["t"] += 1; d["rs"] += r["recall_k"]; d["mrr"] += r["mrr"]
+                if r["has_parent"]:
+                    if r["first_ph_rank"] == 1: d["ph1"] += 1
+                    d["ph5"] += 1
+                if r["has_exact"]:
+                    if r["first_eh_rank"] == 1: d["eh1"] += 1
+                    d["eh5"] += 1
+                if r["has_cosine"]:
+                    if r["first_ch_rank"] == 1: d["ch1"] += 1
+                    d["ch5"] += 1
+                if r["has_only_soft"]: d["soft"] += 1
+                if not r["has_any_hit"]: d["miss"] += 1
 
-            for rank, r in enumerate(retrieved, 1):
-                level = classify_hit(r, eid, einfo)
-                if level == "exact":
-                    best_level = "exact"; best_rank = rank; break
-                if level == "parent" and best_level != "exact":
-                    best_level = "parent"; best_rank = rank
-                if level == "soft" and best_level is None:
-                    best_level = "soft"; best_rank = rank
-
-            # Cosine fallback: when classify_hit finds nothing, try semantic similarity
-            if best_level is None and ret_embeddings and eid in expected_embeddings:
-                exp_vec = expected_embeddings[eid]
-                for rank, r_vec in enumerate(ret_embeddings, 1):
-                    if _cosine(exp_vec, r_vec) >= COSINE_THRESHOLD:
-                        best_level = "cosine"; best_rank = rank
-                        break
-
-            per_expected[eid] = {"best": best_level, "rank": best_rank}
-
-        # Aggregate per question
-        best_levels = [v["best"] for v in per_expected.values()]
-        has_exact = "exact" in best_levels
-        has_parent = "exact" in best_levels or "parent" in best_levels
-        has_cosine = "cosine" in best_levels
-        has_any_hit = has_parent or has_cosine
-        has_only_soft = not has_parent and not has_cosine and "soft" in best_levels
-        total_found = sum(1 for l in best_levels if l in ("exact", "parent"))
-
-        # Parent-hit @K
-        first_ph_rank = 0
-        if has_parent:
-            first_ph_rank = min(
-                (v["rank"] for v in per_expected.values()
-                 if v["best"] in ("exact", "parent")), default=0)
-            if first_ph_rank == 1:
-                parent_hit1 += 1
-            parent_hit5 += 1
-
-        # Exact-hit @K
-        first_eh_rank = 0
-        if has_exact:
-            first_eh_rank = min(
-                (v["rank"] for v in per_expected.values()
-                 if v["best"] == "exact"), default=0)
-            if first_eh_rank == 1:
-                exact_hit1 += 1
-            exact_hit5 += 1
-
-        # Cosine-hit @K
-        first_ch_rank = 0
-        if has_cosine:
-            first_ch_rank = min(
-                (v["rank"] for v in per_expected.values()
-                 if v["best"] == "cosine"), default=0)
-            if first_ch_rank == 1:
-                cosine_hit1 += 1
-            cosine_hit5 += 1
-
-        # Recall@K (parent-level)
-        recall_k = total_found / len(expected_ids) if expected_ids else 0.0
-        recall_sum += recall_k
-
-        # MRR (first parent-level hit rank)
-        mrr = 1.0 / first_ph_rank if first_ph_rank > 0 else 0.0
-        mrr_sum += mrr
-
-        # Soft / Cosine / Miss tracking
-        if has_only_soft:
-            soft_only += 1
-            soft_hits.append({
-                "qa_id": qid, "question": question[:80],
-                "category": category, "chunk_count": chunk_count,
-                "expected": expected_ids,
-                "retrieved": [r.get("id", "") for r in retrieved],
-            })
-        elif not has_parent and has_cosine:
-            cosine_hits_list.append({
-                "qa_id": qid, "question": question[:80],
-                "category": category, "chunk_count": chunk_count,
-                "expected": expected_ids,
-                "retrieved": [r.get("id", "") for r in retrieved],
-            })
-        elif not has_any_hit:
-            miss_count += 1
-            misses.append({
-                "qa_id": qid, "question": question[:80],
-                "chunk_count": chunk_count, "category": category,
-                "expected": expected_ids,
-                "retrieved": [r.get("id", "") for r in retrieved],
-            })
-
-        total += 1
-
-        # Breakdowns
-        for d in [by_cc[cc_key], by_cat[category], by_st[exp_st]]:
-            d["t"] += 1; d["rs"] += recall_k; d["mrr"] += mrr
-            if has_parent:
-                if first_ph_rank == 1: d["ph1"] += 1
-                d["ph5"] += 1
-            if has_exact:
-                if first_eh_rank == 1: d["eh1"] += 1
-                d["eh5"] += 1
-            if has_cosine:
-                if first_ch_rank == 1: d["ch1"] += 1
-                d["ch5"] += 1
-            if has_only_soft: d["soft"] += 1
-            if not has_any_hit: d["miss"] += 1
-
-        if (i + 1) % 50 == 0:
-            elapsed = time.time() - start
-            print(f"  [{i+1}/{len(qa_pairs)}] parent_hit@5: {parent_hit5}/{total}={parent_hit5/total*100:.1f}% "
-                  f"exact_hit@5: {exact_hit5}/{total}={exact_hit5/total*100:.1f}% "
-                  f"cosine_hit@5: {cosine_hit5} soft: {soft_only} miss: {miss_count} ({elapsed:.0f}s)")
+            if completed % 50 == 0:
+                elapsed = time.time() - start
+                abs_recall = (total - miss_count) / total * 100 if total else 0
+                print(f"  [{completed}/{n_total}] 绝对召回率: {abs_recall:.1f}% "
+                      f"parent_hit@5: {parent_hit5}/{total}={parent_hit5/total*100:.1f}% "
+                      f"exact_hit@5: {exact_hit5}/{total}={exact_hit5/total*100:.1f}% "
+                      f"cosine: {cosine_hit5} soft: {soft_only} miss: {miss_count} ({elapsed:.0f}s)")
 
     elapsed = time.time() - start
     print(f"  Done in {elapsed:.0f}s ({elapsed/total:.2f}s/query)")
@@ -441,11 +471,13 @@ async def evaluate(qa_pairs, id_resolution, expected_embeddings=None):
     t = total
     report = {
         "benchmark": "eval_benchmark_v4",
-        "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
+        "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost, embed-once+parallel-colls+3-parallel-qa)",
         "total_evaluated": t,
         "top_k": TOP_K,
         "cosine_threshold": COSINE_THRESHOLD,
         "overall": {
+            "_absolute": "绝对召回率 — 任意命中（exact/parent/soft/cosine 任一个即算命中）",
+            "absolute_recall": pct(total - miss_count, t),
             "_primary": "parent_hit — 父块命中（同一法条/文章）",
             "parent_hit@1": pct(parent_hit1, t),
             "parent_hit@5": pct(parent_hit5, t),

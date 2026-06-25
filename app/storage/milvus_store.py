@@ -121,9 +121,11 @@ class MilvusStore:
         except Exception:
             self.create_collection(collection)
 
-    def search(self, collection: str, query: str, top_k: int = 10) -> List[Dict]:
-        from app.core.embedding import EmbeddingService
-        query_vec = EmbeddingService().embed_query(query)
+    def search(self, collection: str, query: str, top_k: int = 10,
+               query_vec: List[float] = None) -> List[Dict]:
+        if query_vec is None:
+            from app.core.embedding import EmbeddingService
+            query_vec = EmbeddingService().embed_query(query)
         results = self.search_dense(collection, query_vec, top_k)
         from app.schema.metadata import normalize_chunks
         return normalize_chunks(results)
