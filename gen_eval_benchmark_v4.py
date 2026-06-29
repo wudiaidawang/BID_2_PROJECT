@@ -46,10 +46,12 @@ MAX_RETRIES = 3
 RETRY_DELAY = 3
 BATCH_DELAY = 1.5
 
-# 生成模型：GLM-4.1V-Thinking-FlashX 一次性生成问题+答案
-GEN_MODEL = "GLM-4.1V-Thinking-FlashX"
+# 生成模型：优先从 settings 读取（config.yaml/.env），默认 deepseek-chat
+from config import settings
+GEN_MODEL = settings.llm_model or "deepseek-chat"
+print(f"[Benchmark] 使用生成模型: {GEN_MODEL}")
 
-TOTAL_TARGET = 1000
+TOTAL_TARGET = 50  # ★ 先小批量试生成，成功后扩大
 
 # 原计划分布 (930) 等比缩放到 1000
 ORIGINAL_DIST = {
@@ -57,10 +59,10 @@ ORIGINAL_DIST = {
     "pdf_law_child":        80,
     "pdf_case_paragraph":  200,
     "policy_doc":           50,
-    "opinion_news":         80,
+    # opinion_news 已排除：仅 51 字标题无正文，无法支撑问答
     "cross_chunk":         100,
 }
-ORIGINAL_TOTAL = 930
+ORIGINAL_TOTAL = sum(ORIGINAL_DIST.values())  # = 850
 SCALE = TOTAL_TARGET / ORIGINAL_TOTAL
 
 DISTRIBUTION = {k: max(1, round(v * SCALE)) for k, v in ORIGINAL_DIST.items()}
@@ -90,7 +92,7 @@ def validate_qa(qa: dict) -> List[str]:
     if "difficulty" in qa and qa["difficulty"] not in ("easy", "medium", "hard"):
         errors.append(f"无效难度值: {qa['difficulty']}")
     if "type" in qa and qa["type"] not in ("pdf_law_parent", "pdf_law_child",
-        "pdf_case_paragraph", "policy_doc", "opinion_news", "cross_chunk"):
+        "pdf_case_paragraph", "policy_doc", "cross_chunk"):
         errors.append(f"无效 type 值: {qa['type']}")
     return errors
 
@@ -195,19 +197,15 @@ def sample_chunks(chunks: List[dict], dry_run: bool = False,
     sampled["pdf_case_paragraph"] = case_sample
     stats["pdf_case_paragraph"] = {"total": n_case, "actual": len(case_sample)}
 
-    # --- policy_doc ---
-    policy_docs = by_type.get("policy_doc", [])
+    # --- policy_doc（只对正文 >= 100 字的出题） ---
+    policy_all = by_type.get("policy_doc", [])
+    policy_docs = [c for c in policy_all if len(c.get("text", c.get("retrieval_text", ""))) >= 100]
     n_pd = _limit(DISTRIBUTION["policy_doc"])
     pd_sample = random.sample(policy_docs, min(n_pd, len(policy_docs)))
     sampled["policy_doc"] = pd_sample
-    stats["policy_doc"] = {"total": n_pd, "actual": len(pd_sample)}
+    stats["policy_doc"] = {"total": n_pd, "actual": len(pd_sample), "available": len(policy_docs), "filtered": len(policy_all) - len(policy_docs)}
 
-    # --- opinion_news ---
-    opinions = by_type.get("opinion_news", [])
-    n_op = _limit(DISTRIBUTION["opinion_news"])
-    op_sample = random.sample(opinions, min(n_op, len(opinions)))
-    sampled["opinion_news"] = op_sample
-    stats["opinion_news"] = {"total": n_op, "actual": len(op_sample)}
+    # --- opinion_news：排除出题（仅 51 字标题无正文，无法支撑问答） ---
 
     # --- cross_chunk ---
     cross_pairs = _find_cross_pairs(parent_chunks)
@@ -220,7 +218,7 @@ def sample_chunks(chunks: List[dict], dry_run: bool = False,
         return stats
 
     all_selected = []
-    for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_paragraph", "policy_doc", "opinion_news"]:
+    for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_paragraph", "policy_doc"]:
         all_selected.extend(sampled.get(ct, []))
     return sampled, cross_pairs, all_selected
 
@@ -347,7 +345,6 @@ class QAGenerator:
                     temperature=0.7,
                     max_tokens=16384,
                     timeout=300,
-                    extra_body={"thinking": {"type": "enabled"}},
                 )
                 content = resp.choices[0].message.content
                 if not content:
@@ -634,7 +631,8 @@ class QAGenerator:
         all_qas = list(self.progress.get("generated_qas", []))
         qa_counter = len(all_qas)
 
-        for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_paragraph", "policy_doc", "opinion_news"]:
+        for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_paragraph", "policy_doc"]:
+            # opinion_news 已排除出题
             items = sampled.get(ct, [])
             if not items:
                 continue
@@ -654,13 +652,14 @@ class QAGenerator:
                 new_qas = self.generate_single_batch(batch, ct, qa_counter)
                 if new_qas:
                     all_qas.extend(new_qas)
+                    for idx in range(len(new_qas)):
+                        self.progress["generated_qas"] = all_qas
+                        self.progress["total_generated"] = len(all_qas)
+                        self._save_progress()
                     qa_counter += len(new_qas)
-                    self.progress["generated_qas"] = all_qas
-                    self.progress["total_generated"] = len(all_qas)
-                    self._save_progress()
-                    print(f"OK ({len(all_qas)} total)")
+                    print(f"  OK (+{len(new_qas)}, {len(all_qas)} total)")
                 else:
-                    print("FAIL")
+                    print("  FAIL")
 
                 time.sleep(BATCH_DELAY)
 

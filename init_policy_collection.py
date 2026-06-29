@@ -25,6 +25,9 @@ from app.core.child_chunk_builder import ChildChunkBuilder
 RAW_DIR = Path(__file__).parent / "data" / "raw"
 PDF_DIR = Path(__file__).parent / "data" / "pdfs"
 
+# ★ 使用新集合名，不覆盖旧的 policy 集合
+COLLECTION_NAME = "policy_v4"
+
 # 10个PDF全部处理
 PDF_CONFIGS = [
     # 法律条文类 → 结构化Parent-Child切块
@@ -197,32 +200,44 @@ def load_policy_collection(client):
         print(f"  读取 {len(df)} 条")
 
         def build_policy_text(record):
-            parts = [
-                str(record.get('政策标题', '')),
-                str(record.get('发布机构', '')),
-                str(record.get('正文摘要', '')),
-                str(record.get('法规分类', '')),
-            ]
-            return ' '.join([p for p in parts if p and str(p).lower() != 'nan'])
+            title = str(record.get('政策标题', '')).strip()
+            publisher = str(record.get('发布机构', '')).strip()
+            summary = str(record.get('正文摘要', '')).strip()
+            if summary.lower() == 'nan':
+                summary = ''
+            if publisher.lower() == 'nan':
+                publisher = ''
+            return title, publisher, summary
 
         retrieval_texts, texts, metas, ids = [], [], [], []
         for i, row in df.iterrows():
             record = row.to_dict()
-            rt = build_policy_text(record)
-            if rt and len(rt) > 5:
-                retrieval_texts.append(rt)
-                texts.append(rt)  # Excel 数据 retrieval_text = text（无 header 注入）
-                clean = {k: (str(v) if pd.notna(v) else "") for k, v in record.items()}
-                clean["title"] = clean.get("政策标题", "")
-                clean["law_name"] = clean.get("政策标题", "")
-                clean["category"] = "policy"
-                clean["chunk_type"] = "policy_doc"
-                clean["data_version"] = "2026-06-18_v1"
-                clean["source_doc"] = "policy_data.xlsx"
-                clean["chunk_order"] = str(i)
-                metas.append(clean)
-                ids.append(f"policy_{i}")
-        client.add_documents("policy", retrieval_texts, texts, metas, ids)
+            title, publisher, summary = build_policy_text(record)
+
+            # 过滤垃圾：正文摘要长度不足 100 字则跳过（页脚、版权声明等）
+            if not summary or len(summary) < 100:
+                continue
+
+            if publisher:
+                rt = f"【政策法规】《{title}》\n{publisher}\n{summary}"
+            else:
+                rt = f"【政策法规】《{title}》\n{summary}"
+            text = summary  # 纯正文，不含 header
+
+            clean = {k: (str(v) if pd.notna(v) else "") for k, v in record.items()}
+            clean["title"] = title
+            clean["law_name"] = title  # ★ 用于 parent 级匹配
+            clean["category"] = "policy"
+            clean["chunk_type"] = "policy_doc"
+            clean["data_version"] = "2026-06-29_v3"
+            clean["source_doc"] = "policy_data.xlsx"
+            clean["chunk_order"] = str(i)
+
+            retrieval_texts.append(rt)
+            texts.append(text)
+            metas.append(clean)
+            ids.append(f"policy_{i}")
+        client.add_documents(COLLECTION_NAME, retrieval_texts, texts, metas, ids)
         print(f"  入库 {len(retrieval_texts)} 条 (category=policy)")
 
     # ── Step 2: 导入 opinion_data.xlsx ──
@@ -233,32 +248,42 @@ def load_policy_collection(client):
         print(f"  读取 {len(df)} 条")
 
         def build_opinion_text(record):
-            parts = [
-                str(record.get('舆情标题', '')),
-                str(record.get('舆情内容', '')),
-                str(record.get('新闻来源', '')),
-                str(record.get('搜索关键词', '')),
-            ]
-            return ' '.join([p for p in parts if p and str(p).lower() != 'nan'])
+            title = str(record.get('舆情标题', '')).strip()
+            source = str(record.get('新闻来源', '')).strip()
+            keywords = str(record.get('搜索关键词', '')).strip()
+            if source.lower() == 'nan':
+                source = ''
+            if keywords.lower() == 'nan':
+                keywords = ''
+            return title, source, keywords
 
         retrieval_texts, texts, metas, ids = [], [], [], []
         for i, row in df.iterrows():
             record = row.to_dict()
-            rt = build_opinion_text(record)
-            if rt and len(rt) > 5:
-                retrieval_texts.append(rt)
-                texts.append(rt)  # Excel 数据 retrieval_text = text
-                clean = {k: (str(v) if pd.notna(v) else "") for k, v in record.items()}
-                clean["category"] = "opinion"
-                clean["chunk_type"] = "opinion_news"
-                clean["data_version"] = "2026-06-18_v1"
-                clean["title"] = clean.get("舆情标题", "")
-                clean["law_name"] = clean.get("舆情标题", "")
-                clean["source_doc"] = "opinion_data.xlsx"
-                clean["chunk_order"] = str(i)
-                metas.append(clean)
-                ids.append(f"opinion_{i}")
-        client.add_documents("policy", retrieval_texts, texts, metas, ids)
+            title, source, keywords = build_opinion_text(record)
+
+            if not title or len(title) < 5:
+                continue
+
+            rt = f"【招标公告】来源:{source}\n{title}"
+            if keywords:
+                rt += f"\n关键词:{keywords}"
+            text = title  # 无正文内容，仅标题
+
+            clean = {k: (str(v) if pd.notna(v) else "") for k, v in record.items()}
+            clean["category"] = "opinion"
+            clean["chunk_type"] = "opinion_news"
+            clean["data_version"] = "2026-06-29_v3"
+            clean["title"] = title
+            clean["law_name"] = title
+            clean["source_doc"] = "opinion_data.xlsx"
+            clean["chunk_order"] = str(i)
+
+            retrieval_texts.append(rt)
+            texts.append(text)
+            metas.append(clean)
+            ids.append(f"opinion_{i}")
+        client.add_documents(COLLECTION_NAME, retrieval_texts, texts, metas, ids)
         print(f"  入库 {len(retrieval_texts)} 条 (category=opinion)")
 
     # ── Step 3: 导入全部10个PDF ──
@@ -293,14 +318,14 @@ def load_policy_collection(client):
                             "data_version": "2026-06-18_v1",
                         })
                         ids.append(f"pdf_{cfg['name']}_{i}_{hash(chunk) % 10000}")
-                    client.add_documents("policy", rts, txts, metas, ids)
+                    client.add_documents(COLLECTION_NAME, rts, txts, metas, ids)
                     print(f"    入库 {len(chunks)} 条 (滑动窗口回退)")
                 else:
                     all_rt, all_texts, metadatas, ids = result
                     for m in metadatas:
                         m["category"] = "policy"
                         m["data_version"] = "2026-06-18_v1"
-                    client.add_documents("policy", all_rt, all_texts, metadatas, ids)
+                    client.add_documents(COLLECTION_NAME, all_rt, all_texts, metadatas, ids)
                     print(f"    入库 {len(all_rt)} 条 (结构化)")
             elif cfg["mode"] == "paragraph":
                 # ★ 段落归并切块 — 实务类PDF专用
@@ -322,23 +347,24 @@ def load_policy_collection(client):
                         "token_count": str(len(chunk)),
                     })
                     ids.append(f"pdf_{cfg['name']}_para_{i:04d}")
-                client.add_documents("policy", rts, txts, metas, ids)
+                client.add_documents(COLLECTION_NAME, rts, txts, metas, ids)
                 print(f"    入库 {len(chunks)} 条 (段落归并)")
-            else:
-                chunks = sliding_window_chunk(full_text, 500, 200, source_label=cfg["name"])
+            else:  # sliding 模式 — 案例类PDF
+                chunks = sliding_window_chunk(full_text, 500, 200)
                 rts, txts, metas, ids = [], [], [], []
                 for i, chunk in enumerate(chunks):
-                    rts.append(chunk)
+                    rts.append(f"《{cfg['name']}》\n{chunk}")  # ★ 加书名号 header
                     txts.append(chunk)
                     metas.append({
                         "source_doc": cfg["name"], "author": cfg.get("author", ""),
                         "chunk_order": str(i), "total_pages": total_pages,
                         "chunk_type": "pdf_case_sliding", "category": "policy",
-                        "data_version": "2026-06-18_v1",
+                        "law_name": cfg["name"],  # ★ 用于 parent 级匹配
+                        "data_version": "2026-06-29_v3",
                     })
                     ids.append(f"pdf_{cfg['name']}_{i}_{hash(chunk) % 10000}")
-                client.add_documents("policy", rts, txts, metas, ids)
-                print(f"    入库 {len(chunks)} 条 (滑动窗口)")
+                client.add_documents(COLLECTION_NAME, rts, txts, metas, ids)
+                print(f"    入库 {len(chunks)} 条 (滑动窗口+header)")
 
         except Exception as e:
             print(f"    [ERROR] {e}")

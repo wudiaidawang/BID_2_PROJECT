@@ -219,7 +219,10 @@ class MilvusStore:
             "annsField": settings.milvus_dense_field,
             "limit": top_k,
             "outputFields": settings.milvus_output_fields,
-            "searchParams": {"metric_type": settings.milvus_metric_type},
+            "searchParams": {
+                "metric_type": settings.milvus_metric_type,
+                "params": {"ef": settings.milvus_search_ef},
+            },
         })
         if scalar_filter:
             payload["filter"] = scalar_filter

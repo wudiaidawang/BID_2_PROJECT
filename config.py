@@ -152,6 +152,11 @@ class Settings(BaseSettings):
     def milvus_bm25_b(self) -> float:
         return float(_yaml("vector_store.milvus.bm25_b", 0.75))
 
+    @property
+    def milvus_search_ef(self) -> int:
+        """HNSW 搜索时的 ef 参数（越大召回越高，越慢）"""
+        return int(_yaml("vector_store.milvus.search_ef", 128))
+
     # =========================================================================
     # Reranker 配置
     # =========================================================================
