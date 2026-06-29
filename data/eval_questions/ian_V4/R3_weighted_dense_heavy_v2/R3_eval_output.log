@@ -1,0 +1,2072 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache /tmp/jieba.cache
+Loading model cost 0.733 seconds.
+Prefix dict has been built successfully.
+[ConfigLoader] 已加载配置: /home/admin/group_three_5_11/data_pan/config.yaml
+Loading QA pairs (regulation-only, bid_project → SQL)...
+  Total: 102 (bid_project excluded)
+
+Resolving expected chunk metadata from Milvus...
+[Milvus] Connected to http://127.0.0.1:19531, db=panxin_dev
+  Resolved 108 unique chunk IDs
+  With article_id: 108, With parent_id: 0, With retrieval_text: 108
+
+Pre-computing expected chunk embeddings...
+  Pre-computing embeddings for 108 expected chunks...
+    ... 108/108
+  Embeddings: 108
+
+Running evaluation V2 (top_k=5, cosine_threshold=0.85)...
+[SearchPipeline] 6-stage pipeline ready (tracing=ON)
+[Pipeline] >> Stage: preprocess (采购中心在确定成交供应商后，需要在几个工作日内发出成交通知书，并且公告内容必须包括谈判小组成员名单吗？)
+   [Rewrite] 采购中心在确定成交供应商后，需要在几个工作日内发出成交通知书，并且公告内容必须包括谈判小组成员名单吗？... -> 采购中心在确确定成提交投标人后,需要在几个工作日内发布出成提交通知书,并且公告内容必须转包括谈判小组成员名单吗?...
+[Pipeline] OK Stage: preprocess done (1ms)
+[Pipeline] >> Stage: retrieve (采购中心在确确定成提交投标人后,需要在几个工作日内发布出成提交通知书,并且公告内容必须转包括谈判小组成员名单吗? 供应商 潜在投标人 投标方 分包)
+[BM25Retriever] Index for 'bids': 8789 docs
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 3ms)
+[Milvus] get_all_documents ID fetch error: Milvus error (code=65535): invalid max query result window, (offset+limit) should be in range [1, 16384], but got 20000
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 3301ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 105ms)
+[Pipeline] >> Stage: preprocess (在政府采购中，如果招标文件没有规定样品制作标准，采购人能否要求投标人提供样品？)
+   [Rewrite] 在政府采购中，如果招标文件没有规定样品制作标准，采购人能否要求投标人提供样品？... -> 在政府采购中,如果招标文件没有规确定样品制作标准,采购人可以否要求投标人提供样品?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在政府采购中,如果招标文件没有规确定样品制作标准,采购人可以否要求投标人提供样品? 供应商 潜在投标人 投标方 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 27 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 149ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 146ms)
+[Pipeline] >> Stage: preprocess (对于全部使用国有资金且需要审批的工程建设项目，如果要进行邀请招标，必须经过哪个部门的批准？)
+   [Rewrite] 对于全部使用国有资金且需要审批的工程建设项目，如果要进行邀请招标，必须经过哪个部门的批准？... -> 对于全部使用国有资金且需要审批的工程建设项目,如果要进可以邀请招标,必须经过哪个部门的批准?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (对于全部使用国有资金且需要审批的工程建设项目,如果要进可以邀请招标,必须经过哪个部门的批准?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 46 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 136ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 141ms)
+[Pipeline] >> Stage: preprocess (如果采购人违反了《政府采购法实施条例》第七十七条第一款，会面临什么法律后果？)
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果采购人违反了<政府采购法实施条例>第77条第一款,会面临什么法律后果?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 65 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 138ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 29, 0ms)
+[Pipeline] >> Stage: rerank (in: 29)
+[Pipeline] OK Stage: rerank done (out: 5, 111ms)
+[Pipeline] >> Stage: preprocess (各级一般公共预算中，预备费的设置比例是多少？它主要用于哪些支出？)
+   [Rewrite] 各级一般公共预算中，预备费的设置比例是多少？它主要用于哪些支出？... -> 各级一般公共预算中,预备费的设置比例是多少?它主要用于哪些支出?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (各级一般公共预算中,预备费的设置比例是多少?它主要用于哪些支出?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 46 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 14 candidates → Top-14
+[Pipeline] OK Stage: fusion done (out: 14, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 29, 134ms)
+[Pipeline] >> Stage: merge (in: 29)
+[Pipeline] OK Stage: merge done (out: 29, 0ms)
+[Pipeline] >> Stage: expand (in: 29)
+[Pipeline] OK Stage: expand done (out: 29, 0ms)
+[Pipeline] >> Stage: rerank (in: 29)
+[Pipeline] OK Stage: rerank done (out: 5, 141ms)
+[Pipeline] >> Stage: preprocess (地方政府性基金预算的收入编制中，是否包括下级上解收入？)
+   [Rewrite] 地方政府性基金预算的收入编制中，是否包括下级上解收入？... -> 地方政府性基金预算的收取入编制中,是否转包括下级上解收取入?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (地方政府性基金预算的收取入编制中,是否转包括下级上解收取入? 分包)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 141ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 68ms)
+[Pipeline] >> Stage: preprocess (如果一家公司的总经理同时在另一家投标公司担任董事，这两家公司能否参与同一个招标项目的投标？)
+   [Rewrite] 如果一家公司的总经理同时在另一家投标公司担任董事，这两家公司能否参与同一个招标项目的投标？... -> 如果一家公司的总经理同时在另一家投标公司担任董事,这两家公司可以否参与同一个招标项目的投标?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果一家公司的总经理同时在另一家投标公司担任董事,这两家公司可以否参与同一个招标项目的投标?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 26 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 38 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 141ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 142ms)
+[Pipeline] >> Stage: preprocess (政府采购活动中，供应商为了中标而向评标委员会成员送钱，这种行为具体违反了哪条法律规定？)
+   [Rewrite] 政府采购活动中，供应商为了中标而向评标委员会成员送钱，这种行为具体违反了哪条法律规定？... -> 政府采购活动中,投标人为了中标而向评标委员会成员送钱,这种可以为具体违反了哪条法律规确定?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (政府采购活动中,投标人为了中标而向评标委员会成员送钱,这种可以为具体违反了哪条法律规确定? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 43 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 42 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 150ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 143ms)
+[Pipeline] >> Stage: preprocess (水运工程项目招标时，如果招标文件违反了诚实信用原则并影响了投标，招标人必须怎么做？)
+   [Rewrite] 水运工程项目招标时，如果招标文件违反了诚实信用原则并影响了投标，招标人必须怎么做？... -> 水运工程项目招标时,如果招标文件违反了诚实信用原则并影响了投标,招标人必须怎么做?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (水运工程项目招标时,如果招标文件违反了诚实信用原则并影响了投标,招标人必须怎么做?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 42 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 143ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 142ms)
+[Pipeline] >> Stage: preprocess (竞争性谈判小组在采购过程中，从符合条件的供应商名单中至少需要确定几家来参加谈判？)
+   [Rewrite] 竞争性谈判小组在采购过程中，从符合条件的供应商名单中至少需要确定几家来参加谈判？... -> 竞争性谈判小组在采购过程中,从符合条件的投标人名单中至少需要确确定几个来参加谈判?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (竞争性谈判小组在采购过程中,从符合条件的投标人名单中至少需要确确定几个来参加谈判? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 52 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 141ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 27, 0ms)
+[Pipeline] >> Stage: rerank (in: 27)
+[Pipeline] OK Stage: rerank done (out: 5, 110ms)
+[Pipeline] >> Stage: preprocess (制定《招标投标法》的首要目的是什么？)
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (制定<招标投标法>的首要目的是什么?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 111ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 150ms)
+[Pipeline] >> Stage: preprocess (民航地区管理局在处理辖区内的招标投标投诉时，具体负责哪项工作？)
+   [Rewrite] 民航地区管理局在处理辖区内的招标投标投诉时，具体负责哪项工作？... -> 民航地区管理局在处理辖区内的招标投标投诉时,具体负责哪项工作?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (民航地区管理局在处理辖区内的招标投标投诉时,具体负责哪项工作?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 43 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 30 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 126ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 87ms)
+[Pipeline] >> Stage: preprocess (水利工程监理招标时，招标公告里必须写明招标人名称和地址吗？)
+   [Rewrite] 水利工程监理招标时，招标公告里必须写明招标人名称和地址吗？... -> 水利工程监理招标时,招标公告里必须写明招标人名称和地址吗?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (水利工程监理招标时,招标公告里必须写明招标人名称和地址吗?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 49 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 120ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 111ms)
+[Pipeline] >> Stage: preprocess (招标文件出售的最短时间限制是多少天？从开始出售到停止出售不能少于几天？)
+   [Rewrite] 招标文件出售的最短时间限制是多少天？从开始出售到停止出售不能少于几天？... -> 招标文件出售的最短时间限制是多少日内?从开始出售到停止出售不可以少于几日内?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (招标文件出售的最短时间限制是多少日内?从开始出售到停止出售不可以少于几日内? 排斥)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 64 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 145ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 139ms)
+[Pipeline] >> Stage: preprocess (在水利工程招标中，发布招标公告和发售资格预审文件可以同时进行吗？原来规定的10天间隔还适用吗？)
+   [Rewrite] 在水利工程招标中，发布招标公告和发售资格预审文件可以同时进行吗？原来规定的10天间隔还适用吗？... -> 在水利工程招标中,发布布招标公告和发布售资格条件预审文件可以同时进可以吗?原来规确定的10天间隔还适用吗?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在水利工程招标中,发布布招标公告和发布售资格条件预审文件可以同时进可以吗?原来规确定的10天间隔还适用吗? 资质)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 50 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 26 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 152ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 26, 0ms)
+[Pipeline] >> Stage: rerank (in: 26)
+[Pipeline] OK Stage: rerank done (out: 5, 126ms)
+[Pipeline] >> Stage: preprocess (政府采购信息发布的指定媒体，能向发布信息的企业收费吗？)
+   [Rewrite] 政府采购信息发布的指定媒体，能向发布信息的企业收费吗？... -> 政府采购信息发布布的指确定媒体,可以向发布布信息的企业收取费吗?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (政府采购信息发布布的指确定媒体,可以向发布布信息的企业收取费吗?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 33 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 33 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 9ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 141ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 55ms)
+[Pipeline] >> Stage: preprocess (审计法里提到的社会保障基金具体包括哪些？比如社会福利基金算不算？)
+   [Rewrite] 审计法里提到的社会保障基金具体包括哪些？比如社会福利基金算不算？... -> 审计法里提到的社会保障基金具体转包括哪些?比如社会福利基金是否属于?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (审计法里提到的社会保障基金具体转包括哪些?比如社会福利基金是否属于? 分包)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 69 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 12 candidates → Top-12
+[Pipeline] OK Stage: fusion done (out: 12, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 27, 124ms)
+[Pipeline] >> Stage: merge (in: 27)
+[Pipeline] OK Stage: merge done (out: 27, 0ms)
+[Pipeline] >> Stage: expand (in: 27)
+[Pipeline] OK Stage: expand done (out: 27, 0ms)
+[Pipeline] >> Stage: rerank (in: 27)
+[Pipeline] OK Stage: rerank done (out: 5, 81ms)
+[Pipeline] >> Stage: preprocess (水利工程设备招标中，评价商务标准时可以从哪些方面打分？比如供货范围和运营成本算不算？)
+   [Rewrite] 水利工程设备招标中，评价商务标准时可以从哪些方面打分？比如供货范围和运营成本算不算？... -> 水利工程设备招标中,评价商务标准时可以从哪些方面评标?比如供货范围和运营成本是否属于?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (水利工程设备招标中,评价商务标准时可以从哪些方面评标?比如供货范围和运营成本是否属于?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 50 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 19 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 132ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 26, 0ms)
+[Pipeline] >> Stage: rerank (in: 26)
+[Pipeline] OK Stage: rerank done (out: 5, 101ms)
+[Pipeline] >> Stage: preprocess (投标报价明显低于其他投标人，评标委员会要求投标人说明理由后，如果最终认定报价低于企业成本，会有什么后果？)
+   [Rewrite] 投标报价明显低于其他投标人，评标委员会要求投标人说明理由后，如果最终认定报价低于企业成本，会有什么后果？... -> 投标报价明显低于其他投标人,评标委员会要求投标人说明明理由后,如果最终认确定报价低于企业成本,会有哪些后果?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (投标报价明显低于其他投标人,评标委员会要求投标人说明明理由后,如果最终认确定报价低于企业成本,会有哪些后果? 供应商 潜在投标人 投标方 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 46 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 29 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 173ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 140ms)
+[Pipeline] >> Stage: preprocess (如果农业项目在报批可行性研究报告时想申请不进行招标，需要同时提交哪些具体内容？)
+   [Rewrite] 如果农业项目在报批可行性研究报告时想申请不进行招标，需要同时提交哪些具体内容？... -> 如果农业项目在报批可可以性研究报告时想申请不进可以招标,需要同时提提交哪些具体内容?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果农业项目在报批可可以性研究报告时想申请不进可以招标,需要同时提提交哪些具体内容?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 32 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 137ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 145ms)
+[Pipeline] >> Stage: preprocess (某国有资金项目将必须招标的工程拆分成多个小合同来规避招标，被发现后除了罚款，还可能面临什么处罚？)
+   [Rewrite] 某国有资金项目将必须招标的工程拆分成多个小合同来规避招标，被发现后除了罚款，还可能面临什么处罚？... -> 某国有资金项目将必须招标的工程拆分成多个小合同来规避招标,被发布现后除了处处罚,还可可以面临什么处处罚?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (某国有资金项目将必须招标的工程拆分成多个小合同来规避招标,被发布现后除了处处罚,还可可以面临什么处处罚? 罚款 处分 惩戒)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 29 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 33 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 160ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 143ms)
+[Pipeline] >> Stage: preprocess (如果我是开放式框架协议的入围供应商，想退出协议，流程上有什么要求？)
+   [Rewrite] 如果我是开放式框架协议的入围供应商，想退出协议，流程上有什么要求？... -> 如果我是开放式框架协议的入围投标人,想退还出协议,流程上有哪些要求?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果我是开放式框架协议的入围投标人,想退还出协议,流程上有哪些要求? 供应商 潜在投标人 投标方 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 55 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 32 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 143ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 89ms)
+[Pipeline] >> Stage: preprocess (交通运输部部属单位在政府采购中如果发生违规，具体的法律责任应该按照哪个文件来执行？)
+   [Rewrite] 交通运输部部属单位在政府采购中如果发生违规，具体的法律责任应该按照哪个文件来执行？... -> 提交通运输部部属单位在政府采购中如果发布生违规,具体的法律责任应该按照哪个文件来执可以?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (提交通运输部部属单位在政府采购中如果发布生违规,具体的法律责任应该按照哪个文件来执可以?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 44 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 136ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 78ms)
+[Pipeline] >> Stage: preprocess (省级交通主管部门能不能根据公路养护工程招标的暂行规定，自己制定更具体的操作细则？)
+   [Rewrite] 省级交通主管部门能不能根据公路养护工程招标的暂行规定，自己制定更具体的操作细则？... -> 省级提交通主管部门是否可以根据公路养护工程招标的暂可以规确定,自己制确定更具体的操作细则?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (省级提交通主管部门是否可以根据公路养护工程招标的暂可以规确定,自己制确定更具体的操作细则?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 18 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 148ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 94ms)
+[Pipeline] >> Stage: preprocess (国家行政机关的收费由哪个部门另行制定具体管理办法？)
+   [Rewrite] 国家行政机关的收费由哪个部门另行制定具体管理办法？... -> 国家可以政机关的收取费由哪个部门另可以制确定具体管理办法?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (国家可以政机关的收取费由哪个部门另可以制确定具体管理办法?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 62 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 20 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 120ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 79ms)
+[Pipeline] >> Stage: preprocess (如果投诉处理需要检验检测或专家评审，这些时间是否计入30个工作日的处理时限？)
+   [Rewrite] 如果投诉处理需要检验检测或专家评审，这些时间是否计入30个工作日的处理时限？... -> 如果投诉处理需要检验检测或专家评审,这些时间是否计入30个工作日的处理时限?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果投诉处理需要检验检测或专家评审,这些时间是否计入30个工作日的处理时限?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 31 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 31 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 128ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 140ms)
+[Pipeline] >> Stage: preprocess (在公共资源交易活动中有不良行为记录的市场主体，除了招标投标外，还会被限制参加哪些具体交易活动？)
+   [Rewrite] 在公共资源交易活动中有不良行为记录的市场主体，除了招标投标外，还会被限制参加哪些具体交易活动？... -> 在公共资源提交易活动中有不良可以为记录的市场主体,除了招标投标外,还会被限制参加哪些具体提交易活动?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在公共资源提交易活动中有不良可以为记录的市场主体,除了招标投标外,还会被限制参加哪些具体提交易活动? 排斥)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 48 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 31 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 146ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 141ms)
+[Pipeline] >> Stage: preprocess (当评标标准和方法前后不一致导致难以界定偏差性质时，评标委员会应如何处理？)
+   [Rewrite] 当评标标准和方法前后不一致导致难以界定偏差性质时，评标委员会应如何处理？... -> 当评标标准和方法前后不一致导致难以界确定偏差性质时,评标委员会应如何处理?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (当评标标准和方法前后不一致导致难以界确定偏差性质时,评标委员会应如何处理?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 55 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 40 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 127ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 147ms)
+[Pipeline] >> Stage: preprocess (审计机关通过政务信息系统获取的电子数据已能满足需要时，被审计单位还需要重复提供资料吗？)
+   [Rewrite] 审计机关通过政务信息系统获取的电子数据已能满足需要时，被审计单位还需要重复提供资料吗？... -> 审计机关通过政务信息系统获取的电子数据已可以满足需要时,被审计单位还需要重复提供资料吗?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (审计机关通过政务信息系统获取的电子数据已可以满足需要时,被审计单位还需要重复提供资料吗?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 49 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 16 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 147ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 89ms)
+[Pipeline] >> Stage: preprocess (根据公证法，利用虚假公证书从事欺诈活动且构成犯罪的人，会面临什么法律后果？)
+   [Rewrite] 根据公证法，利用虚假公证书从事欺诈活动且构成犯罪的人，会面临什么法律后果？... -> 根据公证法,利用虚假公证书从事欺诈活动且构成犯罪的人,会面临什么法律后果?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (根据公证法,利用虚假公证书从事欺诈活动且构成犯罪的人,会面临什么法律后果?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 53 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 31 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 128ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 26, 0ms)
+[Pipeline] >> Stage: rerank (in: 26)
+[Pipeline] OK Stage: rerank done (out: 5, 133ms)
+[Pipeline] >> Stage: preprocess (电子招标投标交易平台对于投标人离线编制的投标文件，在安全方面有什么法定要求？)
+   [Rewrite] 电子招标投标交易平台对于投标人离线编制的投标文件，在安全方面有什么法定要求？... -> 电子招标投标提交易平台对于投标人离线编制的投标文件,在安全方面有哪些法确定要求?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (电子招标投标提交易平台对于投标人离线编制的投标文件,在安全方面有哪些法确定要求? 供应商 潜在投标人 投标方 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 48 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 27 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 144ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 152ms)
+[Pipeline] >> Stage: preprocess (什么情况下，主管部门不得以招标拍卖挂牌的方式授予探矿权或采矿权？)
+   [Rewrite] 什么情况下，主管部门不得以招标拍卖挂牌的方式授予探矿权或采矿权？... -> 什么情况下,主管部门不应当以招标拍卖挂牌的方式授予探矿权或采矿权?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (什么情况下,主管部门不应当以招标拍卖挂牌的方式授予探矿权或采矿权?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 45 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 38 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 123ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 80ms)
+[Pipeline] >> Stage: preprocess (《政府投资条例》第一条提到的立法目的中，哪一项是直接关于资金使用效率的？)
+   [Rewrite] 《政府投资条例》第一条提到的立法目的中，哪一项是直接关于资金使用效率的？... -> <政府投资条例>第1条提到的立法目的中,哪一项是直接关于资金使用效率的?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (<政府投资条例>第1条提到的立法目的中,哪一项是直接关于资金使用效率的?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 31 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 30 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 137ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 66ms)
+[Pipeline] >> Stage: preprocess (根据《政府采购竞争性磋商采购方式管理暂行办法》，磋商文件中必须包含关于保证金哪些具体内容？)
+   [Rewrite] 根据《政府采购竞争性磋商采购方式管理暂行办法》，磋商文件中必须包含关于保证金哪些具体内容？... -> 根据<政府采购竞争性磋商采购人式管理暂可以办法>,磋商文件中必须转包含关于保证金哪些具体内容?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (根据<政府采购竞争性磋商采购人式管理暂可以办法>,磋商文件中必须转包含关于保证金哪些具体内容? 投标保证金 履约保证金 分包)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 32 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 21 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 163ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 146ms)
+[Pipeline] >> Stage: preprocess (公路工程建设项目开标时，如果提交投标文件的投标人只有2家，应该怎么处理？)
+   [Rewrite] 公路工程建设项目开标时，如果提交投标文件的投标人只有2家，应该怎么处理？... -> 公路工程建设项目开标时,如果提提交投标文件的投标人只有2家,应该怎么处理?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (公路工程建设项目开标时,如果提提交投标文件的投标人只有2家,应该怎么处理? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 72 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 31 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 135ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 145ms)
+[Pipeline] >> Stage: preprocess (出口企业要想有偿获得国家确定的出口商品配额，需要通过什么方式？)
+   [Rewrite] 出口企业要想有偿获得国家确定的出口商品配额，需要通过什么方式？... -> 出口企业要想有偿获应当国家确确定的出口商品配额,需要通过什么方式?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (出口企业要想有偿获应当国家确确定的出口商品配额,需要通过什么方式?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 48 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 125ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 62ms)
+[Pipeline] >> Stage: preprocess (我作为供应商在中央国家机关政府采购中心电子竞价中中标了，成交公告发布后我需要在多长时间内确认订单？)
+   [Rewrite] 我作为供应商在中央国家机关政府采购中心电子竞价中中标了，成交公告发布后我需要在多长时间内确认订单？... -> 我作为投标人在中央国家机关政府采购中心电子竞价中中标了,成提交公告发布布后我需要在多长时间内确认订单?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (我作为投标人在中央国家机关政府采购中心电子竞价中中标了,成提交公告发布布后我需要在多长时间内确认订单? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 32 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 40 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 156ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 116ms)
+[Pipeline] >> Stage: preprocess (评审专家在评审过程中发现采购文件内容违反国家强制性规定时，应该怎么做？)
+   [Rewrite] 评审专家在评审过程中发现采购文件内容违反国家强制性规定时，应该怎么做？... -> 评审专家在评审过程中发布现采购文件内容违反国家强制性规确定时,应该怎么做?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (评审专家在评审过程中发布现采购文件内容违反国家强制性规确定时,应该怎么做?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 39 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 27 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 132ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 100ms)
+[Pipeline] >> Stage: preprocess (建筑工程设计招标中，招标人确定中标人后需要把中标结果告诉哪些人？)
+   [Rewrite] 建筑工程设计招标中，招标人确定中标人后需要把中标结果告诉哪些人？... -> 建筑工程设计招标中,招标人确确定中标人后需要把中标结果告诉哪些人?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (建筑工程设计招标中,招标人确确定中标人后需要把中标结果告诉哪些人?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 51 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 136ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 144ms)
+[Pipeline] >> Stage: preprocess (地方外经贸主管部门在出口商品配额分配中如果违反规定，外经贸部可以采取什么措施？)
+   [Rewrite] 地方外经贸主管部门在出口商品配额分配中如果违反规定，外经贸部可以采取什么措施？... -> 地方外经贸主管部门在出口商品配额分配中如果违反规确定,外经贸部可以采取什么措施?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (地方外经贸主管部门在出口商品配额分配中如果违反规确定,外经贸部可以采取什么措施?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 39 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 127ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 54ms)
+[Pipeline] >> Stage: preprocess (政府购买服务时应当优先安排哪些类型的项目？)
+   [Rewrite] 政府购买服务时应当优先安排哪些类型的项目？... -> 政府购买服务时应当优先安排哪些类型的项目?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (政府购买服务时应当优先安排哪些类型的项目?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 39 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 117ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 28, 0ms)
+[Pipeline] >> Stage: rerank (in: 28)
+[Pipeline] OK Stage: rerank done (out: 5, 136ms)
+[Pipeline] >> Stage: preprocess (中央国家机关政府采购电子卖场中，反拍模式下供应商如何报价才可能成交？)
+   [Rewrite] 中央国家机关政府采购电子卖场中，反拍模式下供应商如何报价才可能成交？... -> 中央国家机关政府采购电子卖场中,反拍模式下投标人如何报价才可可以成提交?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (中央国家机关政府采购电子卖场中,反拍模式下投标人如何报价才可可以成提交? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 43 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 20 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 141ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 28, 0ms)
+[Pipeline] >> Stage: rerank (in: 28)
+[Pipeline] OK Stage: rerank done (out: 5, 93ms)
+[Pipeline] >> Stage: preprocess (国有金融企业在集中采购过程中，如果有人泄露了标底，应该承担什么责任？)
+   [Rewrite] 国有金融企业在集中采购过程中，如果有人泄露了标底，应该承担什么责任？... -> 国有金融企业在集中采购过程中,如果有人泄露了标底,应该承担什么责任?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (国有金融企业在集中采购过程中,如果有人泄露了标底,应该承担什么责任? 透露)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 45 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 129ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 96ms)
+[Pipeline] >> Stage: preprocess (在工程建设项目货物招标中，招标人能否对投标人进行资格审查？)
+   [Rewrite] 在工程建设项目货物招标中，招标人能否对投标人进行资格审查？... -> 在工程建设项目货物招标中,招标人可以否对投标人进可以资格条件审查?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在工程建设项目货物招标中,招标人可以否对投标人进可以资格条件审查? 供应商 潜在投标人 投标方 资质)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 46 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 40 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 145ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 138ms)
+[Pipeline] >> Stage: preprocess (依法必须公开招标的项目如果没有在指定媒介发布招标公告，会面临什么处罚？)
+   [Rewrite] 依法必须公开招标的项目如果没有在指定媒介发布招标公告，会面临什么处罚？... -> 依法必须公开招标的项目如果没有在指确定媒介发布布招标公告,会面临什么处处罚?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (依法必须公开招标的项目如果没有在指确定媒介发布布招标公告,会面临什么处处罚? 罚款 处分 惩戒)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 48 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 41 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 137ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 138ms)
+[Pipeline] >> Stage: preprocess (机电产品国际招标代理机构的监督管理，适用于哪些对象？)
+   [Rewrite] 机电产品国际招标代理机构的监督管理，适用于哪些对象？... -> 机电产品国际招标代理机构的监督管理,适用于哪些对象?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (机电产品国际招标代理机构的监督管理,适用于哪些对象?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 49 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 42 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 118ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 27, 0ms)
+[Pipeline] >> Stage: rerank (in: 27)
+[Pipeline] OK Stage: rerank done (out: 5, 132ms)
+[Pipeline] >> Stage: preprocess (收费公路建设中，从业单位必须遵守哪些安全生产要求？)
+   [Rewrite] 收费公路建设中，从业单位必须遵守哪些安全生产要求？... -> 收取费公路建设中,从业单位必须遵守哪些安全生产要求?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (收取费公路建设中,从业单位必须遵守哪些安全生产要求? 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 48 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 22 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 120ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 108ms)
+[Pipeline] >> Stage: preprocess (供应商在政府采购中提出质疑时，质疑函必须包含哪些内容？)
+   [Rewrite] 供应商在政府采购中提出质疑时，质疑函必须包含哪些内容？... -> 投标人在政府采购中提出质疑时,质疑函必须转包含哪些内容?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (投标人在政府采购中提出质疑时,质疑函必须转包含哪些内容? 供应商 潜在投标人 投标方 分包)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 134ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 138ms)
+[Pipeline] >> Stage: preprocess (《投资项目招标投标管理办法》第三十一条规定，该办法施行后，哪份旧文件会被同时废止？)
+   [Rewrite] 《投资项目招标投标管理办法》第三十一条规定，该办法施行后，哪份旧文件会被同时废止？... -> <投资项目招标投标管理办法>第31条规确定,该办法施可以后,哪份旧文件会被同时废止?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (<投资项目招标投标管理办法>第31条规确定,该办法施可以后,哪份旧文件会被同时废止?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 51 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 193ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 26, 0ms)
+[Pipeline] >> Stage: rerank (in: 26)
+[Pipeline] OK Stage: rerank done (out: 5, 118ms)
+[Pipeline] >> Stage: preprocess (供应商在政府采购中提供虚假材料谋取中标，根据《政府采购进口产品管理办法》第二十三条，会被处以什么罚款？)
+   [Rewrite] 供应商在政府采购中提供虚假材料谋取中标，根据《政府采购进口产品管理办法》第二十三条，会被处以什么罚款？... -> 投标人在政府采购中提供虚假材料谋取中标,根据<政府采购进口产品管理办法>第23条,会被处以什么处处罚?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (投标人在政府采购中提供虚假材料谋取中标,根据<政府采购进口产品管理办法>第23条,会被处以什么处处罚? 供应商 潜在投标人 投标方 罚款 处分 惩戒)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 48 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 29 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 165ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 115ms)
+  [50/102] parent_hit@5: 43/50=86.0% exact_hit@5: 41/50=82.0% cosine_hit@5: 4 soft: 0 miss: 3 (21s)
+[Pipeline] >> Stage: preprocess (公路总承包工程实施中，如果发生设计变更，哪种类型的变更必须报交通运输主管部门审批？)
+   [Rewrite] 公路总承包工程实施中，如果发生设计变更，哪种类型的变更必须报交通运输主管部门审批？... -> 公路总承转包工程实施中,如果发布生设计变更,哪种类型的变更必须报提交通运输主管部门审批?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (公路总承转包工程实施中,如果发布生设计变更,哪种类型的变更必须报提交通运输主管部门审批? 分包)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 48 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 22 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 142ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 72ms)
+[Pipeline] >> Stage: preprocess (在国有建设用地使用权招标出让中，开标时如果投标人少于多少人，出让人必须终止招标活动？)
+   [Rewrite] 在国有建设用地使用权招标出让中，开标时如果投标人少于多少人，出让人必须终止招标活动？... -> 在国有建设用地使用权招标出让中,开标时如果投标人少于多少人,出让人必须终止招标活动?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在国有建设用地使用权招标出让中,开标时如果投标人少于多少人,出让人必须终止招标活动? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 57 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 33 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 145ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 155ms)
+[Pipeline] >> Stage: preprocess (根据法规，如果所有投标都被做废标处理，招标人需要怎么做？)
+   [Rewrite] 根据法规，如果所有投标都被做废标处理，招标人需要怎么做？... -> 根据法规,如果所有投标都被做废标处理,招标人需要怎么做?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (根据法规,如果所有投标都被做废标处理,招标人需要怎么做? 流标 无效投标)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:42)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 58 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 38 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 127ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 145ms)
+[Pipeline] >> Stage: preprocess (采购人选择政府采购代理机构时，根据《政府采购代理机构管理暂行办法》，哪些方式是明确禁止的？)
+   [Rewrite] 采购人选择政府采购代理机构时，根据《政府采购代理机构管理暂行办法》，哪些方式是明确禁止的？... -> 采购人确定择政府采购代理机构时,根据<政府采购代理机构管理暂可以办法>,哪些方式是明确禁止的?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (采购人确定择政府采购代理机构时,根据<政府采购代理机构管理暂可以办法>,哪些方式是明确禁止的? 不得 不允许 严禁)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 30 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 155ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 94ms)
+[Pipeline] >> Stage: preprocess (政府采购活动中，采购人为了支持中小企业发展，具体可以通过哪些措施来提高中小企业在政府采购中的份额？)
+   [Rewrite] 政府采购活动中，采购人为了支持中小企业发展，具体可以通过哪些措施来提高中小企业在政府采购中的份额？... -> 政府采购活动中,采购人为了支持中小企业发布展,具体可以通过哪些措施来提高中小企业在政府采购中的份额?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (政府采购活动中,采购人为了支持中小企业发布展,具体可以通过哪些措施来提高中小企业在政府采购中的份额?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 158ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 28, 0ms)
+[Pipeline] >> Stage: rerank (in: 28)
+[Pipeline] OK Stage: rerank done (out: 5, 138ms)
+[Pipeline] >> Stage: preprocess (中央预算单位采购限额标准以上但公开招标数额标准以下的货物，想要采用公开招标以外的采购方式，应该依据什么规定自主选择？)
+   [Rewrite] 中央预算单位采购限额标准以上但公开招标数额标准以下的货物，想要采用公开招标以外的采购方式，应该依据什么规定自主选择？... -> 中央预算单位采购限额标准以上但公开招标数额标准以下的货物,想要采用公开招标以外的采购人式,应该依据什么规确定自主确定择?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (中央预算单位采购限额标准以上但公开招标数额标准以下的货物,想要采用公开招标以外的采购人式,应该依据什么规确定自主确定择?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 32 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 26 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 155ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 85ms)
+[Pipeline] >> Stage: preprocess (省级交通运输主管部门在管理本行政区域内公路建设项目评标专家库时，需要将其制定的管理制度报哪个上级部门备案？)
+   [Rewrite] 省级交通运输主管部门在管理本行政区域内公路建设项目评标专家库时，需要将其制定的管理制度报哪个上级部门备案？... -> 省级提交通运输主管部门在管理本可以政区域内公路建设项目评标专家库时,需要将其制确定的管理制度报哪个上级部门备案?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (省级提交通运输主管部门在管理本可以政区域内公路建设项目评标专家库时,需要将其制确定的管理制度报哪个上级部门备案?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 50 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 10ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 26 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 156ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 99ms)
+[Pipeline] >> Stage: preprocess (民航地区管理局在评标专家管理工作中，对于辖区内招标投标活动中与评标专家有关的投诉，有什么具体职责？)
+   [Rewrite] 民航地区管理局在评标专家管理工作中，对于辖区内招标投标活动中与评标专家有关的投诉，有什么具体职责？... -> 民航地区管理局在评标专家管理工作中,对于辖区内招标投标活动中与评标专家有关的投诉,有哪些具体职责?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (民航地区管理局在评标专家管理工作中,对于辖区内招标投标活动中与评标专家有关的投诉,有哪些具体职责?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 47 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 30 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 143ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 96ms)
+[Pipeline] >> Stage: preprocess (局管项目的招标投标全过程监督工作中，如果发现招标人、评委专家等在交易场所违反交易规则且拒不改正，铁路局应如何处理？)
+   [Rewrite] 局管项目的招标投标全过程监督工作中，如果发现招标人、评委专家等在交易场所违反交易规则且拒不改正，铁路局应如何处理？... -> 局管项目的招标投标全过程监督工作中,如果发布现招标人,评委专家等在提交易场所违反提交易规则且拒不修改正,铁路局应如何处理...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (局管项目的招标投标全过程监督工作中,如果发布现招标人,评委专家等在提交易场所违反提交易规则且拒不修改正,铁路局应如何处理?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 25 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 155ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 29, 0ms)
+[Pipeline] >> Stage: rerank (in: 29)
+[Pipeline] OK Stage: rerank done (out: 5, 128ms)
+[Pipeline] >> Stage: preprocess (在水利工程招标投标审计中，如果审计部门发现招标人或其代理机构正在进行违反国家法律规定的行为，审计部门可以采取什么措施？)
+   [Rewrite] 在水利工程招标投标审计中，如果审计部门发现招标人或其代理机构正在进行违反国家法律规定的行为，审计部门可以采取什么措施？... -> 在水利工程招标投标审计中,如果审计部门发布现招标人或其代理机构正在进可以违反国家法律规确定的可以为,审计部门可以采取什么...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在水利工程招标投标审计中,如果审计部门发布现招标人或其代理机构正在进可以违反国家法律规确定的可以为,审计部门可以采取什么措施?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 160ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 27, 0ms)
+[Pipeline] >> Stage: rerank (in: 27)
+[Pipeline] OK Stage: rerank done (out: 5, 126ms)
+[Pipeline] >> Stage: preprocess (如果发证机关工作人员对符合条件的申请人没有在法定期限内作出施工许可决定，会受到什么处分？)
+   [Rewrite] 如果发证机关工作人员对符合条件的申请人没有在法定期限内作出施工许可决定，会受到什么处分？... -> 如果发布证机关工作人员对符合条件的申请人没有在法确定期限内作出施工许可决确定,会受到什么处分?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果发布证机关工作人员对符合条件的申请人没有在法确定期限内作出施工许可决确定,会受到什么处分? 处罚)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 133ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 110ms)
+[Pipeline] >> Stage: preprocess (被公告的招标投标当事人认为公告记录有误，向公告部门申请更正后，公告部门必须在几个工作日内完成核对？)
+   [Rewrite] 被公告的招标投标当事人认为公告记录有误，向公告部门申请更正后，公告部门必须在几个工作日内完成核对？... -> 被公告的招标投标当事人认为公告记录有误,向公告部门申请更正后,公告部门必须在几个工作日内完成核对?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (被公告的招标投标当事人认为公告记录有误,向公告部门申请更正后,公告部门必须在几个工作日内完成核对?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 57 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 39 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 155ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 144ms)
+[Pipeline] >> Stage: preprocess (行政监督部门收到投诉书后，如果认为不属于本部门受理，应该怎么处理？)
+   [Rewrite] 行政监督部门收到投诉书后，如果认为不属于本部门受理，应该怎么处理？... -> 可以政监督部门收取到投诉书后,如果认为不属于本部门受理,应该怎么处理?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (可以政监督部门收取到投诉书后,如果认为不属于本部门受理,应该怎么处理?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 127ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 140ms)
+[Pipeline] >> Stage: preprocess (中标通知书发出后，招标人和中标人必须在多少天内签订书面合同？)
+   [Rewrite] 中标通知书发出后，招标人和中标人必须在多少天内签订书面合同？... -> 中标通知书发布出后,招标人和中标人必须在多少日内内订立订书面合同?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (中标通知书发布出后,招标人和中标人必须在多少日内内订立订书面合同?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 121ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 94ms)
+[Pipeline] >> Stage: preprocess (国家食品药品监督管理总局制定采购与招标管理办法的主要法律依据是哪两部？)
+   [Rewrite] 国家食品药品监督管理总局制定采购与招标管理办法的主要法律依据是哪两部？... -> 国家食品药品监督管理总局制确定采购与招标管理办法的主要法律依据是哪两部?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (国家食品药品监督管理总局制确定采购与招标管理办法的主要法律依据是哪两部?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 49 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 38 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 130ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 22, 0ms)
+[Pipeline] >> Stage: rerank (in: 22)
+[Pipeline] OK Stage: rerank done (out: 5, 103ms)
+[Pipeline] >> Stage: preprocess (建筑工程方案设计招标分为哪两种类型？)
+   [Rewrite] 建筑工程方案设计招标分为哪两种类型？... -> 建筑工程方案设计招标分为哪两种类型?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (建筑工程方案设计招标分为哪两种类型?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 32 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 29 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 104ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 140ms)
+[Pipeline] >> Stage: preprocess (《政务信息系统政府采购管理暂行办法》是从什么时候开始施行的？)
+   [Rewrite] 《政务信息系统政府采购管理暂行办法》是从什么时候开始施行的？... -> <政务信息系统政府采购管理暂可以办法>是从什么时候开始施可以的?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (<政务信息系统政府采购管理暂可以办法>是从什么时候开始施可以的?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 39 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 141ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 24, 0ms)
+[Pipeline] >> Stage: rerank (in: 24)
+[Pipeline] OK Stage: rerank done (out: 5, 100ms)
+[Pipeline] >> Stage: preprocess (中央国家机关政府采购中心专家劳务费支付电子回单每月由哪个部门打印并作为会计凭证？)
+   [Rewrite] 中央国家机关政府采购中心专家劳务费支付电子回单每月由哪个部门打印并作为会计凭证？... -> 中央国家机关政府采购中心专家劳务费支付电子回单每月由哪个部门打印并作为会计凭证?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (中央国家机关政府采购中心专家劳务费支付电子回单每月由哪个部门打印并作为会计凭证?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 42 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 17 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 130ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 123ms)
+[Pipeline] >> Stage: preprocess (根据《公路养护工程市场准入暂行规定》，交通部在监督执行国家有关公路养护政策法规之外，还有哪些主要职责？)
+   [Rewrite] 根据《公路养护工程市场准入暂行规定》，交通部在监督执行国家有关公路养护政策法规之外，还有哪些主要职责？... -> 根据<公路养护工程市场准入暂可以规确定>,提交通部在监督执可以国家有关公路养护政策法规之外,还有哪些主要职责?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (根据<公路养护工程市场准入暂可以规确定>,提交通部在监督执可以国家有关公路养护政策法规之外,还有哪些主要职责?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 46 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 149ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 97ms)
+[Pipeline] >> Stage: preprocess (《工程建设项目申报材料增加招标内容和核准招标事项暂行规定》的解释权归哪个部门？)
+   [Rewrite] 《工程建设项目申报材料增加招标内容和核准招标事项暂行规定》的解释权归哪个部门？... -> <工程建设项目申报材料增加招标内容和核准招标事项暂可以规确定>的解释权归哪个部门?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (<工程建设项目申报材料增加招标内容和核准招标事项暂可以规确定>的解释权归哪个部门?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 43 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 130ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 26, 0ms)
+[Pipeline] >> Stage: rerank (in: 26)
+[Pipeline] OK Stage: rerank done (out: 5, 117ms)
+[Pipeline] >> Stage: preprocess (建设工程质量保证金是从哪里预留出来的，它的最长缺陷责任期是多少年？)
+   [Rewrite] 建设工程质量保证金是从哪里预留出来的，它的最长缺陷责任期是多少年？... -> 建设工程质量保证金是从何处预留出来的,它的最长缺陷责任期是多少年?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (建设工程质量保证金是从何处预留出来的,它的最长缺陷责任期是多少年? 投标保证金 履约保证金)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 54 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 16 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 146ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 158ms)
+[Pipeline] >> Stage: preprocess (行业标准施工招标文件中的专用合同条款，如果与标准施工招标文件的通用合同条款强制性规定相抵触，会有什么后果？)
+   [Rewrite] 行业标准施工招标文件中的专用合同条款，如果与标准施工招标文件的通用合同条款强制性规定相抵触，会有什么后果？... -> 可以业标准施工招标文件中的专用合同条款,如果与标准施工招标文件的通用合同条款强制性规确定相抵触,会有哪些后果?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (可以业标准施工招标文件中的专用合同条款,如果与标准施工招标文件的通用合同条款强制性规确定相抵触,会有哪些后果?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 50 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 168ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 142ms)
+[Pipeline] >> Stage: preprocess (如果中央预算单位有紧急采购需求，无法通过批量集中采购完成，需要经过什么程序才能改用协议供货方式？采购数量有什么限制？)
+   [Rewrite] 如果中央预算单位有紧急采购需求，无法通过批量集中采购完成，需要经过什么程序才能改用协议供货方式？采购数量有什么限制？... -> 如果中央预算单位有紧急采购需求,无法通过批量集中采购完成,需要经过什么程序才可以修改用协议供货方式?采购数量有哪些限制?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果中央预算单位有紧急采购需求,无法通过批量集中采购完成,需要经过什么程序才可以修改用协议供货方式?采购数量有哪些限制? 排斥)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 39 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 26 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 158ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 85ms)
+[Pipeline] >> Stage: preprocess (民政部工程建设项目如果投资金额未达到规定的标准，发包程序可以简化吗？需要遵循什么原则？)
+   [Rewrite] 民政部工程建设项目如果投资金额未达到规定的标准，发包程序可以简化吗？需要遵循什么原则？... -> 民政部工程建设项目如果投资金额未达到规确定的标准,发布转包程序可以简化吗?需要遵循什么原则?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (民政部工程建设项目如果投资金额未达到规确定的标准,发布转包程序可以简化吗?需要遵循什么原则? 分包)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 46 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 20 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 11ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 149ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 147ms)
+[Pipeline] >> Stage: preprocess (公路建设市场遵循的基本原则是什么？)
+   [Rewrite] 公路建设市场遵循的基本原则是什么？... -> 公路建设市场遵循的基本原则是什么?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (公路建设市场遵循的基本原则是什么?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 41 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 14 candidates → Top-14
+[Pipeline] OK Stage: fusion done (out: 14, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 29, 111ms)
+[Pipeline] >> Stage: merge (in: 29)
+[Pipeline] OK Stage: merge done (out: 29, 0ms)
+[Pipeline] >> Stage: expand (in: 29)
+[Pipeline] OK Stage: expand done (out: 29, 0ms)
+[Pipeline] >> Stage: rerank (in: 29)
+[Pipeline] OK Stage: rerank done (out: 5, 44ms)
+[Pipeline] >> Stage: preprocess (如果投诉人故意捏造事实进行投诉，给他人造成了损失，需要承担什么责任？)
+   [Rewrite] 如果投诉人故意捏造事实进行投诉，给他人造成了损失，需要承担什么责任？... -> 如果投诉人故意捏造事实进可以投诉,予以他人造成了损失,需要承担什么责任?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果投诉人故意捏造事实进可以投诉,予以他人造成了损失,需要承担什么责任?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:17)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 46 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 24 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 126ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 66ms)
+[Pipeline] >> Stage: preprocess (依法必须招标的项目中，招标人在中标通知书发出后无正当理由不与中标人订立合同，会受到什么处罚？)
+   [Rewrite] 依法必须招标的项目中，招标人在中标通知书发出后无正当理由不与中标人订立合同，会受到什么处罚？... -> 依法必须招标的项目中,招标人在中标通知书发布出后无正当理由不与中标人订立合同,会受到什么处处罚?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (依法必须招标的项目中,招标人在中标通知书发布出后无正当理由不与中标人订立合同,会受到什么处处罚? 罚款 处分 惩戒)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 33 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 41 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 158ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 157ms)
+[Pipeline] >> Stage: preprocess (对于技术复杂、规格难以统一的货物，应该采用哪种评标方法？)
+   [Rewrite] 对于技术复杂、规格难以统一的货物，应该采用哪种评标方法？... -> 对于技术复杂,规格难以统一的货物,应该采用哪种评标方法?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (对于技术复杂,规格难以统一的货物,应该采用哪种评标方法?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 7 candidates → Top-7
+[Pipeline] OK Stage: fusion done (out: 7, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 22, 130ms)
+[Pipeline] >> Stage: merge (in: 22)
+[Pipeline] OK Stage: merge done (out: 22, 0ms)
+[Pipeline] >> Stage: expand (in: 22)
+[Pipeline] OK Stage: expand done (out: 22, 0ms)
+[Pipeline] >> Stage: rerank (in: 22)
+[Pipeline] OK Stage: rerank done (out: 5, 112ms)
+[Pipeline] >> Stage: preprocess (如果某个项目在《必须招标的工程项目规定》第二条中没有明确列举，是否还能强制要求招标？)
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果某个项目在<必须招标的工程项目规定>第2条中没有明确列举,是否还能强制要求招标? 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 73 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 40 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 141ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 151ms)
+[Pipeline] >> Stage: preprocess (投标人如果在投标过程中弄虚作假，已经中标了会有什么后果？)
+   [Rewrite] 投标人如果在投标过程中弄虚作假，已经中标了会有什么后果？... -> 投标人如果在投标过程中进可以虚作假,已经中标了会有哪些后果?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (投标人如果在投标过程中进可以虚作假,已经中标了会有哪些后果? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:10)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 39 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 135ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 28, 0ms)
+[Pipeline] >> Stage: rerank (in: 28)
+[Pipeline] OK Stage: rerank done (out: 5, 138ms)
+[Pipeline] >> Stage: preprocess (《定的有效期内以书面形式向中标人发出中标通知》这个办法什么时候开始生效？)
+   [Rewrite] 《定的有效期内以书面形式向中标人发出中标通知》这个办法什么时候开始生效？... -> <确定的有效期内以书面形式向中标人发布出中标通知>办法什么时候开始生效?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (<确定的有效期内以书面形式向中标人发布出中标通知>办法什么时候开始生效?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 35 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 17 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 131ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 27, 0ms)
+[Pipeline] >> Stage: rerank (in: 27)
+[Pipeline] OK Stage: rerank done (out: 5, 143ms)
+[Pipeline] >> Stage: preprocess (哪些项目不属于《必须招标的工程项目规定》第二条的适用范围？)
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (哪些项目不属于<必须招标的工程项目规定>第2条的适用范围?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 56 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 18 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 133ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 141ms)
+[Pipeline] >> Stage: preprocess (公路养护工程从业资质证书的式样是由哪个部门统一制发的？)
+   [Rewrite] 公路养护工程从业资质证书的式样是由哪个部门统一制发的？... -> 公路养护工程从业资格条件证书的式样是由哪个部门统一制发布的?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (公路养护工程从业资格条件证书的式样是由哪个部门统一制发布的? 资质)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 18 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 122ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 26, 0ms)
+[Pipeline] >> Stage: rerank (in: 26)
+[Pipeline] OK Stage: rerank done (out: 5, 100ms)
+[Pipeline] >> Stage: preprocess (中国人民解放军和武警部队的审计工作规定应该由谁来制定？)
+   [Rewrite] 中国人民解放军和武警部队的审计工作规定应该由谁来制定？... -> 中国人民解放军和武警部队的审计工作规确定应该由何人来制确定?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (中国人民解放军和武警部队的审计工作规确定应该由何人来制确定?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 44 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 6 candidates → Top-6
+[Pipeline] OK Stage: fusion done (out: 6, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 21, 114ms)
+[Pipeline] >> Stage: merge (in: 21)
+[Pipeline] OK Stage: merge done (out: 21, 0ms)
+[Pipeline] >> Stage: expand (in: 21)
+[Pipeline] OK Stage: expand done (out: 21, 0ms)
+[Pipeline] >> Stage: rerank (in: 21)
+[Pipeline] OK Stage: rerank done (out: 5, 63ms)
+[Pipeline] >> Stage: preprocess (中标供应商拒绝履行框架协议或合同义务，财政部会依据什么法规进行处罚？)
+   [Rewrite] 中标供应商拒绝履行框架协议或合同义务，财政部会依据什么法规进行处罚？... -> 中标投标人拒绝履可以框架协议或合同义务,财政部会依据什么法规进可以处处罚?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (中标投标人拒绝履可以框架协议或合同义务,财政部会依据什么法规进可以处处罚? 供应商 潜在投标人 投标方 罚款 处分 惩戒)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:15)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 45 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 26 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 144ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 140ms)
+[Pipeline] >> Stage: preprocess (晋财购〔2015〕16号请示询问的是关于哪种采购方式的问题？)
+   [Rewrite] 晋财购〔2015〕16号请示询问的是关于哪种采购方式的问题？... -> 晋财购〔2015〕16号请示询问的是关于哪种采购人式的问题?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (晋财购〔2015〕16号请示询问的是关于哪种采购人式的问题?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 130ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 69ms)
+[Pipeline] >> Stage: preprocess (根据交通运输主管部门职责的相关办法，哪个部门负责解释该办法？)
+   [Rewrite] 根据交通运输主管部门职责的相关办法，哪个部门负责解释该办法？... -> 根据提交通运输主管部门职责的相关办法,哪个部门负责解释该办法?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (根据提交通运输主管部门职责的相关办法,哪个部门负责解释该办法?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 63 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 133ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 92ms)
+[Pipeline] >> Stage: preprocess (供应商在电子竞价中成交后未按要求确认订单，会面临什么自动处罚？)
+   [Rewrite] 供应商在电子竞价中成交后未按要求确认订单，会面临什么自动处罚？... -> 投标人在电子竞价中成提交后未按要求确认订单,会面临什么自动处处罚?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (投标人在电子竞价中成提交后未按要求确认订单,会面临什么自动处处罚? 供应商 潜在投标人 投标方 罚款 处分 惩戒 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 52 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 26 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 143ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 28, 0ms)
+[Pipeline] >> Stage: rerank (in: 28)
+[Pipeline] OK Stage: rerank done (out: 5, 138ms)
+[Pipeline] >> Stage: preprocess (如果有人非法强制招标人委托招标代理机构办理招标事宜，由哪个部门依据哪些法规进行处罚？)
+   [Rewrite] 如果有人非法强制招标人委托招标代理机构办理招标事宜，由哪个部门依据哪些法规进行处罚？... -> 如果有人非法强制招标人委托招标代理机构办理招标事宜,由哪个部门依据哪些法规进可以处处罚?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果有人非法强制招标人委托招标代理机构办理招标事宜,由哪个部门依据哪些法规进可以处处罚? 罚款 处分 惩戒)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:33)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 38 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 27 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 139ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 150ms)
+[Pipeline] >> Stage: preprocess (省级财政部门应在什么时间前向财政部报送本省三年内有效的政府采购严重违法失信行为信息记录？)
+   [Rewrite] 省级财政部门应在什么时间前向财政部报送本省三年内有效的政府采购严重违法失信行为信息记录？... -> 省级财政部门应在什么时间前向财政部报送本省三年内有效的政府采购严重违法失信可以为信息记录?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (省级财政部门应在什么时间前向财政部报送本省三年内有效的政府采购严重违法失信可以为信息记录?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 33 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 2ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 140ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 23, 0ms)
+[Pipeline] >> Stage: rerank (in: 23)
+[Pipeline] OK Stage: rerank done (out: 5, 114ms)
+[Pipeline] >> Stage: preprocess (根据《促进残疾人就业政府采购政策的通知》，残疾人福利性单位在政府采购中享受哪些视同待遇？)
+   [Rewrite] 根据《促进残疾人就业政府采购政策的通知》，残疾人福利性单位在政府采购中享受哪些视同待遇？... -> 根据<促进残疾人就业政府采购政策的通知>,残疾人福利性单位在政府采购中享受哪些视同待遇?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (根据<促进残疾人就业政府采购政策的通知>,残疾人福利性单位在政府采购中享受哪些视同待遇?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 11 candidates → Top-11
+[Pipeline] OK Stage: fusion done (out: 11, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 26, 141ms)
+[Pipeline] >> Stage: merge (in: 26)
+[Pipeline] OK Stage: merge done (out: 26, 0ms)
+[Pipeline] >> Stage: expand (in: 26)
+[Pipeline] OK Stage: expand done (out: 22, 0ms)
+[Pipeline] >> Stage: rerank (in: 22)
+[Pipeline] OK Stage: rerank done (out: 5, 111ms)
+[Pipeline] >> Stage: preprocess (在交通运输部部属单位的集中采购中，如果采购人与集中采购机构按年度签订了一揽子委托代理协议，之后某个具体项目有特殊要求，他们应该怎么做？)
+   [Rewrite] 在交通运输部部属单位的集中采购中，如果采购人与集中采购机构按年度签订了一揽子委托代理协议，之后某个具体项目有特殊要求，他... -> 在提交通运输部部属单位的集中采购中,如果采购人与集中采购机构按年度订立订了一揽子委托代理协议,之后某个具体项目有特殊要求...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在提交通运输部部属单位的集中采购中,如果采购人与集中采购机构按年度订立订了一揽子委托代理协议,之后某个具体项目有特殊要求,他们应该怎么做? 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 43 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 30 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 184ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 28, 0ms)
+[Pipeline] >> Stage: rerank (in: 28)
+[Pipeline] OK Stage: rerank done (out: 5, 130ms)
+[Pipeline] >> Stage: preprocess (对于需要供应商提供设计方案、解决方案或组织方案的采购项目，如果采购人想考虑全生命周期成本，在评审时应该要求供应商报出哪些费用？)
+   [Rewrite] 对于需要供应商提供设计方案、解决方案或组织方案的采购项目，如果采购人想考虑全生命周期成本，在评审时应该要求供应商报出哪些... -> 对于需要投标人提供设计方案,解决方案或组织方案的采购项目,如果采购人想考虑全生命周期成本,在评审时应该要求投标人报出哪些...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (对于需要投标人提供设计方案,解决方案或组织方案的采购项目,如果采购人想考虑全生命周期成本,在评审时应该要求投标人报出哪些费用? 供应商 潜在投标人 投标方 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 12 candidates → Top-12
+[Pipeline] OK Stage: fusion done (out: 12, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 27, 165ms)
+[Pipeline] >> Stage: merge (in: 27)
+[Pipeline] OK Stage: merge done (out: 27, 0ms)
+[Pipeline] >> Stage: expand (in: 27)
+[Pipeline] OK Stage: expand done (out: 26, 0ms)
+[Pipeline] >> Stage: rerank (in: 26)
+[Pipeline] OK Stage: rerank done (out: 5, 133ms)
+[Pipeline] >> Stage: preprocess (在交通运输部部属单位的部门集中采购程序中，采购人编制完部门集中采购实施计划后，除了逐级上报给交通运输部委托的集中采购机构，还需要同时做什么？)
+   [Rewrite] 在交通运输部部属单位的部门集中采购程序中，采购人编制完部门集中采购实施计划后，除了逐级上报给交通运输部委托的集中采购机构... -> 在提交通运输部部属单位的部门集中采购程序中,采购人编制完部门集中采购实施计划后,除了逐级上报予以提交通运输部委托的集中采...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在提交通运输部部属单位的部门集中采购程序中,采购人编制完部门集中采购实施计划后,除了逐级上报予以提交通运输部委托的集中采购机构,还需要同时做什么?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 58 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 32 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 170ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 24, 0ms)
+[Pipeline] >> Stage: rerank (in: 24)
+[Pipeline] OK Stage: rerank done (out: 5, 127ms)
+[Pipeline] >> Stage: preprocess (一家公司想申请三类养护工程从业资质中的甲级资质，它要求从事高速公路或一级公路小修保养作业至少满多少年？)
+   [Rewrite] 一家公司想申请三类养护工程从业资质中的甲级资质，它要求从事高速公路或一级公路小修保养作业至少满多少年？... -> 一家公司想申请三类养护工程从业资格条件中的甲级资格条件,它要求从事高速公路或一级公路小修保养作业至少满多少年?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (一家公司想申请三类养护工程从业资格条件中的甲级资格条件,它要求从事高速公路或一级公路小修保养作业至少满多少年? 指定 资质)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.75, Dense=0.25 (type: keyword_heavy)
+  [WeightedFusion] 20 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 160ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 22, 0ms)
+[Pipeline] >> Stage: rerank (in: 22)
+[Pipeline] OK Stage: rerank done (out: 5, 120ms)
+[Pipeline] >> Stage: preprocess (根据招标投标法实施条例，如果投标人弄虚作假骗取中标，给招标人造成了30万元以上的直接经济损失，这属于什么性质的行为？)
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (根据招标投标法实施条例,如果投标人弄虚作假骗取中标,给招标人造成了30万元以上的直接经济损失,这属于什么性质的行为? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 51 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 33 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 161ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 28, 0ms)
+[Pipeline] >> Stage: rerank (in: 28)
+[Pipeline] OK Stage: rerank done (out: 5, 152ms)
+[Pipeline] >> Stage: preprocess (审计机关在封存被审计单位的资料和资产时，封存期限一般不能超过几天？如果情况特殊需要延长，最长可以延长多久？另外，在封存期间，如果审计机关想向社会公布审计结果，但涉及上市公司，需要提前多久告知上市公司？)
+   [Rewrite] 审计机关在封存被审计单位的资料和资产时，封存期限一般不能超过几天？如果情况特殊需要延长，最长可以延长多久？另外，在封存期... -> 审计机关在封存被审计单位的资料和资产时,封存期限一般不可以超过几日内?如果情况特殊需要延长,最长可以延长多长时间?另外,...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (审计机关在封存被审计单位的资料和资产时,封存期限一般不可以超过几日内?如果情况特殊需要延长,最长可以延长多长时间?另外,在封存期间,如果审计机关想向社会公布审计结果,但涉及上市公司,需要提前多长时间告知上市公司?)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 38 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 14 candidates → Top-14
+[Pipeline] OK Stage: fusion done (out: 14, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 29, 212ms)
+[Pipeline] >> Stage: merge (in: 29)
+[Pipeline] OK Stage: merge done (out: 29, 0ms)
+[Pipeline] >> Stage: expand (in: 29)
+[Pipeline] OK Stage: expand done (out: 29, 0ms)
+[Pipeline] >> Stage: rerank (in: 29)
+[Pipeline] OK Stage: rerank done (out: 5, 128ms)
+[Pipeline] >> Stage: preprocess (在民航专业工程评标中，评标委员会成员必须按照什么来评审投标文件？如果招标文件里没写某个标准，能不能用？另外，评标委员会成员能不能私下接触投标人或者收受好处？)
+   [Rewrite] 在民航专业工程评标中，评标委员会成员必须按照什么来评审投标文件？如果招标文件里没写某个标准，能不能用？另外，评标委员会成... -> 在民航专业工程评标中,评标委员会成员必须按照什么来评审投标文件?如果招标文件里没写某个标准,是否可以用?另外,评标委员会...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (在民航专业工程评标中,评标委员会成员必须按照什么来评审投标文件?如果招标文件里没写某个标准,是否可以用?另外,评标委员会成员是否可以私下接触投标人或者收取受财物? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 28 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 176ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 94ms)
+[Pipeline] >> Stage: preprocess (如果中标人把中标项目的主体部分违法分包给了别人，或者分包人又再次分包，会面临什么处罚？另外，如果招标人和中标人签的合同跟招标文件、投标文件内容不一致，又会受到什么处罚？)
+   [Rewrite] 如果中标人把中标项目的主体部分违法分包给了别人，或者分包人又再次分包，会面临什么处罚？另外，如果招标人和中标人签的合同跟... -> 如果中标人把中标项目的主体部分违法分转包予以了别人,或者分转包人又再次分转包,会面临什么处处罚?另外,如果招标人和中标人...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果中标人把中标项目的主体部分违法分转包予以了别人,或者分转包人又再次分转包,会面临什么处处罚?另外,如果招标人和中标人订立的合同跟招标文件,投标文件内容不一致,又会受到什么处处罚? 罚款 处分 惩戒 分包)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 56 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 29 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 199ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 162ms)
+[Pipeline] >> Stage: preprocess (公路工程评标时，现场对通讯设备有什么要求？评标工作开始后，第一步程序是什么？)
+   [Rewrite] 公路工程评标时，现场对通讯设备有什么要求？评标工作开始后，第一步程序是什么？... -> 公路工程评标时,现场对通讯设备有哪些要求?评标工作开始后,第一步程序是什么?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (公路工程评标时,现场对通讯设备有哪些要求?评标工作开始后,第一步程序是什么? 指定)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:48)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 41 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 133ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 147ms)
+  [100/102] parent_hit@5: 85/100=85.0% exact_hit@5: 77/100=77.0% cosine_hit@5: 7 soft: 0 miss: 8 (41s)
+[Pipeline] >> Stage: preprocess (政府采购应当遵循哪些基本原则？如果采购的是工程，并且采用招标投标方式，应该适用哪部法律？)
+   [Rewrite] 政府采购应当遵循哪些基本原则？如果采购的是工程，并且采用招标投标方式，应该适用哪部法律？... -> 政府采购应当遵循哪些基本原则?如果采购的是工程,并且采用招标投标人式,应该适用哪部法律?...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (政府采购应当遵循哪些基本原则?如果采购的是工程,并且采用招标投标人式,应该适用哪部法律? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 37 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: balanced)
+  [WeightedFusion] 45 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 152ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 146ms)
+[Pipeline] >> Stage: preprocess (如果招标文件里没有明确说可以提交备选方案，投标人提交投标文件时能不能自己主动提交备选方案？如果擅自提交了会有什么后果？)
+   [Rewrite] 如果招标文件里没有明确说可以提交备选方案，投标人提交投标文件时能不能自己主动提交备选方案？如果擅自提交了会有什么后果？... -> 如果招标文件里没有明确说明可以提提交备确定方案,投标人提提交投标文件时是否可以自己主动提提交备确定方案?如果擅自提提交了...
+[Pipeline] OK Stage: preprocess done (0ms)
+[Pipeline] >> Stage: retrieve (如果招标文件里没有明确说明可以提提交备确定方案,投标人提提交投标文件时是否可以自己主动提提交备确定方案?如果擅自提提交了会有哪些后果? 供应商 潜在投标人 投标方)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:50)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 36 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 1ms)
+[Pipeline] >> Stage: fusion (vec:50 + bm25:0)
+  [WeightedFusion] BM25=0.4, Dense=0.6 (type: semantic_heavy)
+  [WeightedFusion] 34 candidates → Top-15
+[Pipeline] OK Stage: fusion done (out: 15, 0ms)
+[Pipeline] OK Stage: retrieve done (out: 30, 190ms)
+[Pipeline] >> Stage: merge (in: 30)
+[Pipeline] OK Stage: merge done (out: 30, 0ms)
+[Pipeline] >> Stage: expand (in: 30)
+[Pipeline] OK Stage: expand done (out: 30, 0ms)
+[Pipeline] >> Stage: rerank (in: 30)
+[Pipeline] OK Stage: rerank done (out: 5, 157ms)
+  Done in 42s (0.41s/query)
+
+============================================================
+RECALL EVALUATION V2 — 四级命中体系
+============================================================
+
+  [parent_hit — 父块命中（同一法条/文章）]
+  parent_hit@1: 38/102 = 37.3%
+  parent_hit@5: 87/102 = 85.3%
+  recall@5 (parent): 0.8333
+  mrr (parent): 0.5864
+
+  [exact_hit — 精确 chunk ID 匹配（数据质量指标）]
+  exact_hit@1: 34/102 = 33.3%
+  exact_hit@5: 79/102 = 77.5%
+
+  [cosine_hit — 余弦 ≥ 0.85（语义相近但ID不同），不计入Miss]
+  cosine_hit@1: 4/102 = 3.9%
+  cosine_hit@5: 8/102 = 7.8%
+
+  [soft_hit — 语义等价（同条但不同源），不计入 Miss]
+  soft_hits_only: 0/102 = 0.0%
+
+  [true miss — 无任何命中]
+  misses: 8/102 = 7.8%
+
+--- Parent Resolution ---
+  total_unique_chunks: 108
+  with_parent_id: 0
+  with_article_id: 108
+  with_retrieval_text: 108
+  no_article_or_parent: 0
+
+--- By chunk_count ---
+  chunk_count=1 (n=96):
+    parent_hit@1=36/96 = 37.5%  parent_hit@5=81/96 = 84.4%
+    exact_hit@1=33/96 = 34.4%  exact_hit@5=73/96 = 76.0%
+    cosine_hit@1=4/96 = 4.2%  cosine_hit@5=7/96 = 7.3%
+    recall@5=0.8438  mrr=0.5898
+    soft_only=0/96  miss=8/96
+  chunk_count=2 (n=6):
+    parent_hit@1=2/6 = 33.3%  parent_hit@5=6/6 = 100.0%
+    exact_hit@1=1/6 = 16.7%  exact_hit@5=6/6 = 100.0%
+    cosine_hit@1=0/6 = 0.0%  cosine_hit@5=1/6 = 16.7%
+    recall@5=0.6667  mrr=0.5333
+    soft_only=0/6  miss=0/6
+
+--- By category ---
+  pdf_law_child (n=5):
+    parent_hit@5=5/5 = 100.0%  exact_hit@5=0/5 = 0.0%
+    cosine_hit@5=0/5 = 0.0%
+    soft_only=0/5  miss=0/5
+  pdf_law_parent (n=97):
+    parent_hit@5=82/97 = 84.5%  exact_hit@5=79/97 = 81.4%
+    cosine_hit@5=8/97 = 8.2%
+    soft_only=0/97  miss=8/97
+
+--- By source_type ---
+  regulation_article (n=102):
+    parent_hit@5=87/102 = 85.3%  exact_hit@5=79/102 = 77.5%
+    cosine_hit@5=8/102 = 7.8%
+    soft_only=0/102  miss=8/102
+
+--- Soft Hits (0): Not counted as Miss ---
+
+--- Cosine Hits (7): Cosine ≥ 0.85 ---
+  qa_v4_0007: 如果一家公司的总经理同时在另一家投标公司担任董事，这两家公司能否参与同一个招标项目的投标？
+    expected: ['parent_中华人民共和国招标投标法实施条例_34_107_2784']
+    retrieved: ['pdf_招标投标法律解读与风险防范实务_para_0299', 'pdf_招标投标法律解读与风险防范实务_para_0302', 'pdf_招标投标法律解读与风险防范实务_para_0300', 'parent_标法》《中华人民共和国招标投标法实施条例_35_1843_4478', 'parent_标法》《中华人民共和国招标投标法实施条例_35_1843_7468']
+  qa_v4_0021: 某国有资金项目将必须招标的工程拆分成多个小合同来规避招标，被发现后除了罚款，还可能面临什么处罚？
+    expected: ['parent_国家对潜在投标人或者投标人的资格条件有规_68_549_9849']
+    retrieved: ['parent_工程建设项目施工招标投标办法_68_70_721', 'parent_工程建设项目施工招标投标办法_68_70_972', 'parent_评标委员会应组织全体评标委员学习有关规定_64_1965_5470', 'parent_评标委员会应组织全体评标委员学习有关规定_64_1965_6769', 'parent_国家对潜在投标人或者投标人的资格条件有规_51_555_5333']
+  qa_v4_0026: 如果投诉处理需要检验检测或专家评审，这些时间是否计入30个工作日的处理时限？
+    expected: ['parent_机电产品国际招标评标专家及专家库管理办法_84_1369_5980']
+    retrieved: ['parent_政府采购质疑和投诉办法_27_3487_2036', 'parent_政府采购质疑和投诉办法_27_3487_5022', 'pdf_招标投标法律解读与风险防范实务_para_0705', 'parent_华人民共和国招标投标法实施条例》及其他有_21_1000_2274', 'parent_华人民共和国招标投标法实施条例》及其他有_21_1000_5427']
+  qa_v4_0045: 依法必须公开招标的项目如果没有在指定媒介发布招标公告，会面临什么处罚？
+    expected: ['parent_招标公告和公示信息发布管理办法_49_790_6471']
+    retrieved: ['parent_工程建设项目勘察设计招标投标办法_49_629_2721', 'parent_工程建设项目勘察设计招标投标办法_49_629_8472', 'parent_工程建设项目施工招标投标办法_49_77_134', 'parent_中华人民共和国招标投标法实施条例_51_139_2478', 'parent_中华人民共和国招标投标法实施条例_51_139_8706']
+  qa_v4_0053: 根据法规，如果所有投标都被做废标处理，招标人需要怎么做？
+    expected: ['parent_明确或实际投标人报名数量未达到招标公告中_32_1106_3326']
+    retrieved: ['pdf_招标投标法律解读与风险防范实务_para_0562', 'parent_道路旅客运输班线经营权招标投标办法_38_1798_5420', 'parent_道路旅客运输班线经营权招标投标办法_38_1798_800', 'parent_中华人民共和国政府采购法_36_2993_25', 'parent_中华人民共和国政府采购法_36_2993_8119']
+  qa_v4_0077: 依法必须招标的项目中，招标人在中标通知书发出后无正当理由不与中标人订立合同，会受到什么处罚？
+    expected: ['parent_加配件或者售后服务量以及其他超出招标文件_58_687_3006']
+    retrieved: ['parent_中华人民共和国招标投标法实施条例_74_154_8957', 'parent_中华人民共和国招标投标法实施条例_74_154_8961', 'parent_评标委员会和评标方法暂行规定_57_450_3368', 'parent_评标委员会和评标方法暂行规定_57_450_6827', 'pdf_招标投标法律解读与风险防范实务_para_0632']
+  qa_v4_0080: 投标人如果在投标过程中弄虚作假，已经中标了会有什么后果？
+    expected: ['parent_民共和国道路运输条例》中已明确的相应处罚_52_1806_4113']
+    retrieved: ['parent_国家对潜在投标人或者投标人的资格条件有规_75_558_1929', 'parent_工程建设项目施工招标投标办法_75_79_3089', 'parent_工程建设项目施工招标投标办法_75_79_4680', 'parent_建筑工程设计招标投标管理办法_33_1071_2729', 'parent_建筑工程设计招标投标管理办法_33_1071_9656']
+
+--- Misses (8): True misses ---
+  qa_v4_0008: 政府采购活动中，供应商为了中标而向评标委员会成员送钱，这种行为具体违反了哪条法律规定？
+    expected: ['parent_中华人民共和国政府采购法_25_2982_9467']
+    retrieved: ['parent_中华人民共和国政府采购法实施条例_77_81_4416', 'parent_中华人民共和国政府采购法实施条例_77_81_6263', 'parent_国家对潜在投标人或者投标人的资格条件有规_74_557_1560', 'parent_中华人民共和国招标投标法实施条例_67_145_1139', 'parent_中华人民共和国招标投标法实施条例_67_145_3813']
+  qa_v4_0010: 竞争性谈判小组在采购过程中，从符合条件的供应商名单中至少需要确定几家来参加谈判？
+    expected: ['parent_政府采购非招标采购方式管理办法_8_4176_6329']
+    retrieved: ['parent_中央国家机关政府采购中心货物和服务定点采_14_3742_7875', 'parent_中央国家机关政府采购中心货物和服务定点采_14_3742_9633', 'parent_中央国家机关政府采购中心货物和服务定点采_37_3769_1608', 'parent_中华人民共和国政府采购法_38_2995_727', 'parent_中华人民共和国政府采购法_38_2995_7395']
+  qa_v4_0035: 公路工程建设项目开标时，如果提交投标文件的投标人只有2家，应该怎么处理？
+    expected: ['parent_公路工程建设项目招标投标管理办法_35_1467_6094']
+    retrieved: ['parent_道路旅客运输班线经营权招标投标办法_29_1789_2089', 'parent_道路旅客运输班线经营权招标投标办法_29_1789_4306', 'parent_经营性公路建设项目投资人招标投标管理规定_30_1749_4750', 'parent_经营性公路建设项目投资人招标投标管理规定_30_1749_6088', 'pdf_招标投标法律解读与风险防范实务_para_0500']
+  qa_v4_0052: 在国有建设用地使用权招标出让中，开标时如果投标人少于多少人，出让人必须终止招标活动？
+    expected: ['parent_招标拍卖挂牌出让国有建设用地使用权规定_13_1023_6804']
+    retrieved: ['pdf_招标投标法律解读与风险防范实务_para_0384', 'parent_投资项目招标投标管理办法_15_2552_6060', 'parent_投资项目招标投标管理办法_15_2552_8755', 'parent_重大装备自主化依托工程设备招标采购活动的_11_2923_2054', 'parent_重大装备自主化依托工程设备招标采购活动的_11_2923_8037']
+  qa_v4_0060: 在水利工程招标投标审计中，如果审计部门发现招标人或其代理机构正在进行违反国家法律规定的行为，审计部门可以采取什么措施？
+    expected: ['parent_水利工程建设项目招标投标审计办法_6_2436_6724']
+    retrieved: ['parent_水利工程建设项目招标投标审计办法_18_2448_4525', 'parent_水利工程建设项目招标投标审计办法_16_2446_2580', 'parent_水利工程建设项目招标投标审计办法_16_2446_469', 'parent_水利工程建设项目招标投标审计办法_15_2445_584', 'parent_水利工程建设项目招标投标审计办法_15_2445_8633']
+  qa_v4_0064: 中标通知书发出后，招标人和中标人必须在多少天内签订书面合同？
+    expected: ['parent_及教学资源招标采购管理办法_17_2897_3311']
+    retrieved: ['parent_建筑工程设计招标投标管理办法_25_1063_2681', 'parent_建筑工程设计招标投标管理办法_25_1063_3535', 'parent_机电产品国际招标评标专家及专家库管理办法_76_1357_9389', 'parent_机电产品国际招标评标专家及专家库管理办法_76_1357_9614', 'parent_农业基本建设项目招标投标管理规定_50_2871_3882']
+  qa_v4_0070: 《工程建设项目申报材料增加招标内容和核准招标事项暂行规定》的解释权归哪个部门？
+    expected: ['parent_工程建设项目申报材料增加招标内容和核准招_14_497_3684']
+    retrieved: ['parent_工程建设项目申报材料增加招标内容和核准招_8_491_2979', 'parent_工程建设项目申报材料增加招标内容和核准招_12_495_6453', 'parent_工程建设项目申报材料增加招标内容和核准招_12_495_9172', 'parent_招标公告和公示信息发布管理办法_24_796_4083', 'parent_招标公告和公示信息发布管理办法_24_796_6038']
+  qa_v4_0081: 《定的有效期内以书面形式向中标人发出中标通知》这个办法什么时候开始生效？
+    expected: ['parent_定的有效期内以书面形式向中标人发出中标通_70_2430_1928']
+    retrieved: ['pdf_招标投标法律解读与风险防范实务_para_0607', 'pdf_招标投标法律解读与风险防范实务_para_0602', 'parent_机电产品国际招标评标专家及专家库管理办法_76_1357_9389', 'parent_机电产品国际招标评标专家及专家库管理办法_76_1357_9614', 'pdf_招标投标法律解读与风险防范实务_para_0635']
+
+Saved: data/QA_report/eval_recall_report_v4.json

@@ -9,7 +9,7 @@ import re
 import numpy as np
 from typing import List, Dict, Tuple
 
-from config import settings
+from config import settings, _yaml
 from app.pipeline.retrievers import chinese_tokenize, VectorRetriever, BM25Retriever
 
 
@@ -100,6 +100,12 @@ class WeightedFusion:
 
     def _get_dynamic_weights(self, query: str) -> Tuple[float, float]:
         qtype = self._detect_query_type(query)
+        try:
+            weights = _yaml(f"retrieval.weighted.question_type_weights.{qtype}")
+            if weights and len(weights) == 2:
+                return (float(weights[0]), float(weights[1]))
+        except:
+            pass
         if qtype == "keyword_heavy":
             return (0.75, 0.25)
         elif qtype == "semantic_heavy":
