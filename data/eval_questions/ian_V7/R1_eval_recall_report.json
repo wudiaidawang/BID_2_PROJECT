@@ -1,0 +1,336 @@
+{
+  "benchmark": "eval_benchmark_v4",
+  "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
+  "total_evaluated": 142,
+  "top_k": 5,
+  "cosine_threshold": 0.85,
+  "overall": {
+    "_primary": "parent_hit — 父块命中（同一法条/文章）",
+    "parent_hit@1": "97/142 = 68.3%",
+    "parent_hit@5": "131/142 = 92.3%",
+    "recall@5 (parent)": "0.9155",
+    "mrr (parent)": "0.7624",
+    "_secondary": "exact_hit — 精确 chunk ID 匹配（数据质量指标）",
+    "exact_hit@1": "94/142 = 66.2%",
+    "exact_hit@5": "126/142 = 88.7%",
+    "_cosine": "cosine_hit — 余弦 ≥ 0.85（语义相近但ID不同），不计入Miss",
+    "cosine_hit@1": "2/142 = 1.4%",
+    "cosine_hit@5": "4/142 = 2.8%",
+    "_soft": "soft_hit — 语义等价（同条但不同源），不计入 Miss",
+    "soft_hits_only": "0/142 = 0.0%",
+    "_miss": "true miss — 无任何命中",
+    "misses": "7/142 = 4.9%"
+  },
+  "parent_resolution": {
+    "total_unique_chunks": 147,
+    "with_parent_id": 0,
+    "with_article_id": 132,
+    "with_retrieval_text": 147,
+    "no_article_or_parent": 15
+  },
+  "by_chunk_count": {
+    "1": {
+      "count": 136,
+      "parent_hit@1": "92/136 = 67.6%",
+      "parent_hit@5": "126/136 = 92.6%",
+      "exact_hit@1": "89/136 = 65.4%",
+      "exact_hit@5": "121/136 = 89.0%",
+      "cosine_hit@1": "1/136 = 0.7%",
+      "cosine_hit@5": "3/136 = 2.2%",
+      "recall@5": "0.9265",
+      "mrr": "0.7593",
+      "soft_only": "0/136",
+      "miss": "7/136"
+    },
+    "2": {
+      "count": 6,
+      "parent_hit@1": "5/6 = 83.3%",
+      "parent_hit@5": "5/6 = 83.3%",
+      "exact_hit@1": "5/6 = 83.3%",
+      "exact_hit@5": "5/6 = 83.3%",
+      "cosine_hit@1": "1/6 = 16.7%",
+      "cosine_hit@5": "1/6 = 16.7%",
+      "recall@5": "0.6667",
+      "mrr": "0.8333",
+      "soft_only": "0/6",
+      "miss": "0/6"
+    }
+  },
+  "by_category": {
+    "pdf_case_paragraph": {
+      "count": 12,
+      "parent_hit@1": "2/12 = 16.7%",
+      "parent_hit@5": "12/12 = 100.0%",
+      "exact_hit@1": "2/12 = 16.7%",
+      "exact_hit@5": "12/12 = 100.0%",
+      "cosine_hit@1": "0/12 = 0.0%",
+      "cosine_hit@5": "0/12 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.3458",
+      "soft_only": "0/12",
+      "miss": "0/12"
+    },
+    "pdf_law_child": {
+      "count": 5,
+      "parent_hit@1": "4/5 = 80.0%",
+      "parent_hit@5": "5/5 = 100.0%",
+      "exact_hit@1": "1/5 = 20.0%",
+      "exact_hit@5": "1/5 = 20.0%",
+      "cosine_hit@1": "0/5 = 0.0%",
+      "cosine_hit@5": "0/5 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.9000",
+      "soft_only": "0/5",
+      "miss": "0/5"
+    },
+    "pdf_law_parent": {
+      "count": 122,
+      "parent_hit@1": "89/122 = 73.0%",
+      "parent_hit@5": "112/122 = 91.8%",
+      "exact_hit@1": "89/122 = 73.0%",
+      "exact_hit@5": "111/122 = 91.0%",
+      "cosine_hit@1": "2/122 = 1.6%",
+      "cosine_hit@5": "3/122 = 2.5%",
+      "recall@5": "0.9098",
+      "mrr": "0.8001",
+      "soft_only": "0/122",
+      "miss": "7/122"
+    },
+    "policy_doc": {
+      "count": 3,
+      "parent_hit@1": "2/3 = 66.7%",
+      "parent_hit@5": "2/3 = 66.7%",
+      "exact_hit@1": "2/3 = 66.7%",
+      "exact_hit@5": "2/3 = 66.7%",
+      "cosine_hit@1": "0/3 = 0.0%",
+      "cosine_hit@5": "1/3 = 33.3%",
+      "recall@5": "0.6667",
+      "mrr": "0.6667",
+      "soft_only": "0/3",
+      "miss": "0/3"
+    }
+  },
+  "by_source_type": {
+    "regulation_article": {
+      "count": 127,
+      "parent_hit@1": "93/127 = 73.2%",
+      "parent_hit@5": "117/127 = 92.1%",
+      "exact_hit@1": "90/127 = 70.9%",
+      "exact_hit@5": "112/127 = 88.2%",
+      "cosine_hit@1": "2/127 = 1.6%",
+      "cosine_hit@5": "3/127 = 2.4%",
+      "recall@5": "0.9134",
+      "mrr": "0.8041",
+      "soft_only": "0/127",
+      "miss": "7/127"
+    },
+    "regulation_case": {
+      "count": 12,
+      "parent_hit@1": "2/12 = 16.7%",
+      "parent_hit@5": "12/12 = 100.0%",
+      "exact_hit@1": "2/12 = 16.7%",
+      "exact_hit@5": "12/12 = 100.0%",
+      "cosine_hit@1": "0/12 = 0.0%",
+      "cosine_hit@5": "0/12 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.3458",
+      "soft_only": "0/12",
+      "miss": "0/12"
+    },
+    "regulation_policy": {
+      "count": 3,
+      "parent_hit@1": "2/3 = 66.7%",
+      "parent_hit@5": "2/3 = 66.7%",
+      "exact_hit@1": "2/3 = 66.7%",
+      "exact_hit@5": "2/3 = 66.7%",
+      "cosine_hit@1": "0/3 = 0.0%",
+      "cosine_hit@5": "1/3 = 33.3%",
+      "recall@5": "0.6667",
+      "mrr": "0.6667",
+      "soft_only": "0/3",
+      "miss": "0/3"
+    }
+  },
+  "soft_hits": [],
+  "cosine_hits": [
+    {
+      "qa_id": "qa_v4_0042",
+      "question": "政府采购竞争性磋商的评审报告中，关于成交候选供应商需要列出哪些信息？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_政府采购竞争性磋商采购方式管理暂行办法_26_4154_6704"
+      ],
+      "retrieved": [
+        "parent_中央国家机关政府采购中心货物和服务定点采_15_3743_160",
+        "parent_政府采购竞争性磋商采购方式管理暂行办法_9_4133_7246",
+        "parent_政府采购竞争性磋商采购方式管理暂行办法_7_4131_9448",
+        "parent_政府采购竞争性磋商采购方式管理暂行办法_2_4125_7073",
+        "pdf_招标投标法律解读与风险防范实务_para_0024"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0097",
+      "question": "招标人不履行与中标人订立的合同，中标人没有提交履约保证金，招标人需要承担什么责任？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_加配件或者售后服务量以及其他超出招标文件_59_688_6831"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_85_89_2856",
+        "parent_工程建设项目施工招标投标办法_84_88_4263",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_85_568_2146",
+        "parent_中华人民共和国招标投标法_60_63_2536",
+        "pdf_招标投标法律解读与风险防范实务_para_0648"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0135",
+      "question": "上海市公共资源交易平台下面具体有哪些分平台？",
+      "category": "policy_doc",
+      "chunk_count": 1,
+      "expected": [
+        "policy_111"
+      ],
+      "retrieved": [
+        "policy_125",
+        "policy_77",
+        "policy_3",
+        "policy_96",
+        "policy_101"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0141",
+      "question": "依法必须招标的通信工程建设项目，招标人应该依据什么来抽取评标专家？如果评标专家与投标人有经济利益关系，应该怎么处理？",
+      "category": "pdf_law_parent",
+      "chunk_count": 2,
+      "expected": [
+        "parent_通信工程建设项目评标专家及评标专家库管理_10_2517_7701",
+        "parent_通信工程建设项目评标专家及评标专家库管理_11_2519_5399"
+      ],
+      "retrieved": [
+        "parent_通信工程建设项目招标投标管理办法_30_2485_7790",
+        "parent_中华人民共和国招标投标法_37_40_4477",
+        "parent_通信工程建设项目评标专家及评标专家库管理_17_2525_9555",
+        "parent_通信工程建设项目评标专家及评标专家库管理_30_2518_4390",
+        "parent_标法》《中华人民共和国招标投标法实施条例_45_1853_3383"
+      ]
+    }
+  ],
+  "misses": [
+    {
+      "qa_id": "qa_v4_0003",
+      "question": "机电产品国际招标中，评标委员会评标前，招标人和招标机构可以要求投标人介绍投标方案吗？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_进一步规范机电产品国际招标投标活动有关规_12_1234_2625"
+      ],
+      "retrieved": [
+        "parent_进一步规范机电产品国际招标投标活动有关规_17_1311_7785",
+        "parent_进一步规范机电产品国际招标投标活动有关规_28_1323_1582",
+        "parent_工程建设项目勘察设计招标投标办法_34_610_4152",
+        "pdf_招标投标法律解读与风险防范实务_para_0573",
+        "pdf_招标投标法律解读与风险防范实务_para_0493"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0033",
+      "question": "价格法第六条中，哪些价格可以依照该法第十八条实行政府指导价或政府定价？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_中华人民共和国价格法_6_171_9910"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国价格法_18_184_9733",
+        "parent_中华人民共和国价格法_18_172_2351",
+        "parent_中华人民共和国价格法_21_187_368",
+        "parent_中华人民共和国价格法_3_168_4672",
+        "parent_中华人民共和国价格法_23_189_7861"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0054",
+      "question": "国有金融企业在集中采购中，如果有人泄露了标底，根据规定会面临什么后果？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_国有金融企业集中采购管理暂行规定_32_3915_2559"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国招标投标法_52_55_8354",
+        "parent_评标委员会应组织全体评标委员学习有关规定_67_1968_7741",
+        "parent_国有金融企业集中采购管理暂行规定_28_3911_3411",
+        "parent_国有金融企业集中采购管理暂行规定_29_3912_7232",
+        "parent_国有金融企业集中采购管理暂行规定_33_3916_3576"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0069",
+      "question": "哪些类型的项目不适用《中华人民共和国中小企业促进法》等有关法律法规的第二十二条？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_《中华人民共和国中小企业促进法》等有关法_22_3992_7039"
+      ],
+      "retrieved": [
+        "parent_《中华人民共和国中小企业促进法》等有关法_4_3973_6687",
+        "parent_《中华人民共和国中小企业促进法》等有关法_12_3982_12",
+        "parent_《中华人民共和国中小企业促进法》等有关法_7_3976_6652",
+        "parent_《中华人民共和国中小企业促进法》等有关法_21_3991_7144",
+        "parent_《中华人民共和国中小企业促进法》等有关法_6_3975_7374"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0095",
+      "question": "供应商提交投诉书时，如果使用的是英文撰写的材料，是否合规？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_采购人和采购代理机构收到暂停采购活动通知_39_3492_7259"
+      ],
+      "retrieved": [
+        "parent_机电产品国际招标评标专家及专家库管理办法_83_1368_6828",
+        "parent_工程建设项目招标投标活动投诉处理办法_7_986_4081",
+        "parent_铁路工程建设项目招标投标管理办法_49_2126_5002",
+        "pdf_招标投标法律解读与风险防范实务_para_0698",
+        "pdf_招标投标法律解读与风险防范实务_para_0702"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0101",
+      "question": "施工、设计和监理单位使用项目资金采购重要设备、材料时，应按照什么办理？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_定的有效期内以书面形式向中标人发出中标通_67_2427_9605"
+      ],
+      "retrieved": [
+        "parent_水利工程建设项目重要设备材料采购招标投标_3_2365_2650",
+        "parent_水利工程建设项目重要设备材料采购招标投标_10_2372_9414",
+        "parent_水利工程建设项目重要设备材料采购招标投标_7_2369_8429",
+        "parent_水利工程建设项目重要设备材料采购招标投标_11_2373_6619",
+        "parent_政府投资条例_5_377_6941"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0111",
+      "question": "在电子竞价中，如果供应商成交公告发布后未按要求确认订单，会有什么后果？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_发布竞价需求和供应商报价时应提交的承诺等_35_3625_7677"
+      ],
+      "retrieved": [
+        "parent_中央国家机关政府采购中心电子竞价采购管理_26_3609_7584",
+        "parent_中央国家机关政府采购中心电子竞价采购管理_24_3611_1285",
+        "parent_中央国家机关政府采购中心电子竞价采购管理_25_3608_2589",
+        "parent_中央国家机关政府采购中心电子竞价采购管理_23_3606_7083",
+        "parent_中央国家机关政府采购中心电子竞价采购管理_35_3619_6419"
+      ]
+    }
+  ]
+}
