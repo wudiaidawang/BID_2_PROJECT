@@ -3,7 +3,13 @@ Parent Chunk 构建器 (ParentChunkBuilder)
 
 将 LegalStructureParser 输出的结构化法律文档转换为 parent chunks。
 一个法条 = 一个 parent chunk，保留完整内容，禁止任何截断。
+
+层级关系（V4.2 上移一级）:
+  - 检索单元: 完整法条（旧 parent，avg 194 chars）
+  - 上下文父块: 整章所有法条拼接（章上下文，avg 1170 chars）
+  - child chunk 已淘汰
 """
+from collections import defaultdict
 from typing import List, Dict
 
 from app.core.legal_structure_parser import LawDocument, ChapterInfo, ArticleInfo
@@ -88,6 +94,25 @@ class ParentChunkBuilder:
                 "parent_id": "",
             }
         }
+
+    def build_chapter_context(self, parents: List[Dict]) -> Dict[str, str]:
+        """为每个 (law_name, chapter) 构建章上下文，返回 {chunk_id: chapter_context} 映射"""
+        groups = defaultdict(list)
+        for p in parents:
+            groups[(p["law_name"], p["chapter"])].append(p)
+
+        chapter_contexts: Dict[str, str] = {}
+        for (law_name, chapter), group in groups.items():
+            parts = []
+            for p in sorted(group, key=lambda x: int(x.get("article_id", 0) or 0)):
+                header = self._make_header(law_name, chapter, p.get("article", ""))
+                parts.append(f"{header}\n{p.get('raw_content', '')}")
+
+            context_text = "\n\n".join(parts)
+            for p in group:
+                chapter_contexts[p["chunk_id"]] = context_text
+
+        return chapter_contexts
 
     def _make_chunk_id(self, law_name: str, article_id: int, content: str = "") -> str:
         """生成唯一 chunk ID（使用自增计数器保证唯一性）"""

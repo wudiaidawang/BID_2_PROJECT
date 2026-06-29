@@ -43,6 +43,7 @@ data/rag_answers.json
 project_backup.md
 *.tmp
 *.bak
+data.zip
 
 # ============================================================================
 # OS

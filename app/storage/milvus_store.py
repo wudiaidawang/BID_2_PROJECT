@@ -48,7 +48,7 @@ class MilvusStore:
             return
         self._ensure_collection(collection)
         from app.core.embedding import EmbeddingService
-        batch_size = 200
+        batch_size = 50
         total = 0
         for i in range(0, len(retrieval_texts), batch_size):
             batch_rt = retrieval_texts[i:i + batch_size]

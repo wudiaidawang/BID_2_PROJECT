@@ -31,27 +31,12 @@ class ChildChunkBuilder:
 
     def build_all(self, parents: List[Dict]) -> tuple:
         """
-        同时返回 parents 和 children。
-        短法条（不需要拆分的 parent）也作为可检索 chunk 返回。
+        V4.2: 整体上移一级，所有法条完整参与检索，不再拆分为 child chunk。
+
+        旧: parent(>400字) → children(300字) 参与检索
+        新: 所有 parent 直接参与检索，上下文由章级别提供
         """
-        searchable_parents = []
-        all_children = []
-
-        for parent in parents:
-            raw = parent.get("raw_content", "")
-            if len(raw) <= self.threshold:
-                # 短法条：parent 自身可直接检索
-                searchable_parents.append(parent)
-            else:
-                # 长法条：拆分为 children
-                children = self._build_for_parent(parent)
-                if children:
-                    all_children.extend(children)
-                else:
-                    # 拆分失败，降级：parent 自身参与检索
-                    searchable_parents.append(parent)
-
-        return searchable_parents, all_children
+        return list(parents), []
 
     def _build_for_parent(self, parent: Dict) -> List[Dict]:
         """为单个 parent 构建 child chunks"""

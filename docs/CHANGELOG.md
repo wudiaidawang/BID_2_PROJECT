@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-29 — V6 双基准策略与真实用户 Benchmark（详见 [CHANGELOG_2026-06-29_V6双基准策略与真实用户Benchmark](CHANGELOG_2026-06-29_V6双基准策略与真实用户Benchmark.md)）
+
+- 双基准体系确立：V5 回归测试 + V6 真实用户模拟
+- V6 Benchmark 2908 题，含 8 类题型 + 4 级检索难度标注
+- 独立评测脚本按 question_type / retrieval_difficulty / chunk_type 三维分组
+- V6 R@1=34.7% / R@5=54.5%（对比 V5 R@1=71.5% / R@5=96.3%，区分度大幅提升）
+- 跨文档题目 46 题 + opinion_news 266 题加入评测
+
+---
+
+## 2026-06-26 — V5 召回评测独立化 + Benchmark 修复（详见 [CHANGELOG_2026-06-26_V5评测独立化与Benchmark修复](CHANGELOG_2026-06-26_V5评测独立化与Benchmark修复.md)）
+
+- 670+ Benchmark 脏 chunk_id 修复完成，2174 条全部验证有效
+- V5 独立评测脚本部署至服务器，3 并发直连 Milvus + Embedding/Reranker
+- Recall 计算分支修复（@1/@3/@5 不再相同）
+
+---
+
 ## 2026-06-25 — BM25 本地化 + Benchmark 修复（详见 [CHANGELOG_2026-06-25_BM25本地化与Benchmark修复](CHANGELOG_2026-06-25_BM25本地化与Benchmark修复.md)）
 
 - BM25 从 Milvus 内置字符 n-gram 切换为本地 jieba 分词检索

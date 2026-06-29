@@ -104,7 +104,7 @@ _TRUNCATED_NAME_FIXES = {
 
 
 def chunk_by_structure(full_text: str, pdf_name: str):
-    """Parent-Child结构化切块（法律条文类PDF）"""
+    """V4.2: 整体上移一级。法条全文检索，章作父块。不再拆分 child chunk。"""
     parser = LegalStructureParser()
     documents = parser.parse(full_text, pdf_name)
 
@@ -137,6 +137,16 @@ def chunk_by_structure(full_text: str, pdf_name: str):
                                         chunk_type="pdf_law_parent")
     parents = parent_builder.build(documents)
 
+    # V4.2: 构建章上下文，注入每个 parent 的 metadata
+    chapter_contexts = parent_builder.build_chapter_context(parents)
+    ctx_sizes = [len(c) for c in chapter_contexts.values()]
+    print(f"    章上下文: {len(set(chapter_contexts.values()))} 章, "
+          f"min={min(ctx_sizes)} max={max(ctx_sizes)} avg={sum(ctx_sizes)//len(ctx_sizes)}")
+
+    for p in parents:
+        p["metadata"]["chapter_context"] = chapter_contexts.get(p["chunk_id"], p.get("raw_content", ""))
+
+    # V4.2: build_all 返回全部 parents 为检索单元，children 永远为空
     child_builder = ChildChunkBuilder(chunk_type="pdf_law_child")
     searchable_parents, children = child_builder.build_all(parents)
 
@@ -148,20 +158,7 @@ def chunk_by_structure(full_text: str, pdf_name: str):
         all_metadatas.append(p["metadata"])
         all_ids.append(p["chunk_id"])
 
-    for c in children:
-        all_rt.append(c["retrieval_text"])
-        all_texts.append(c["text"])
-        all_metadatas.append(c["metadata"])
-        all_ids.append(c["chunk_id"])
-
-    # 长法条的parent-only chunks
-    searchable_ids = {p["chunk_id"] for p in searchable_parents}
-    for p in parents:
-        if p["chunk_id"] not in searchable_ids:
-            all_rt.append(p["retrieval_text"])
-            all_texts.append(p["text"])
-            all_metadatas.append(p["metadata"])
-            all_ids.append(p["chunk_id"])
+    print(f"    入库: {len(searchable_parents)} 条 (全部法条, 无child拆分)")
 
     return all_rt, all_texts, all_metadatas, all_ids
 

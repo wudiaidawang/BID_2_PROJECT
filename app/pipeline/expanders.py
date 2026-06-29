@@ -46,51 +46,55 @@ class ParentContextExpander:
         if not self._enabled or not results:
             return results
 
-        # 分离 child 和 non-child
-        child_results = []
-        non_child_results = []
+        # V4.2: 上移一级 — 章上下文为主要路径，旧 child→parent 为兼容路径
+        enriched: List[Dict] = []
+        seen_articles: Set[str] = set()
+        child_fallbacks: List[Dict] = []
+
         for r in results:
             meta = r.get("metadata") or r.get("data", {})
-            if str(meta.get("chunk_type", "")).endswith("_child"):
-                child_results.append(r)
-            else:
-                non_child_results.append(r)
-
-        if not child_results:
-            return results
-
-        # 批量查询 parents
-        parent_ids = self._collect_parent_ids(child_results)
-        parents = self._batch_get_parents(parent_ids, collection)
-
-        # 附加 parent_content 并去重
-        enriched = list(non_child_results)
-        seen_articles: Set[str] = set()
-
-        for r in non_child_results:
-            meta = r.get("metadata") or r.get("data", {})
-            aid = str(meta.get("article_id", ""))
-            if aid:
-                seen_articles.add(aid)
-
-        for child in child_results:
-            meta = child.get("metadata") or child.get("data", {})
             article_id = str(meta.get("article_id", ""))
-            parent_id = meta.get("parent_id", "")
+            chapter_context = meta.get("chapter_context", "")
 
             if article_id and article_id in seen_articles:
                 continue
-            if article_id:
-                seen_articles.add(article_id)
 
-            parent = parents.get(parent_id)
-            if parent:
-                child["parent_content"] = parent.get("text", "")
-                child["parent_metadata"] = parent.get("metadata", {})
+            if chapter_context:
+                # 新路径: 章上下文直接注入
+                r["parent_content"] = chapter_context
+                if article_id:
+                    seen_articles.add(article_id)
+                enriched.append(r)
+            elif str(meta.get("chunk_type", "")).endswith("_child"):
+                # 兼容路径: 旧 child chunk → 查找 parent
+                child_fallbacks.append(r)
             else:
-                child["parent_content"] = child.get("text", "")
+                if article_id:
+                    seen_articles.add(article_id)
+                enriched.append(r)
 
-            enriched.append(child)
+        # 处理旧格式 child chunks
+        if child_fallbacks:
+            parent_ids = self._collect_parent_ids(child_fallbacks)
+            parents = self._batch_get_parents(parent_ids, collection)
+
+            for child in child_fallbacks:
+                meta = child.get("metadata") or child.get("data", {})
+                article_id = str(meta.get("article_id", ""))
+                parent_id = meta.get("parent_id", "")
+
+                if article_id and article_id in seen_articles:
+                    continue
+                if article_id:
+                    seen_articles.add(article_id)
+
+                parent = parents.get(parent_id)
+                if parent:
+                    child["parent_content"] = parent.get("text", "")
+                    child["parent_metadata"] = parent.get("metadata", {})
+                else:
+                    child["parent_content"] = child.get("text", "")
+                enriched.append(child)
 
         enriched.sort(key=lambda x: x.get("score", 0), reverse=True)
         return enriched
