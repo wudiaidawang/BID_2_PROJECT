@@ -1,0 +1,463 @@
+{
+  "benchmark": "eval_benchmark_v4",
+  "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
+  "total_evaluated": 560,
+  "top_k": 5,
+  "cosine_threshold": 0.85,
+  "overall": {
+    "_primary": "parent_hit — 父块命中（同一法条/文章）",
+    "parent_hit@1": "209/560 = 37.3%",
+    "parent_hit@5": "541/560 = 96.6%",
+    "recall@5 (parent)": "0.9634",
+    "mrr (parent)": "0.5843",
+    "_secondary": "exact_hit — 精确 chunk ID 匹配（数据质量指标）",
+    "exact_hit@1": "208/560 = 37.1%",
+    "exact_hit@5": "508/560 = 90.7%",
+    "_cosine": "cosine_hit — 余弦 ≥ 0.85（语义相近但ID不同），不计入Miss",
+    "cosine_hit@1": "7/560 = 1.2%",
+    "cosine_hit@5": "11/560 = 2.0%",
+    "_soft": "soft_hit — 语义等价（同条但不同源），不计入 Miss",
+    "soft_hits_only": "0/560 = 0.0%",
+    "_miss": "true miss — 无任何命中",
+    "misses": "9/560 = 1.6%"
+  },
+  "parent_resolution": {
+    "total_unique_chunks": 564,
+    "with_parent_id": 0,
+    "with_article_id": 333,
+    "with_retrieval_text": 564,
+    "no_article_or_parent": 231
+  },
+  "by_chunk_count": {
+    "1": {
+      "count": 556,
+      "parent_hit@1": "207/556 = 37.2%",
+      "parent_hit@5": "537/556 = 96.6%",
+      "exact_hit@1": "206/556 = 37.1%",
+      "exact_hit@5": "504/556 = 90.6%",
+      "cosine_hit@1": "7/556 = 1.3%",
+      "cosine_hit@5": "10/556 = 1.8%",
+      "recall@5": "0.9658",
+      "mrr": "0.5837",
+      "soft_only": "0/556",
+      "miss": "9/556"
+    },
+    "2": {
+      "count": 4,
+      "parent_hit@1": "2/4 = 50.0%",
+      "parent_hit@5": "4/4 = 100.0%",
+      "exact_hit@1": "2/4 = 50.0%",
+      "exact_hit@5": "4/4 = 100.0%",
+      "cosine_hit@1": "0/4 = 0.0%",
+      "cosine_hit@5": "1/4 = 25.0%",
+      "recall@5": "0.6250",
+      "mrr": "0.6667",
+      "soft_only": "0/4",
+      "miss": "0/4"
+    }
+  },
+  "by_category": {
+    "pdf_case_paragraph": {
+      "count": 204,
+      "parent_hit@1": "42/204 = 20.6%",
+      "parent_hit@5": "201/204 = 98.5%",
+      "exact_hit@1": "42/204 = 20.6%",
+      "exact_hit@5": "180/204 = 88.2%",
+      "cosine_hit@1": "0/204 = 0.0%",
+      "cosine_hit@5": "1/204 = 0.5%",
+      "recall@5": "0.9853",
+      "mrr": "0.4426",
+      "soft_only": "0/204",
+      "miss": "2/204"
+    },
+    "pdf_law_child": {
+      "count": 42,
+      "parent_hit@1": "19/42 = 45.2%",
+      "parent_hit@5": "42/42 = 100.0%",
+      "exact_hit@1": "19/42 = 45.2%",
+      "exact_hit@5": "40/42 = 95.2%",
+      "cosine_hit@1": "0/42 = 0.0%",
+      "cosine_hit@5": "0/42 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.6675",
+      "soft_only": "0/42",
+      "miss": "0/42"
+    },
+    "pdf_law_parent": {
+      "count": 287,
+      "parent_hit@1": "139/287 = 48.4%",
+      "parent_hit@5": "273/287 = 95.1%",
+      "exact_hit@1": "138/287 = 48.1%",
+      "exact_hit@5": "263/287 = 91.6%",
+      "cosine_hit@1": "6/287 = 2.1%",
+      "cosine_hit@5": "9/287 = 3.1%",
+      "recall@5": "0.9460",
+      "mrr": "0.6762",
+      "soft_only": "0/287",
+      "miss": "6/287"
+    },
+    "policy_doc": {
+      "count": 27,
+      "parent_hit@1": "9/27 = 33.3%",
+      "parent_hit@5": "25/27 = 92.6%",
+      "exact_hit@1": "9/27 = 33.3%",
+      "exact_hit@5": "25/27 = 92.6%",
+      "cosine_hit@1": "1/27 = 3.7%",
+      "cosine_hit@5": "1/27 = 3.7%",
+      "recall@5": "0.9259",
+      "mrr": "0.5494",
+      "soft_only": "0/27",
+      "miss": "1/27"
+    }
+  },
+  "by_source_type": {
+    "regulation_article": {
+      "count": 329,
+      "parent_hit@1": "158/329 = 48.0%",
+      "parent_hit@5": "315/329 = 95.7%",
+      "exact_hit@1": "157/329 = 47.7%",
+      "exact_hit@5": "303/329 = 92.1%",
+      "cosine_hit@1": "6/329 = 1.8%",
+      "cosine_hit@5": "9/329 = 2.7%",
+      "recall@5": "0.9529",
+      "mrr": "0.6751",
+      "soft_only": "0/329",
+      "miss": "6/329"
+    },
+    "regulation_case": {
+      "count": 204,
+      "parent_hit@1": "42/204 = 20.6%",
+      "parent_hit@5": "201/204 = 98.5%",
+      "exact_hit@1": "42/204 = 20.6%",
+      "exact_hit@5": "180/204 = 88.2%",
+      "cosine_hit@1": "0/204 = 0.0%",
+      "cosine_hit@5": "1/204 = 0.5%",
+      "recall@5": "0.9853",
+      "mrr": "0.4426",
+      "soft_only": "0/204",
+      "miss": "2/204"
+    },
+    "regulation_policy": {
+      "count": 27,
+      "parent_hit@1": "9/27 = 33.3%",
+      "parent_hit@5": "25/27 = 92.6%",
+      "exact_hit@1": "9/27 = 33.3%",
+      "exact_hit@5": "25/27 = 92.6%",
+      "cosine_hit@1": "1/27 = 3.7%",
+      "cosine_hit@5": "1/27 = 3.7%",
+      "recall@5": "0.9259",
+      "mrr": "0.5494",
+      "soft_only": "0/27",
+      "miss": "1/27"
+    }
+  },
+  "soft_hits": [],
+  "cosine_hits": [
+    {
+      "qa_id": "qa_v4_0020",
+      "question": "评标委员会是否可以要求投标人对投标文件中含义不明确的内容进行澄清？有无限制？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_国家对潜在投标人或者投标人的资格条件有规_51_184_2656"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_51_21_6224_child0",
+        "parent_工程建设项目施工招标投标办法_51_21_6224",
+        "parent_政府采购货物和服务招标投标管理办法_49_20_9664_child1",
+        "parent_中华人民共和国招标投标法_38_13_1002",
+        "pdf_招标投标法律解读与风险防范实务_para_0525"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0030",
+      "question": "《评标委员会和评标方法暂行规定》中，评标委员会发现投标人串通投标时应如何处理？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_评标委员会和评标方法暂行规定_20_144_7499"
+      ],
+      "retrieved": [
+        "parent_公路工程建设项目评标工作细则_22_537_533",
+        "parent_公路工程建设项目评标工作细则_24_538_4528_child0",
+        "pdf_招标投标法律解读与风险防范实务_para_0401",
+        "pdf_招标投标法律解读与风险防范实务_para_0402",
+        "pdf_招标投标法律解读与风险防范实务_para_0467"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0097",
+      "question": "招标人不履行与中标人订立的合同，需要承担什么责任？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_加配件或者售后服务量以及其他超出招标文件_59_241_3094"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_85_35_898",
+        "parent_工程建设项目施工招标投标办法_85_35_898_child0",
+        "parent_工程建设项目施工招标投标办法_83_34_7265",
+        "parent_中华人民共和国招标投标法_58_21_7264_child1",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_83_197_9738"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0088",
+      "question": "评标委员会完成评标后，应当向招标人提交什么文件？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_工程建设项目勘察设计招标投标办法_38_213_3624"
+      ],
+      "retrieved": [
+        "parent_铁路工程建设项目招标投标管理办法_35_763_5706_child0",
+        "parent_铁路工程建设项目招标投标管理办法_35_763_5706",
+        "parent_房屋建筑和市政基础设施工程施工招标投标管_41_404_2708_child0",
+        "parent_房屋建筑和市政基础设施工程施工招标投标管_41_404_2708",
+        "pdf_招标投标法律解读与风险防范实务_para_0567"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0089",
+      "question": "招标人出售招标文件或资格预审文件，自出售之日起至停止出售之日止，最短不得少于几天？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_工程建设项目勘察设计招标投标办法_12_205_8888"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_14_6_1318_child1",
+        "parent_工程建设项目施工招标投标办法_14_176_3340_child1",
+        "parent_工程建设项目施工招标投标办法_14_6_1318",
+        "parent_工程建设项目施工招标投标办法_14_176_3340",
+        "parent_工程建设项目货物招标投标办法_13_226_4781_child1"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0172",
+      "question": "根据法规，招标人在不同媒介发布的同一招标项目资格预审公告内容不一致，影响潜在投标人投标的，应如何处罚？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_加配件或者售后服务量以及其他超出招标文件_55_239_826"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_72_29_7581_child1",
+        "parent_中华人民共和国招标投标法实施条例_63_49_9512",
+        "parent_中华人民共和国招标投标法实施条例_63_49_9512_child0",
+        "parent_工程建设项目施工招标投标办法_72_29_7581",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_73_192_9905"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0173",
+      "question": "开标时，如果投标人对开标有异议，应如何处理？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_法定代表人为同一个人的两个及两个以上法_40_235_8249"
+      ],
+      "retrieved": [
+        "parent_标法》《中华人民共和国招标投标法实施条例_42_662_3533",
+        "parent_进一步规范机电产品国际招标投标活动有关规_48_469_7841_child0",
+        "pdf_招标投标法律解读与风险防范实务_para_0446",
+        "pdf_招标投标法律解读与风险防范实务_para_0448",
+        "pdf_招标投标法律解读与风险防范实务_para_0447"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0193",
+      "question": "根据《中央国家机关政府采购中心货物和服务定点采购管理办法》，当中标结果公布后，采购中心与供应商签订框架协议的时间要求是什么？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_中央国家机关政府采购中心货物和服务定点采_15_1326_7861"
+      ],
+      "retrieved": [
+        "parent_中央国家机关政府采购中心货物和服务定点采_9_1324_5951_child1",
+        "parent_中央国家机关政府采购中心货物和服务定点采_9_1324_5951_child0",
+        "parent_中央国家机关政府采购中心货物和服务定点采_9_1324_5951",
+        "parent_中央国家机关政府采购中心货物和服务定点采_5_1322_1626",
+        "parent_中央国家机关政府采购中心货物和服务定点采_13_1313_3575"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0282",
+      "question": "我们公司作为投标人，在资格预审通过后，想更换联合体成员，或者以自己名义单独再投同一个标，这样操作可以吗？",
+      "category": "pdf_case_paragraph",
+      "chunk_count": 1,
+      "expected": [
+        "pdf_招标投标法律解读与风险防范实务_para_0740"
+      ],
+      "retrieved": [
+        "parent_民航专业工程建设项目招标投标管理办法_28_795_135_child1",
+        "parent_中华人民共和国招标投标法实施条例_37_37_7711_child0",
+        "parent_中华人民共和国招标投标法实施条例_37_37_7711",
+        "parent_民航专业工程建设项目招标投标管理办法_28_795_135",
+        "parent_工程建设项目勘察设计招标投标办法_25_209_6606"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0448",
+      "question": "上海市公共资源交易平台中，专门用于国有企业采购的分平台叫什么？",
+      "category": "policy_doc",
+      "chunk_count": 1,
+      "expected": [
+        "policy_108"
+      ],
+      "retrieved": [
+        "policy_111",
+        "policy_102",
+        "policy_100",
+        "policy_77",
+        "policy_83"
+      ]
+    }
+  ],
+  "misses": [
+    {
+      "qa_id": "qa_v4_0011",
+      "question": "政府采购非招标方式中，供应商提交保证金的金额上限是多少？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_政府采购非招标采购方式管理办法_14_1498_8742"
+      ],
+      "retrieved": [
+        "parent_集中采购机构是设区的市级以上人民政府依法_33_1097_7836_child0",
+        "parent_集中采购机构是设区的市级以上人民政府依法_33_1097_7836",
+        "parent_中华人民共和国政府采购法实施条例_33_14_8241_child0",
+        "pdf_招标投标法律解读与风险防范实务_para_0645",
+        "pdf_招标投标法律解读与风险防范实务_para_0371"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0027",
+      "question": "《交通运输部部属单位政府采购管理办法》第五十二条要求采购人做什么？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_交通运输部部属单位政府采购管理办法_52_1416_731"
+      ],
+      "retrieved": [
+        "parent_交通运输部部属单位政府采购管理办法_22_1405_5390",
+        "parent_交通运输部部属单位政府采购管理办法_10_1400_2084",
+        "parent_交通运输部部属单位政府采购管理办法_32_1408_2242",
+        "parent_交通运输部部属单位政府采购管理办法_47_1413_7286",
+        "parent_交通运输部部属单位政府采购管理办法_34_1409_728"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0024",
+      "question": "招标文件中规定的评标标准和方法在评标过程中能否改变？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_工程建设项目施工招标投标办法_28_12_5280"
+      ],
+      "retrieved": [
+        "parent_公路工程建设项目评标工作细则_22_537_533_child0",
+        "parent_公路工程建设项目评标工作细则_22_537_533",
+        "pdf_招标投标法律解读与风险防范实务_para_0488",
+        "pdf_招标投标法律解读与风险防范实务_para_0491",
+        "pdf_招标投标法律解读与风险防范实务_para_0489"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0070",
+      "question": "投标人和其他利害关系人认为招标投标活动不符合招标投标法规定时，可以采取什么行动？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_中华人民共和国招标投标法_65_24_3578"
+      ],
+      "retrieved": [
+        "parent_电子招标投标办法_8_260_4516_child1",
+        "parent_中华人民共和国招标投标法实施条例_60_47_3408",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_88_199_1639",
+        "parent_工程建设项目施工招标投标办法_88_36_2261",
+        "pdf_招标投标法律解读与风险防范实务_para_0685"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0107",
+      "question": "公路养护工程投标中哪些行为是被禁止的？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_公路养护工程施工招标投标管理暂行规定_27_566_2645"
+      ],
+      "retrieved": [
+        "parent_公路养护工程施工招标投标管理暂行规定_1_556_3686",
+        "parent_公路养护工程施工招标投标管理暂行规定_41_571_4719",
+        "parent_公路养护工程施工招标投标管理暂行规定_23_565_1618_child1",
+        "parent_公路养护工程施工招标投标管理暂行规定_36_572_1102",
+        "parent_公路养护工程施工招标投标管理暂行规定_5_557_7516"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0157",
+      "question": "使用国际组织或外国政府贷款进行公路招标时，如果对方规定的条件和程序与国内不同，应该怎么处理？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_设计施工总承包招标的评标采用综合评分法_72_526_4978"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_90_37_2193",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_90_200_7580",
+        "parent_房屋建筑和市政基础设施工程施工招标投标管_54_410_1793",
+        "parent_规定的有效期内以书面形式向中标人发出中标_71_851_9296",
+        "pdf_招标投标法律解读与风险防范实务_para_0058"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0299",
+      "question": "我们公司是一家中小企业，正在参与一个预算为300万元的政府采购货物项目。采购公告中并没有明确说要专门面向中小企业，我们担心在价格评审上会处于劣势。请问我们作为小",
+      "chunk_count": 1,
+      "category": "pdf_case_paragraph",
+      "expected": [
+        "pdf_招标投标法律解读与风险防范实务_para_0289"
+      ],
+      "retrieved": [
+        "parent_《中华人民共和国中小企业促进法》等有关法_9_1420_9726_child0",
+        "parent_《中华人民共和国中小企业促进法》等有关法_9_1420_9726",
+        "parent_《中华人民共和国中小企业促进法》等有关法_7_1419_4379",
+        "parent_《中华人民共和国中小企业促进法》等有关法_9_1421_8564",
+        "parent_《中华人民共和国中小企业促进法》等有关法_2_1417_5415_child1"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0342",
+      "question": "我们公司是一家国有金融企业，最近要开展集中采购工作，请问有没有专门的规范性文件来指导我们的采购管理？",
+      "chunk_count": 1,
+      "category": "pdf_case_paragraph",
+      "expected": [
+        "pdf_招标投标法律解读与风险防范实务_para_0760"
+      ],
+      "retrieved": [
+        "parent_国有金融企业集中采购管理暂行规定_6_1386_3986_child1",
+        "parent_国有金融企业集中采购管理暂行规定_25_1393_2401_child0",
+        "parent_国有金融企业集中采购管理暂行规定_6_1386_3986",
+        "parent_国有金融企业集中采购管理暂行规定_6_1386_3986_child0",
+        "parent_国有金融企业集中采购管理暂行规定_16_1389_2354"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0442",
+      "question": "《评标专家和评标专家库管理办法》是哪个部门发布的？文号是什么？",
+      "chunk_count": 1,
+      "category": "policy_doc",
+      "expected": [
+        "policy_6"
+      ],
+      "retrieved": [
+        "parent_通信工程建设项目评标专家及评标专家库管理_1_902_6656",
+        "parent_系统工程综合评标专家库管理办法_17_682_1380",
+        "parent_铁路建设工程评标专家库及评标专家管理办法_28_742_5632",
+        "policy_28",
+        "policy_4"
+      ]
+    }
+  ]
+}
