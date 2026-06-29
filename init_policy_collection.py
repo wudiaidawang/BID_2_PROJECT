@@ -26,7 +26,7 @@ RAW_DIR = Path(__file__).parent / "data" / "raw"
 PDF_DIR = Path(__file__).parent / "data" / "pdfs"
 
 # ★ 使用新集合名，不覆盖旧的 policy 集合
-COLLECTION_NAME = "policy_v4"
+COLLECTION_NAME = "policy_v6"
 
 # 10个PDF全部处理
 PDF_CONFIGS = [
@@ -99,11 +99,84 @@ def chunk_by_paragraphs(full_text: str, pdf_name: str,
 
 
 # 大合集PDF中因跨行换行导致截断的法规名 → 完整名称映射
+# 保留作为最后兜底
 _TRUNCATED_NAME_FIXES = {
     "和服务定点采购管理办法": "中央国家机关政府采购中心货物和服务定点采购管理办法",
     "及评标专家管理办法": "铁路建设工程评标专家库及评标专家管理办法",
     "与招投标挂钩办法": "铁路建设工程质量安全事故与招投标挂钩办法",
+    "标法》《中华人民共和国招标投标法实施条例": "中华人民共和国招标投标法实施条例",
+    "民共和国道路运输条例》中已明确的相应处罚规定": "中华人民共和国道路运输条例",
 }
+
+
+def _repair_law_names(documents):
+    """系统性修复截断的 law_name，替换脆弱的硬编码映射。
+
+        识别以下问题：
+        1. 以连接词开头（及、与、的）→ 尝试与前一部法律拼接
+        2. 包含乱字符号（》〈等）→ 清理
+        3. 明显不是法规名（含"投标人""应当"等正文特征）→ 合并到前一部法律
+        4. 硬编码映射兜底
+    """
+    CONJUNCTION_PREFIXES = ('及', '与', '的', '之', '而', '以', '或', '由', '对', '从', '把', '被', '让')
+    BODY_KEYWORDS = ('投标人', '招标人', '应当', '不得', '可以', '必须', '违反', '中标', '参加', '投标文件')
+
+    repaired_any = False
+    i = 0
+    while i < len(documents):
+        doc = documents[i]
+        old_name = doc.law_name
+
+        # 尝试1: 硬编码映射
+        if old_name in _TRUNCATED_NAME_FIXES:
+            doc.law_name = _TRUNCATED_NAME_FIXES[old_name]
+            print(f"    修正: {old_name} → {doc.law_name}")
+            repaired_any = True
+            i += 1
+            continue
+
+        # 尝试2: 清理垃圾字符
+        cleaned = re.sub(r'[》》〈〈»«]', '', old_name)
+        cleaned = re.sub(r'》中已明确的相应处罚规定$', '', cleaned)
+        cleaned = re.sub(r'以及其他超出招标文件规定$', '', cleaned)
+        if cleaned != old_name:
+            doc.law_name = cleaned
+            print(f"    修整: {old_name} → {doc.law_name}")
+            repaired_any = True
+
+        # 尝试3: 以连接词开头 → 尝试与前一部法律拼接
+        if any(old_name.startswith(p) for p in CONJUNCTION_PREFIXES) and i > 0:
+            prev_name = documents[i - 1].law_name
+            if not any(prev_name.startswith(p) for p in CONJUNCTION_PREFIXES):
+                full = prev_name + old_name
+                # 验证拼接结果是否合理：包含"法""条例""办法"等结尾
+                if any(full.endswith(s) for s in ['法', '条例', '办法', '规定', '细则', '通知', '意见', '函', '批复']):
+                    if len(full) <= 60:
+                        doc.law_name = full
+                        print(f"    拼接: {prev_name} + {old_name} → {doc.law_name}")
+                        repaired_any = True
+                        i += 1
+                        continue
+
+        # 尝试4: 明显不是法规名（含正文关键词但无法规后缀）→ 合并到前一部法律
+        body_hits = sum(1 for kw in BODY_KEYWORDS if kw in old_name)
+        has_law_suffix = any(old_name.endswith(s) for s in ['法', '条例', '办法', '规定', '细则', '通知', '意见', '函', '批复'])
+        if body_hits >= 2 and not has_law_suffix and i > 0:
+            # 这不是法规标题，是正文内容被误识别为标题
+            # 将此文档的所有内容合并到前一部法律
+            prev = documents[i - 1]
+            # 移动当前文档的所有章节到前一部法律
+            prev.chapters.extend(doc.chapters)
+            prev.preamble.extend(doc.preamble)
+            documents.pop(i)
+            print(f"    合并: {old_name} → 归入《{prev.law_name}》（非标题，合并内容）")
+            repaired_any = True
+            # 不递增 i，继续检查当前位置
+            continue
+
+        i += 1
+
+    return repaired_any
 
 
 def chunk_by_structure(full_text: str, pdf_name: str):
@@ -111,12 +184,8 @@ def chunk_by_structure(full_text: str, pdf_name: str):
     parser = LegalStructureParser()
     documents = parser.parse(full_text, pdf_name)
 
-    # 修正截断的法规名
-    for doc in documents:
-        if doc.law_name in _TRUNCATED_NAME_FIXES:
-            old = doc.law_name
-            doc.law_name = _TRUNCATED_NAME_FIXES[old]
-            print(f"    修正: {old} → {doc.law_name}")
+    # 系统性修复截断的法规名（替换脆弱的硬编码映射）
+    _repair_law_names(documents)
 
     doc_stats = parser.get_statistics(documents)
 
