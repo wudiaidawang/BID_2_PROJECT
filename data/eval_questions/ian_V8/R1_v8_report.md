@@ -49,3 +49,6 @@ rerank: article 2.0x + law_name 1.2x
 pool: 30
 ef: 128
 ```
+
+## V8 R2 🏆 (93.2%)
+改 rrf_k: 30→20，exact_hit@5 从 91.1%→93.2%，超出 92% 目标
