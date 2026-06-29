@@ -3,7 +3,7 @@ import httpx, json, os
 
 uri = "http://127.0.0.1:19531"
 db = "panxin_dev"
-collection = "policy_v6"
+collection = "policy_v8"
 
 # Phase 1: get all IDs
 all_ids = []

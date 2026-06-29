@@ -51,18 +51,18 @@ from config import settings
 GEN_MODEL = settings.llm_model or "deepseek-chat"
 print(f"[Benchmark] 使用生成模型: {GEN_MODEL}")
 
-TOTAL_TARGET = 50  # ★ 先小批量试生成，成功后扩大
+TOTAL_TARGET = 500  # ★ 总共500题，会根据已有进度增量生成
 
-# 原计划分布 (930) 等比缩放到 1000
+# ★ 按数据量和重要性合理分配
 ORIGINAL_DIST = {
-    "pdf_law_parent":      420,
-    "pdf_law_child":        80,
-    "pdf_case_paragraph":  200,
-    "policy_doc":           50,
-    # opinion_news 已排除：仅 51 字标题无正文，无法支撑问答
-    "cross_chunk":         100,
+    "pdf_law_parent":      320,   # 法条精确（核心，但不要太多）
+    "pdf_law_child":        60,   # 法条子句
+    "pdf_case_paragraph":  300,   # 实务书（场景式，重点关注）
+    "policy_doc":           40,   # 政策文件
+    # opinion_news 已排除
+    "cross_chunk":          80,   # 跨法条综合
 }
-ORIGINAL_TOTAL = sum(ORIGINAL_DIST.values())  # = 850
+ORIGINAL_TOTAL = sum(ORIGINAL_DIST.values())
 SCALE = TOTAL_TARGET / ORIGINAL_TOTAL
 
 DISTRIBUTION = {k: max(1, round(v * SCALE)) for k, v in ORIGINAL_DIST.items()}
@@ -251,34 +251,54 @@ def _find_cross_pairs(parent_chunks: List[dict]) -> List[Tuple[dict, dict]]:
 # ---------------------------------------------------------------------------
 # QA 生成
 # ---------------------------------------------------------------------------
-SYSTEM_PROMPT_SINGLE = """你是一个企业级RAG系统评测集构建专家。你的任务是基于给定的知识库Chunk生成高质量的问答对，用于评测检索系统的召回和排序能力。
+# 按 chunk_type 区分 prompt 模板
+CHUNK_PROMPTS = {
+    "pdf_law_parent": {
+        "type_desc": "法规原文（法律条文）",
+        "question_type": "definition",
+        "style": "用户可能问的是定义、条件、禁止性规定或处罚。问题要模拟企业法务或采购人员查询法条的精确表述。"
+    },
+    "pdf_law_child": {
+        "type_desc": "法规原文子句（法条的细化片段）",
+        "question_type": "procedure",
+        "style": "用户可能问的是具体操作步骤、时限要求或例外情况。"
+    },
+    "pdf_case_paragraph": {
+        "type_desc": "招标投标实务解读（场景式问答）",
+        "question_type": "scenario_judgment",
+        "style": "用户遇到真实业务场景来咨询。问题要以'我们公司'开头，描述一个具体的招投标业务场景。答案要从解读材料中提取，不要提及文章章节编号。"
+    },
+    "policy_doc": {
+        "type_desc": "政策文件（通知、办法、细则等）",
+        "question_type": "condition_check",
+        "style": "用户想了解某项政策的具体要求、适用范围或申请条件。"
+    },
+}
+
+SYSTEM_PROMPT_SINGLE_TEMPLATE = """你是一个企业级RAG系统评测集构建专家。你的任务是基于给定的知识库Chunk生成高质量的问答对，用于评测检索系统的召回和排序能力。
+
+当前Chunk类型：{type_desc}
+预期题型：{question_type}
+
+## 生成风格
+{style}
 
 ## 输出格式
 严格输出 JSON 数组，每个元素包含以下字段：
-{
+{{
   "question": "模拟真实用户自然语言问题",
   "expected_chunk_id": "该问题最核心答案所在的精确chunk_id",
   "acceptable_chunk_ids": ["其他同样正确的chunk_id", "..."],
   "answer": "用简短的一句话给出标准答案",
-  "difficulty": "easy|medium|hard"
-}
+  "difficulty": "easy|medium|hard",
+  "question_type": "{question_type}"
+}}
 
 ## 生成要求
 1. **真实口吻**：问题要像用户日常提问，禁止直接使用Chunk标题或拼接关键词。
-2. **精准锚定——避免泛化关键词（极其重要）**：
-   知识库中大量Chunk都包含相同的通用术语（如"评审专家""投诉处理""招标人""投标人""保证金"等）。
-   如果一个问题只由这些高频通用词组成，检索系统将无法区分应该返回哪个具体Chunk。
-   你生成的每一个问题都必须包含足够的**唯一区分信息**，确保人类能够仅凭问题内容就判断出它指向的是哪个具体Chunk。
-   - 对于法规类Chunk：问题中必须嵌入该法规的**唯一情境**或**具体数字/条件/法条号**。
-   - 对于案例类Chunk：问题应包含该案例的**核心事实特征**。
-   - 对于政策/解读类Chunk：问题应指向该文档**特有的观点、说明或具体解释对象**。
-   - 禁止使用仅由"名词+通用动词"构成的问题。
-3. **难度分布**：
-   - easy: 答案直接包含在单个Chunk内，问题与原文高度相似。
-   - medium: 答案在单个Chunk内，但需要简单语义转换或推理。
-   - hard: 需要综合信息、进行否定/条件判断或对比。
-4. **无幻觉**：所有问题和答案必须严格基于提供的Chunk内容，不得引入外部知识。
-5. 每个片段生成一个问答对。"""
+2. **精准锚定**：问题必须包含足够的唯一区分信息，确保人类能够仅凭问题内容就判断出它指向的是哪个具体Chunk。
+3. **无幻觉**：所有问题和答案必须严格基于提供的Chunk内容。
+4. 每个片段生成一个问答对。"""
 
 SYSTEM_PROMPT_CROSS = """你是一个企业级RAG系统评测集构建专家。你的任务是生成需要同时参考两个相关法律条文才能回答的问题，用于测试检索系统的跨片段召回能力。
 
@@ -289,7 +309,8 @@ SYSTEM_PROMPT_CROSS = """你是一个企业级RAG系统评测集构建专家。�
   "expected_chunk_id": "第一个片段（主）的精确chunk_id",
   "acceptable_chunk_ids": ["第二个片段的chunk_id", "其他可接受chunk_id"],
   "answer": "综合两个片段信息给出完整答案",
-  "difficulty": "easy|medium|hard"
+  "difficulty": "easy|medium|hard",
+  "question_type": "comparison"
 }
 
 ## 生成要求
@@ -300,8 +321,7 @@ SYSTEM_PROMPT_CROSS = """你是一个企业级RAG系统评测集构建专家。�
    - easy: 两个片段信息的简单组合
    - medium: 需要理解两个片段之间的关系
    - hard: 需要深层推理或对比分析
-5. **无幻觉**：所有问题和答案必须严格基于提供的Chunk内容。
-6. 每个片段对生成一个问答对。"""
+5. **无幻觉**：所有问题和答案必须严格基于提供的Chunk内容。"""
 
 
 class QAGenerator:
@@ -502,7 +522,13 @@ class QAGenerator:
                                start_idx: int) -> List[dict]:
         if not chunks:
             return []
-        content = self._call_llm(SYSTEM_PROMPT_SINGLE, self._build_single_prompt(chunks, chunk_type))
+        prompt_config = CHUNK_PROMPTS.get(chunk_type, CHUNK_PROMPTS["pdf_law_parent"])
+        system_prompt = SYSTEM_PROMPT_SINGLE_TEMPLATE.format(
+            type_desc=prompt_config["type_desc"],
+            question_type=prompt_config["question_type"],
+            style=prompt_config["style"],
+        )
+        content = self._call_llm(system_prompt, self._build_single_prompt(chunks, chunk_type))
         if not content:
             return []
         qa_list = self._extract_json(content)
@@ -524,6 +550,7 @@ class QAGenerator:
                 acceptable = []
             acceptable = [cid for cid in acceptable if cid != expected_id]
 
+            q_type = qa.get("question_type", prompt_config["question_type"])
             results.append({
                 "id": qid,
                 "question": str(qa.get("question", "")).strip(),
@@ -539,6 +566,7 @@ class QAGenerator:
                 "article_id": str(chunk.get("article_id", "")),
                 "law_name": chunk.get("law_name", "") or chunk.get("source_doc", "") or "",
                 "difficulty": qa.get("difficulty", "medium"),
+                "question_type": q_type,
                 "expected_source_type": self._infer_source_type(chunk),
                 "expected_answer_text": str(qa.get("answer", "")).strip(),
                 "is_regulatory_strict": self._is_regulatory_strict(chunk),
@@ -585,6 +613,7 @@ class QAGenerator:
                 "article_id": f"{c_a.get('article_id','')},{c_b.get('article_id','')}",
                 "law_name": c_a.get("law_name", "") or "",
                 "difficulty": qa.get("difficulty", "medium"),
+                "question_type": "comparison",
                 "expected_source_type": "法规原文",
                 "expected_answer_text": str(qa.get("answer", "")).strip(),
                 "is_regulatory_strict": True,
@@ -617,31 +646,37 @@ class QAGenerator:
             print(f"    {ct}: {len(items)}")
         print(f"    cross_chunk: {len(cross_pairs)}")
 
-        # 检查进度（用 chunk_id 追踪，因为 QA id 与 chunk id 不同）
-        completed_ids = set()
-        for qa in self.progress.get("generated_qas", []):
-            completed_ids.add(qa.get("expected_chunk_id", ""))
-            for aid in qa.get("acceptable_chunk_ids", []):
-                completed_ids.add(aid)
-        if completed_ids:
-            print(f"\n  已完成的 chunk 数: {len(completed_ids)}（已有 {len(self.progress.get('generated_qas', []))} 个 QA）")
+        # 按 question_type 追踪已用 chunk（同一 chunk 可出不同类型题，但同一类型不重复）
+        existing_qas = self.progress.get("generated_qas", [])
+        used_by_type = {}
+        for qa in existing_qas:
+            ct = qa.get("chunk_type", qa.get("type", ""))
+            if ct not in used_by_type:
+                used_by_type[ct] = set()
+            used_by_type[ct].add(qa.get("expected_chunk_id", ""))
+
+        if existing_qas:
+            print(f"\n  已有 {len(existing_qas)} 个 QA（按类型去重后继续增补）")
 
         # 3. 生成 single-chunk QA
         print(f"\n[3/4] 生成 QA 对...")
-        all_qas = list(self.progress.get("generated_qas", []))
+        all_qas = list(existing_qas)
         qa_counter = len(all_qas)
 
         for ct in ["pdf_law_parent", "pdf_law_child", "pdf_case_paragraph", "policy_doc"]:
-            # opinion_news 已排除出题
             items = sampled.get(ct, [])
             if not items:
                 continue
-            remaining = [c for c in items if c.get("id") not in completed_ids]
+
+            # 过滤掉本类型已出过题的 chunk，避免重复
+            used_ids = used_by_type.get(ct, set())
+            remaining = [c for c in items if c.get("id") not in used_ids]
+
             if not remaining:
-                print(f"  [{ct}] 全部已完成，跳过")
+                print(f"  [{ct}] 全部 chunk 已出过题，跳过")
                 continue
 
-            print(f"\n  [{ct}] 生成 {len(remaining)} 个 QA ({len(items)-len(remaining)} 已完成)...")
+            print(f"\n  [{ct}] 待生成 {len(remaining)} 个 QA（已跳过 {len(used_ids)} 个已出题 chunk）")
 
             for batch_start in range(0, len(remaining), BATCH_SIZE):
                 batch = remaining[batch_start:batch_start + BATCH_SIZE]

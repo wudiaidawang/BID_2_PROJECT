@@ -6,6 +6,7 @@ category 字段区分: "policy" (政策法规) / "opinion" (舆情新闻)
 """
 
 import hashlib
+import re
 import sys
 import json
 from pathlib import Path
@@ -17,7 +18,7 @@ import fitz
 import pandas as pd
 from config import settings
 from app.storage import get_vector_store
-from app.core.legal_structure_parser import LegalStructureParser
+from app.core.legal_structure_parser import LegalStructureParser, ArticleInfo
 from app.core.appendix_detector import remove_appendix_articles, get_detection_report
 from app.core.parent_chunk_builder import ParentChunkBuilder
 from app.core.child_chunk_builder import ChildChunkBuilder
@@ -26,7 +27,7 @@ RAW_DIR = Path(__file__).parent / "data" / "raw"
 PDF_DIR = Path(__file__).parent / "data" / "pdfs"
 
 # ★ 使用新集合名，不覆盖旧的 policy 集合
-COLLECTION_NAME = "policy_v6"
+COLLECTION_NAME = "policy_v8"
 
 # 10个PDF全部处理
 PDF_CONFIGS = [
@@ -110,82 +111,70 @@ _TRUNCATED_NAME_FIXES = {
 
 
 def _repair_law_names(documents):
-    """系统性修复截断的 law_name，替换脆弱的硬编码映射。
+    """修复截断的 law_name（仅硬编码映射，不做符号清理）"""
+    for doc in documents:
+        if doc.law_name in _TRUNCATED_NAME_FIXES:
+            old = doc.law_name
+            doc.law_name = _TRUNCATED_NAME_FIXES[old]
+            print(f"    修正: {old} → {doc.law_name}")
 
-        识别以下问题：
-        1. 以连接词开头（及、与、的）→ 尝试与前一部法律拼接
-        2. 包含乱字符号（》〈等）→ 清理
-        3. 明显不是法规名（含"投标人""应当"等正文特征）→ 合并到前一部法律
-        4. 硬编码映射兜底
-    """
-    CONJUNCTION_PREFIXES = ('及', '与', '的', '之', '而', '以', '或', '由', '对', '从', '把', '被', '让')
-    BODY_KEYWORDS = ('投标人', '招标人', '应当', '不得', '可以', '必须', '违反', '中标', '参加', '投标文件')
 
-    repaired_any = False
-    i = 0
-    while i < len(documents):
-        doc = documents[i]
-        old_name = doc.law_name
+def _merge_short_articles(documents):
+    """合并同一法律同一章节内的连续短文章，提高信息密度。"""
+    MIN_TARGET = 300
+    MAX_MERGE = 5
 
-        # 尝试1: 硬编码映射
-        if old_name in _TRUNCATED_NAME_FIXES:
-            doc.law_name = _TRUNCATED_NAME_FIXES[old_name]
-            print(f"    修正: {old_name} → {doc.law_name}")
-            repaired_any = True
-            i += 1
-            continue
+    for doc in documents:
+        for ch in doc.chapters:
+            if len(ch.articles) <= 1:
+                continue
+            merged = []
+            i = 0
+            while i < len(ch.articles):
+                batch = [ch.articles[i]]
+                total_len = len(ch.articles[i].content)
+                j = i + 1
+                while j < len(ch.articles) and len(batch) < MAX_MERGE:
+                    nxt = ch.articles[j]
+                    total_len += len(nxt.content)
+                    batch.append(nxt)
+                    j += 1
+                    if total_len >= MIN_TARGET:
+                        break
 
-        # 尝试2: 清理垃圾字符
-        cleaned = re.sub(r'[》》〈〈»«]', '', old_name)
-        cleaned = re.sub(r'》中已明确的相应处罚规定$', '', cleaned)
-        cleaned = re.sub(r'以及其他超出招标文件规定$', '', cleaned)
-        if cleaned != old_name:
-            doc.law_name = cleaned
-            print(f"    修整: {old_name} → {doc.law_name}")
-            repaired_any = True
+                if len(batch) == 1:
+                    merged.append(batch[0])
+                    i += 1
+                    continue
 
-        # 尝试3: 以连接词开头 → 尝试与前一部法律拼接
-        if any(old_name.startswith(p) for p in CONJUNCTION_PREFIXES) and i > 0:
-            prev_name = documents[i - 1].law_name
-            if not any(prev_name.startswith(p) for p in CONJUNCTION_PREFIXES):
-                full = prev_name + old_name
-                # 验证拼接结果是否合理：包含"法""条例""办法"等结尾
-                if any(full.endswith(s) for s in ['法', '条例', '办法', '规定', '细则', '通知', '意见', '函', '批复']):
-                    if len(full) <= 60:
-                        doc.law_name = full
-                        print(f"    拼接: {prev_name} + {old_name} → {doc.law_name}")
-                        repaired_any = True
-                        i += 1
-                        continue
+                merged_aids = [str(a.article_id) for a in batch]
+                merged_content = "\n\n".join(a.content for a in batch)
+                new_aid = "," + ",".join(merged_aids) + ","
 
-        # 尝试4: 明显不是法规名（含正文关键词但无法规后缀）→ 合并到前一部法律
-        body_hits = sum(1 for kw in BODY_KEYWORDS if kw in old_name)
-        has_law_suffix = any(old_name.endswith(s) for s in ['法', '条例', '办法', '规定', '细则', '通知', '意见', '函', '批复'])
-        if body_hits >= 2 and not has_law_suffix and i > 0:
-            # 这不是法规标题，是正文内容被误识别为标题
-            # 将此文档的所有内容合并到前一部法律
-            prev = documents[i - 1]
-            # 移动当前文档的所有章节到前一部法律
-            prev.chapters.extend(doc.chapters)
-            prev.preamble.extend(doc.preamble)
-            documents.pop(i)
-            print(f"    合并: {old_name} → 归入《{prev.law_name}》（非标题，合并内容）")
-            repaired_any = True
-            # 不递增 i，继续检查当前位置
-            continue
+                merged_art = ArticleInfo(
+                    article_id=int(merged_aids[0]),
+                    article_text="、".join(a.article_text for a in batch),
+                    content=merged_content,
+                )
+                merged.append(merged_art)
+                i = j
 
-        i += 1
-
-    return repaired_any
-
+            orig = len(ch.articles)
+            ch.articles = merged
+            merged_cnt = orig - len(merged)
+            if merged_cnt > 0:
+                print(f"    合并: {doc.law_name[:20]} / {ch.chapter_text[:15]}  {merged_cnt}条")
 
 def chunk_by_structure(full_text: str, pdf_name: str):
     """Parent-Child结构化切块（法律条文类PDF）"""
     parser = LegalStructureParser()
     documents = parser.parse(full_text, pdf_name)
 
-    # 系统性修复截断的法规名（替换脆弱的硬编码映射）
+    # 系统性修复截断的法规名
     _repair_law_names(documents)
+
+    # ★ V8: 合并短文章
+    _merge_short_articles(documents)
 
     doc_stats = parser.get_statistics(documents)
 

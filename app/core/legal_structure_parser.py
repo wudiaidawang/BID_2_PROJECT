@@ -53,7 +53,10 @@ TITLE_BLACKLIST = [
     '违反', '不得', '应当', '可以', '必须',
     # 章节名误识别为法规标题（以"规定""办法"等为后缀但实为章节名）
     '一般规定', '串通投标',
-]
+    ]
+
+# 正文特征词 — 正文被误判为标题时拒绝
+BODY_PATTERN_WORDS = ['投标人', '招标人', '中标', '参加', '投标文件', '进行', '提出', '符合', '按照', '根据']
 
 # TOC 条目模式: 法名 + 连续分隔符 + 页码 (如 "招标投标法........................1")
 TOC_ENTRY_PATTERN = re.compile(
@@ -237,9 +240,17 @@ class LegalStructureParser:
         for kw in self.TOC_KEYWORDS:
             if kw in cleaned:
                 return False
+        # 先通过正则匹配真正标题
         for pattern in DOC_TITLE_PATTERNS:
             if pattern.search(cleaned):
+                # 已经是合法标题模式，不再用 body word 拒绝
                 return True
+        # 排除正文特征：无法规后缀 + 含正文特征词 + 长度较长 -> 不是标题
+        if not any(cleaned.endswith(s) for s in ['法', '条例', '办法', '规定', '细则', '通知', '意见', '函', '批复']):
+            if len(cleaned) > 20:
+                for bw in BODY_PATTERN_WORDS:
+                    if bw in cleaned:
+                        return False
         return False
 
     def _should_skip(self, title: str) -> bool:

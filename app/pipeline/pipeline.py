@@ -293,8 +293,30 @@ class SearchPipeline:
         if not settings.reranker_enabled:
             return candidates[:top_k]
 
+        # ── 邻居扩展（同法律 article_id ±1，从全量候选池中拉） ──
+        expanded = list(candidates)
+        neighbor_added = 0
+        for c in candidates[:settings.reranker_candidate_pool * 2]:
+            meta = c.get("metadata", {})
+            law = str(meta.get("law_name", ""))
+            aid = str(meta.get("article_id", ""))
+            if law and aid and aid.isdigit():
+                aid_int = int(aid)
+                for delta in [-1, 1]:
+                    target = str(aid_int + delta)
+                    for nc in candidates:
+                        nmeta = nc.get("metadata", {})
+                        if (str(nmeta.get("law_name", "")) == law
+                                and str(nmeta.get("article_id", "")) == target
+                                and nc not in expanded):
+                            expanded.append(nc)
+                            neighbor_added += 1
+                            break
+        if neighbor_added:
+            print(f"  [Neighbor] +{neighbor_added} chunks")
+
         documents = []
-        for d in candidates[:settings.reranker_candidate_pool]:
+        for d in expanded[:settings.reranker_candidate_pool]:
             doc_text = d.get("parent_content") or d.get("retrieval_text", d.get("text", ""))
             documents.append(doc_text[:settings.reranker_max_input_length])
 
@@ -312,13 +334,38 @@ class SearchPipeline:
 
         # ── 条款号精确匹配 boost ──
         query_article = self._extract_query_article_id(query)
-        if query_article:
-            ARTICLE_BOOST = 1.5
-            for r in reranked:
-                aid = str(r.get("metadata", {}).get("article_id", ""))
-                if aid and aid == query_article:
-                    r["score"] = r.get("score", 0.0) * ARTICLE_BOOST
-            reranked.sort(key=lambda x: x.get("score", 0), reverse=True)
+        for r in reranked:
+            meta = r.get("metadata", {})
+            article_id = str(meta.get("article_id", ""))
+
+            # 同 article_id 精确匹配：1.5x
+            if query_article and article_id and article_id == query_article:
+                r["score"] = r.get("score", 0.0) * 2.0
+
+            # 同 law_name（不同条款也能受益）：1.2x
+            law_name = str(meta.get("law_name", ""))
+            if law_name:
+                # 从 query 中提取可能的 law_name 关键词
+                q_law_kw = [kw for kw in ['招标投标法', '政府采购法', '预算法', '审计法', '价格法',
+                                           '条例', '管理办法', '暂行规定', '管理暂行办法']
+                            if kw in query]
+                if q_law_kw and any(kw in law_name for kw in q_law_kw):
+                    r["score"] = r.get("score", 0.0) * 1.2
+
+        reranked.sort(key=lambda x: x.get("score", 0), reverse=True)
+
+        # ── 同文档加权（同 law_name 的多个结果互相提升） ──
+        law_counts: Dict[str, int] = {}
+        for r in reranked:
+            ln = str(r.get("metadata", {}).get("law_name", ""))
+            if ln:
+                law_counts[ln] = law_counts.get(ln, 0) + 1
+        # 如果同一法律有多个 chunk 进 reranked，每个再小幅度提升
+        for r in reranked:
+            ln = str(r.get("metadata", {}).get("law_name", ""))
+            if ln and law_counts.get(ln, 0) >= 2:
+                r["score"] = r.get("score", 0.0) * 1.1
+        reranked.sort(key=lambda x: x.get("score", 0), reverse=True)
 
         return reranked[:top_k]
 
