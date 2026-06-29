@@ -1,0 +1,287 @@
+{
+  "benchmark": "eval_benchmark_v4",
+  "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
+  "total_evaluated": 142,
+  "top_k": 5,
+  "cosine_threshold": 0.85,
+  "overall": {
+    "_primary": "parent_hit — 父块命中（同一法条/文章）",
+    "parent_hit@1": "99/142 = 69.7%",
+    "parent_hit@5": "134/142 = 94.4%",
+    "recall@5 (parent)": "0.9331",
+    "mrr (parent)": "0.7946",
+    "_secondary": "exact_hit — 精确 chunk ID 匹配（数据质量指标）",
+    "exact_hit@1": "96/142 = 67.6%",
+    "exact_hit@5": "126/142 = 88.7%",
+    "_cosine": "cosine_hit — 余弦 ≥ 0.85（语义相近但ID不同），不计入Miss",
+    "cosine_hit@1": "1/142 = 0.7%",
+    "cosine_hit@5": "2/142 = 1.4%",
+    "_soft": "soft_hit — 语义等价（同条但不同源），不计入 Miss",
+    "soft_hits_only": "0/142 = 0.0%",
+    "_miss": "true miss — 无任何命中",
+    "misses": "7/142 = 4.9%"
+  },
+  "parent_resolution": {
+    "total_unique_chunks": 147,
+    "with_parent_id": 0,
+    "with_article_id": 132,
+    "with_retrieval_text": 147,
+    "no_article_or_parent": 15
+  },
+  "by_chunk_count": {
+    "1": {
+      "count": 136,
+      "parent_hit@1": "95/136 = 69.9%",
+      "parent_hit@5": "128/136 = 94.1%",
+      "exact_hit@1": "92/136 = 67.6%",
+      "exact_hit@5": "120/136 = 88.2%",
+      "cosine_hit@1": "0/136 = 0.0%",
+      "cosine_hit@5": "1/136 = 0.7%",
+      "recall@5": "0.9412",
+      "mrr": "0.7929",
+      "soft_only": "0/136",
+      "miss": "7/136"
+    },
+    "2": {
+      "count": 6,
+      "parent_hit@1": "4/6 = 66.7%",
+      "parent_hit@5": "6/6 = 100.0%",
+      "exact_hit@1": "4/6 = 66.7%",
+      "exact_hit@5": "6/6 = 100.0%",
+      "cosine_hit@1": "1/6 = 16.7%",
+      "cosine_hit@5": "1/6 = 16.7%",
+      "recall@5": "0.7500",
+      "mrr": "0.8333",
+      "soft_only": "0/6",
+      "miss": "0/6"
+    }
+  },
+  "by_category": {
+    "pdf_case_paragraph": {
+      "count": 12,
+      "parent_hit@1": "3/12 = 25.0%",
+      "parent_hit@5": "11/12 = 91.7%",
+      "exact_hit@1": "3/12 = 25.0%",
+      "exact_hit@5": "9/12 = 75.0%",
+      "cosine_hit@1": "0/12 = 0.0%",
+      "cosine_hit@5": "1/12 = 8.3%",
+      "recall@5": "0.9167",
+      "mrr": "0.4444",
+      "soft_only": "0/12",
+      "miss": "0/12"
+    },
+    "pdf_law_child": {
+      "count": 5,
+      "parent_hit@1": "3/5 = 60.0%",
+      "parent_hit@5": "5/5 = 100.0%",
+      "exact_hit@1": "0/5 = 0.0%",
+      "exact_hit@5": "0/5 = 0.0%",
+      "cosine_hit@1": "0/5 = 0.0%",
+      "cosine_hit@5": "0/5 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.7667",
+      "soft_only": "0/5",
+      "miss": "0/5"
+    },
+    "pdf_law_parent": {
+      "count": 122,
+      "parent_hit@1": "90/122 = 73.8%",
+      "parent_hit@5": "115/122 = 94.3%",
+      "exact_hit@1": "90/122 = 73.8%",
+      "exact_hit@5": "114/122 = 93.4%",
+      "cosine_hit@1": "1/122 = 0.8%",
+      "cosine_hit@5": "1/122 = 0.8%",
+      "recall@5": "0.9303",
+      "mrr": "0.8251",
+      "soft_only": "0/122",
+      "miss": "7/122"
+    },
+    "policy_doc": {
+      "count": 3,
+      "parent_hit@1": "3/3 = 100.0%",
+      "parent_hit@5": "3/3 = 100.0%",
+      "exact_hit@1": "3/3 = 100.0%",
+      "exact_hit@5": "3/3 = 100.0%",
+      "cosine_hit@1": "0/3 = 0.0%",
+      "cosine_hit@5": "0/3 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "1.0000",
+      "soft_only": "0/3",
+      "miss": "0/3"
+    }
+  },
+  "by_source_type": {
+    "regulation_article": {
+      "count": 127,
+      "parent_hit@1": "93/127 = 73.2%",
+      "parent_hit@5": "120/127 = 94.5%",
+      "exact_hit@1": "90/127 = 70.9%",
+      "exact_hit@5": "114/127 = 89.8%",
+      "cosine_hit@1": "1/127 = 0.8%",
+      "cosine_hit@5": "1/127 = 0.8%",
+      "recall@5": "0.9331",
+      "mrr": "0.8228",
+      "soft_only": "0/127",
+      "miss": "7/127"
+    },
+    "regulation_case": {
+      "count": 12,
+      "parent_hit@1": "3/12 = 25.0%",
+      "parent_hit@5": "11/12 = 91.7%",
+      "exact_hit@1": "3/12 = 25.0%",
+      "exact_hit@5": "9/12 = 75.0%",
+      "cosine_hit@1": "0/12 = 0.0%",
+      "cosine_hit@5": "1/12 = 8.3%",
+      "recall@5": "0.9167",
+      "mrr": "0.4444",
+      "soft_only": "0/12",
+      "miss": "0/12"
+    },
+    "regulation_policy": {
+      "count": 3,
+      "parent_hit@1": "3/3 = 100.0%",
+      "parent_hit@5": "3/3 = 100.0%",
+      "exact_hit@1": "3/3 = 100.0%",
+      "exact_hit@5": "3/3 = 100.0%",
+      "cosine_hit@1": "0/3 = 0.0%",
+      "cosine_hit@5": "0/3 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "1.0000",
+      "soft_only": "0/3",
+      "miss": "0/3"
+    }
+  },
+  "soft_hits": [],
+  "cosine_hits": [
+    {
+      "qa_id": "qa_v4_0131",
+      "question": "根据《通信工程建设项目招标投标管理办法》，公开招标费用占项目合同金额比例超过多少且邀请招标费用明显更低时，可认定为‘比例过大’？",
+      "category": "pdf_case_paragraph",
+      "chunk_count": 1,
+      "expected": [
+        "pdf_招标投标法律解读与风险防范实务_para_0055"
+      ],
+      "retrieved": [
+        "parent_通信工程建设项目招标投标管理办法_6_2458_1478",
+        "parent_中华人民共和国招标投标法实施条例_8_79_7936",
+        "parent_工程建设项目施工招标投标办法_11_11_7672",
+        "parent_工程建设项目施工招标投标办法_11_509_8847",
+        "parent_工程建设项目货物招标投标办法_11_651_8789"
+      ]
+    }
+  ],
+  "misses": [
+    {
+      "qa_id": "qa_v4_0033",
+      "question": "根据价格法，商品价格和服务价格在什么情况下可以不由政府定价？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_中华人民共和国价格法_6_171_4233"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国价格法_18_184_6079",
+        "parent_中华人民共和国价格法_3_168_7164",
+        "parent_中华人民共和国价格法_20_186_2367",
+        "parent_中华人民共和国价格法_30_196_9403",
+        "parent_中华人民共和国价格法_23_189_3895"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0066",
+      "question": "在房屋建筑和市政基础设施工程施工招标中，如果依法必须公开招标的项目实行资格预审且采用综合评估法评标，当合格申请人数量过多时，对于工程投资额1000万元以上的项目",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_8127"
+      ],
+      "retrieved": [
+        "parent_标法》《中华人民共和国招标投标法实施条例_26_1834_216",
+        "parent_房屋建筑和市政基础设施工程施工招标投标管_16_1139_8461",
+        "parent_标法》《中华人民共和国招标投标法实施条例_74_1885_812_child10",
+        "pdf_招标投标法律解读与风险防范实务_para_0199",
+        "pdf_招标投标法律解读与风险防范实务_para_0154"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0095",
+      "question": "供应商提交的投诉书是用英文写的，这份投诉书会被受理吗？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_采购人和采购代理机构收到暂停采购活动通知_39_3492_8421"
+      ],
+      "retrieved": [
+        "parent_工程建设项目招标投标活动投诉处理办法_7_986_5068",
+        "parent_工程建设项目招标投标活动投诉处理办法_12_991_1657",
+        "pdf_招标投标法律解读与风险防范实务_para_0703",
+        "pdf_招标投标法律解读与风险防范实务_para_0704",
+        "pdf_招标投标法律解读与风险防范实务_para_0697"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0098",
+      "question": "投标文件在什么情况下会被招标人直接拒收，而不是由评标委员会否决？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_法定代表人为同一个人的两个及两个以上法_41_675_2118"
+      ],
+      "retrieved": [
+        "parent_评标委员会和评标方法暂行规定_22_413_5677",
+        "pdf_招标投标法律解读与风险防范实务_para_0530",
+        "pdf_招标投标法律解读与风险防范实务_para_0532",
+        "pdf_招标投标法律解读与风险防范实务_para_0538",
+        "pdf_招标投标法律解读与风险防范实务_para_0533"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0102",
+      "question": "《关于进一步规范招标投标活动的若干意见》中提到的本办法是从什么时候开始施行的？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_金提供方对招标投标的具体条件和程序有不同_83_1984_1043"
+      ],
+      "retrieved": [
+        "parent_铁路建设工程评标专家库及评标专家管理办法_31_2056_8467",
+        "parent_华人民共和国招标投标法实施条例》及其他有_31_1010_1495",
+        "parent_水利工程建设项目招标投标审计办法_22_2452_5903_child0",
+        "parent_招标公告和公示信息发布管理办法_24_796_9944_child0",
+        "parent_设计施工总承包招标的评标采用综合评分法_74_1493_768"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0107",
+      "question": "采购人违规进行批量集中采购，供应商可能面临多长时间的禁入处罚？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_批量集中采购管理有关事项的通知_54_4324_3456"
+      ],
+      "retrieved": [
+        "parent_政府采购货物和服务招标投标管理办法_78_84_4380",
+        "parent_中华人民共和国政府采购法_71_3029_3685",
+        "parent_政府采购进口产品管理办法_23_4064_7681",
+        "parent_集中采购机构是设区的市级以上人民政府依法_21_3118_3210",
+        "parent_中华人民共和国政府采购法实施条例_19_21_6778"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0115",
+      "question": "根据《财政部关于促进政府采购公平竞争优化营商环境的通知》，对于供应商已经出具法人代表委托书的情况下，采购人是否还要求法人代表亲自到场参加开标？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_财政部关于促进政府采购公平竞争优化营商环_68_4037_7243"
+      ],
+      "retrieved": [
+        "parent_政府采购货物和服务招标投标管理办法_42_3401_8542",
+        "parent_政府采购货物和服务招标投标管理办法_42_43_5799",
+        "parent_中华人民共和国政府采购法_23_2979_7410",
+        "parent_中央国家机关政府采购中心货物和服务定点采_15_3844_958",
+        "pdf_招标投标法律解读与风险防范实务_para_0425"
+      ]
+    }
+  ]
+}
