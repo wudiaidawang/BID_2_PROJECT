@@ -106,7 +106,8 @@ class WeightedFusion:
             return (0.40, 0.60)
         return (0.65, 0.35)
 
-    def _compute_boost(self, text: str, metadata: Dict = None) -> float:
+    def _compute_boost(self, text: str, metadata: Dict = None,
+                       query: str = None) -> float:
         boost = 0.0
         md = metadata or {}
 
@@ -130,7 +131,20 @@ class WeightedFusion:
         if reg_cnt >= 1:
             boost += 0.05
 
-        return min(boost, 0.2)
+        # ★ article_id 匹配 boost
+        if query is not None:
+            m = re.search(r"第\s*([零〇一二两三四五六七八九十百千\d]+)\s*条", query)
+            if m and md.get("article_id"):
+                query_aid = m.group(1)
+                if query_aid.isdigit():
+                    doc_aid = md.get("article_id", "")
+                    # article_id 可能是逗号包边格式 ",1,2,3,"
+                    if doc_aid and (doc_aid == query_aid or
+                                    doc_aid in ("," + query_aid + ",") or
+                                    query_aid in doc_aid):
+                        boost += 0.15
+
+        return min(boost, 0.35)
 
     def _compute_penalty(self, text: str) -> float:
         for pattern, val in PENALTY_PATTERNS:
@@ -174,7 +188,7 @@ class WeightedFusion:
                and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}))
+            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}), query)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 
@@ -193,7 +207,7 @@ class WeightedFusion:
                and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}))
+            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}), query)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 

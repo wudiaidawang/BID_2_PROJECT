@@ -313,7 +313,7 @@ class SearchPipeline:
         # ── 条款号精确匹配 boost ──
         query_article = self._extract_query_article_id(query)
         if query_article:
-            ARTICLE_BOOST = 1.2
+            ARTICLE_BOOST = 1.5
             for r in reranked:
                 aid = str(r.get("metadata", {}).get("article_id", ""))
                 if aid and aid == query_article:
