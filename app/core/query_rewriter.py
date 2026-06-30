@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import List, Tuple, Optional
 
+from app.core.legal_entity_registry import is_protected_entity
+
 
 class QueryRewriter:
     """统一查询改写器（单例）"""
@@ -22,19 +24,6 @@ class QueryRewriter:
         self.enable_colloquial = settings.qr_colloquial_to_formal
         self.enable_redundancy = settings.qr_redundancy_removal
         self.enable_synonym = settings.qr_synonym_expansion
-
-        # 法规名称保护列表 — 这些专有名词不参与任何改写
-        self._protected_names = [
-            "中华人民共和国招标投标法", "招标投标法", "中华人民共和国政府采购法",
-            "政府采购法", "中华人民共和国民法典", "民法典", "中华人民共和国合同法",
-            "招标投标法实施条例", "政府采购法实施条例",
-            "工程建设项目招标投标管理办法", "招标拍卖挂牌出让国有土地使用权规定",
-            "建设工程质量管理条例", "建筑工程施工许可管理办法",
-            "工程建设项目施工招标投标办法", "评标委员会和评标办法暂行规定",
-            "电子招标投标办法", "必须招标的工程项目规定",
-            "招标投标条例", "采购法", "合同法",
-        ]
-        self._protected_names = sorted(self._protected_names, key=len, reverse=True)
 
         # ── 第一层：标点规范化 ──
         self.punctuation_map = {
@@ -118,7 +107,8 @@ class QueryRewriter:
         result = self._normalize_article_numbers(result)
 
         # 如果包含法规名称，跳过后续改写（保护专有名词不被改坏）
-        if self._contains_protected_name(result):
+        # 使用统一实体注册中心检测
+        if is_protected_entity(result):
             return result
 
         # 1. 冗余精简
@@ -129,9 +119,9 @@ class QueryRewriter:
         if self.enable_colloquial:
             result = self._colloquial_to_formal(result)
 
-        # 3. 同义词替换
-        if self.enable_synonym:
-            result = self._expand_synonyms(result)
+        # 3. 同义词扩展 —— 已禁用（最易造成语义漂移，改为仅做口语规范化 + 实体识别）
+        # if self.enable_synonym:
+        #     result = self._expand_synonyms(result)
 
         # 4. 清理多余空格
         result = re.sub(r"\s+", " ", result).strip()
@@ -144,28 +134,26 @@ class QueryRewriter:
 
         return result
 
-    def _contains_protected_name(self, text: str) -> bool:
-        """检查文本中是否包含法规名称（含简称）"""
-        for name in self._protected_names:
-            if name in text:
-                return True
-        return False
-
     def _normalize_punctuation(self, text: str) -> str:
         for cn, en in self.punctuation_map.items():
             text = text.replace(cn, en)
         return text
 
     def _normalize_article_numbers(self, text: str) -> str:
-        """将条款号中的中文数字统一转为阿拉伯数字（如"第三十七条"→"第37条"）"""
+        """将条款号中的中文数字统一转为阿拉伯数字。
+
+        覆盖: 第X条 / 第X款 / 第X项 / 第X章 / 第X节
+        数字范围: 一～九、十、百、千（如"第一百二十三条"→"第123条"）
+        """
         from app.utils.chinese_number import chinese_number_converter
         result = text
-        # 匹配"第X条"模式，其中X为纯中文数字
-        for match in re.finditer(r'第([一二三四五六七八九十百千]+)条', text):
-            chinese = match.group(1)
-            arabic = chinese_number_converter.to_arabic(chinese)
-            if arabic != chinese:
-                result = result.replace(f"第{chinese}条", f"第{arabic}条")
+        cn_num = r'[一二三四五六七八九十百千]+'
+        for suffix in ['条', '款', '项', '章', '节']:
+            for match in re.finditer(rf'第({cn_num}){suffix}', result):
+                chinese = match.group(1)
+                arabic = chinese_number_converter.to_arabic(chinese)
+                if arabic != chinese:
+                    result = result.replace(f'第{chinese}{suffix}', f'第{arabic}{suffix}')
         return result
 
     def _remove_redundancy(self, text: str) -> str:
@@ -182,17 +170,28 @@ class QueryRewriter:
         return result
 
     def _colloquial_to_formal(self, text: str) -> str:
+        """词边界感知的口语→书面语替换。
+        多字词直接替换；单字词仅当作为独立 jieba token 时才替换。
+        """
+        import jieba
         result = text
         for colloquial, formal in self.colloquial_mappings:
-            if colloquial in result:
+            if len(colloquial) >= 2 and colloquial in result:
                 result = result.replace(colloquial, formal)
+
+        single_chars = {c: f for c, f in self.colloquial_mappings if len(c) == 1}
+        if single_chars and result:
+            tokens = list(jieba.cut(result))
+            new_tokens = [single_chars.get(t, t) for t in tokens]
+            result = "".join(new_tokens)
         return result
 
     def _expand_synonyms(self, text: str) -> str:
+        """同义词替换 —— 追加标准术语，同时保留原始口语词"""
         result = text
         for oral, standard in self.synonym_mappings:
-            if oral in result:
-                result = result.replace(oral, standard)
+            if oral in result and standard not in result:
+                result = result.replace(oral, f"{oral} {standard}")
         return result
 
     def is_enabled(self) -> bool:

@@ -10,6 +10,7 @@ import numpy as np
 from typing import List, Dict, Tuple
 
 from config import settings
+from app.core.legal_entity_registry import detect_regulation_entity
 from app.pipeline.retrievers import chinese_tokenize, VectorRetriever, BM25Retriever
 
 
@@ -25,6 +26,8 @@ REGULATION_KEYWORDS = {
     "high": ["民法典", "招标投标法", "政府采购法", "招标投标法实施条例"],
     "medium": ["管理办法", "指导意见", "通知", "规定"],
 }
+
+# ── 法规实体检测 —— 统一注册中心（legal_entity_registry.py）──
 
 PENALTY_PATTERNS = [
     (r"^第[一二三四五六七八九十]+页$", -0.2),
@@ -70,7 +73,12 @@ class RRFFusion:
                 result_map[doc_id] = r
 
         sorted_ids = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        return [result_map[did] for did, _ in sorted_ids if did in result_map]
+        results = []
+        for did, score in sorted_ids:
+            if did in result_map:
+                result_map[did]["score"] = score
+                results.append(result_map[did])
+        return results
 
 
 class WeightedFusion:
@@ -98,15 +106,25 @@ class WeightedFusion:
                 return "semantic_heavy"
         return "balanced"
 
+    def _detect_regulation_entity(self, query: str) -> bool:
+        """检测 query 是否明确指向法规法条 → 委托统一注册中心"""
+        return detect_regulation_entity(query)
+
     def _get_dynamic_weights(self, query: str) -> Tuple[float, float]:
         qtype = self._detect_query_type(query)
+        has_reg = self._detect_regulation_entity(query)
+
+        # 法规实体查询 → BM25 最重（法条号/法规名精确匹配 BM25 更强）
+        if has_reg:
+            return (0.80, 0.20)
         if qtype == "keyword_heavy":
             return (0.75, 0.25)
         elif qtype == "semantic_heavy":
             return (0.40, 0.60)
         return (0.65, 0.35)
 
-    def _compute_boost(self, text: str, metadata: Dict = None) -> float:
+    def _compute_boost(self, text: str, metadata: Dict = None,
+                       has_regulation: bool = False) -> float:
         boost = 0.0
         md = metadata or {}
 
@@ -126,11 +144,16 @@ class WeightedFusion:
         if low_cnt >= 2:
             boost += 0.03
 
-        reg_cnt = sum(1 for kw in REGULATION_KEYWORDS["high"] if kw in text)
-        if reg_cnt >= 1:
-            boost += 0.05
+        # 法规 Boost 仅当 query 含法规实体时启用
+        if has_regulation:
+            reg_cnt = sum(1 for kw in REGULATION_KEYWORDS["high"] if kw in text)
+            if reg_cnt >= 1:
+                boost += 0.05
+            # BM25 结果中法条号精确匹配 → 额外加分
+            if re.search(r"第[一二三四五六七八九十百零\d]+条", text):
+                boost += 0.08
 
-        return min(boost, 0.2)
+        return min(boost, 0.25)
 
     def _compute_penalty(self, text: str) -> float:
         for pattern, val in PENALTY_PATTERNS:
@@ -158,10 +181,12 @@ class WeightedFusion:
         for i, r in enumerate(bm25_results):
             r["norm_score"] = bm25_norm[i] if i < len(bm25_norm) else 0
 
-        # 动态权重
+        # 动态权重 + 法规实体检测
         bm25_w, dense_w = self._get_dynamic_weights(query)
         query_type = self._detect_query_type(query)
-        print(f"  [WeightedFusion] BM25={bm25_w}, Dense={dense_w} (type: {query_type})")
+        has_regulation = self._detect_regulation_entity(query)
+        print(f"  [WeightedFusion] BM25={bm25_w}, Dense={dense_w} "
+              f"(type: {query_type}, reg_entity: {has_regulation})")
 
         # 融合 + Boost/Penalty
         all_results: Dict[str, Dict] = {}
@@ -170,11 +195,15 @@ class WeightedFusion:
             doc_id = r.get("id") or str(hash(r.get("text", "")))
             base_score = dense_w * r.get("norm_score", 0)
 
-            if r.get("metadata", {}).get("chunk_type") in ("parent", "child") \
-               and query_type == "semantic_heavy":
+            # 法规实体查询: Dense 的 law child/parent 降权 (BM25 更可靠)
+            if has_regulation and r.get("metadata", {}).get("chunk_type") in ("pdf_law_child", "pdf_law_parent"):
+                base_score *= 0.8
+            elif r.get("metadata", {}).get("chunk_type") in ("parent", "child") \
+                 and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}))
+            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}),
+                                        has_regulation=has_regulation)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 
@@ -193,7 +222,8 @@ class WeightedFusion:
                and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}))
+            boost = self._compute_boost(r.get("text", ""), r.get("metadata", {}),
+                                        has_regulation=has_regulation)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 

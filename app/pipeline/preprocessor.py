@@ -29,6 +29,14 @@ SYNONYMS: Dict[str, List[str]] = {
 }
 
 
+# ── 定义类问题模式 —— 命中则跳过同义词扩展，避免"围标"被扩展为"串标"后跑偏 ──
+DEFINITION_PATTERNS = [
+    "是什么", "什么是", "的定义", "定义是",
+    "什么意思", "指的是", "是指", "指的是什么",
+    "概念", "含义", "如何理解",
+]
+
+
 class QueryPreprocessor:
     """查询预处理器 —— 归一化 + 同义词扩展"""
 
@@ -39,7 +47,7 @@ class QueryPreprocessor:
         """
         预处理管线：
         1. 口语→书面语（QueryRewriter 3层规则）
-        2. 同义词扩展（BM25 召回增强）
+        2. 同义词扩展（BM25 召回增强）—— 定义类问题跳过
         """
         if not query:
             return ""
@@ -47,11 +55,18 @@ class QueryPreprocessor:
         # Step 1: 归一化
         normalized = query_rewriter.rewrite(query)
 
-        # Step 2: 同义词扩展
-        if self.enable_synonyms:
+        # Step 2: 同义词扩展（定义类问题跳过，避免语义漂移）
+        if self.enable_synonyms and not self._is_definition_query(query):
             normalized = self._expand_synonyms(normalized)
 
         return normalized
+
+    def _is_definition_query(self, query: str) -> bool:
+        """检测是否为定义/概念解释类问题"""
+        for pat in DEFINITION_PATTERNS:
+            if pat in query:
+                return True
+        return False
 
     def _expand_synonyms(self, query: str) -> str:
         """双向同义词扩展，提升 BM25 召回率"""
