@@ -157,42 +157,53 @@ class SearchPipeline:
     # ═════════════════════════════════════════════════════════════
 
     def search_unified(self, query: str, top_k: int = 5) -> List[Dict]:
-        """统一跨库检索 —— bids + policy 双库并行"""
+        """统一跨库检索 —— bids + policy 双库并行 + 多路查询变体"""
         if not query:
             return []
 
-        # ── Stage 1: Preprocess ──
-        normalized = StageRunner("preprocess", self.tracer).run(
-            lambda q: self.preprocessor.process(q), query
+        # ── Stage 1: Preprocess (multi-variant) ──
+        base_query, expanded_query = StageRunner("preprocess", self.tracer).run(
+            lambda q: self.preprocessor.process_variants(q), query
         )
 
-        # ★ 查询向量只算一次，双库复用
-        from app.core.embedding import EmbeddingService
-        query_vec = EmbeddingService().embed_query(normalized)
+        # ── Stage 2: Multi-query Retrieve + Fuse per collection ──
+        queries_to_run = [base_query]
+        if expanded_query and expanded_query != base_query:
+            queries_to_run.append(expanded_query)
+            print(f"  [Pipeline] Multi-query: base + expanded ({len(expanded_query)} chars)")
 
-        # ── Stage 2: Retrieve + Fuse per collection（双库并行）──
-        def _search_both(normalized_q):
+        from app.core.embedding import EmbeddingService
+
+        def _search_multi():
             collections = [c["name"] for c in settings.collections]
-            all_candidates = []
-            with ThreadPoolExecutor(max_workers=len(collections)) as executor:
-                futures = {
-                    executor.submit(
-                        self._retrieve_and_fuse,
-                        normalized_q, query, col, top_k * 3, query_vec
-                    ): col for col in collections
-                }
-                for future in as_completed(futures):
-                    col = futures[future]
-                    try:
-                        all_candidates.extend(future.result())
-                    except Exception as e:
-                        print(f"  [Pipeline] collection '{col}' error: {e}")
-            if not all_candidates:
+            all_candidates = {}
+            for q in queries_to_run:
+                if not q:
+                    continue
+                query_vec = EmbeddingService().embed_query(q)
+                with ThreadPoolExecutor(max_workers=len(collections)) as executor:
+                    futures = {
+                        executor.submit(
+                            self._retrieve_and_fuse,
+                            q, query, col, top_k * 3, query_vec
+                        ): col for col in collections
+                    }
+                    for future in as_completed(futures):
+                        col = futures[future]
+                        try:
+                            for r in future.result():
+                                did = r.get("id") or str(hash(r.get("text", "")))
+                                if did not in all_candidates or r.get("score", 0) > all_candidates[did].get("score", 0):
+                                    all_candidates[did] = r
+                        except Exception as e:
+                            print(f"  [Pipeline] collection '{col}' error: {e}")
+            candidates_list = list(all_candidates.values())
+            if not candidates_list:
                 raise RuntimeError("All collections returned empty")
-            return all_candidates
+            return candidates_list
 
         all_candidates = StageRunner("retrieve", self.tracer).run(
-            _search_both, normalized
+            _search_multi, None
         )
 
         if not all_candidates:
@@ -216,21 +227,34 @@ class SearchPipeline:
         return reranked
 
     def search(self, query: str, collection: str, top_k: int = 5) -> List[Dict]:
-        """单库检索 —— 供 Agent 工具调用"""
+        """单库检索 —— 供 Agent 工具调用 + 多路查询变体"""
         if not query:
             return []
 
-        # ── Stage 1: Preprocess ──
-        normalized = StageRunner("preprocess", self.tracer).run(
-            lambda q: self.preprocessor.process(q), query
+        # ── Stage 1: Preprocess (multi-variant) ──
+        base_query, expanded_query = StageRunner("preprocess", self.tracer).run(
+            lambda q: self.preprocessor.process_variants(q), query
         )
 
-        # ── Stage 2: Retrieve + Fuse ──
-        def _search_single(normalized_q):
-            return self._retrieve_and_fuse(normalized_q, query, collection, top_k * 3)
+        # ── Stage 2: Multi-query Retrieve + Fuse ──
+        queries_to_run = [base_query]
+        if expanded_query and expanded_query != base_query:
+            queries_to_run.append(expanded_query)
+
+        def _search_single():
+            all_candidates = {}
+            for q in queries_to_run:
+                if not q:
+                    continue
+                candidates = self._retrieve_and_fuse(q, query, collection, top_k * 3)
+                for r in candidates:
+                    did = r.get("id") or str(hash(r.get("text", "")))
+                    if did not in all_candidates or r.get("score", 0) > all_candidates[did].get("score", 0):
+                        all_candidates[did] = r
+            return list(all_candidates.values())
 
         fused = StageRunner("retrieve", self.tracer).run(
-            _search_single, normalized
+            _search_single, None
         )
 
         # ── Stage 3: Expand (only if regulations) ──

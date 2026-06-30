@@ -127,8 +127,10 @@ class WeightedFusion:
                        has_regulation: bool = False) -> float:
         boost = 0.0
         md = metadata or {}
+        chunk_type = md.get("chunk_type", "")
 
-        if md.get("chunk_type") in ("parent", "child"):
+        # 法律父子 chunk 基础加分
+        if chunk_type in ("parent", "child", "pdf_law_child", "pdf_law_parent"):
             boost += 0.08
         if re.match(r"^第\d+条", text.strip()):
             boost += 0.05
@@ -145,15 +147,24 @@ class WeightedFusion:
             boost += 0.03
 
         # 法规 Boost 仅当 query 含法规实体时启用
+        boost_cap = 0.25
         if has_regulation:
+            boost_cap = 0.35  # 法规查询放宽上限，让法条片段更容易突破阈值
+
             reg_cnt = sum(1 for kw in REGULATION_KEYWORDS["high"] if kw in text)
             if reg_cnt >= 1:
                 boost += 0.05
-            # BM25 结果中法条号精确匹配 → 额外加分
+            # 法条号精确匹配 → 强加分
             if re.search(r"第[一二三四五六七八九十百零\d]+条", text):
-                boost += 0.08
+                boost += 0.10
+            # law_child / law_parent 在法规查询时额外加权（补齐切分过碎的短板）
+            if chunk_type in ("pdf_law_child", "pdf_law_parent"):
+                boost += 0.05
+            # 含 article_id 元数据的 chunk → 额外加权
+            if md.get("article_id"):
+                boost += 0.03
 
-        return min(boost, 0.25)
+        return min(boost, boost_cap)
 
     def _compute_penalty(self, text: str) -> float:
         for pattern, val in PENALTY_PATTERNS:

@@ -351,6 +351,30 @@ def preprocess_query(query: str) -> str:
     return q
 
 
+def preprocess_variants(query: str):
+    """返回 (base_query, expanded_query_or_None) — 多路检索用"""
+    base = preprocess_query(query)
+    # 生成同义词扩展变体（做追加，不做替换，避免语义漂移）
+    is_def = any(pat in query for pat in DEFINITION_PATTERNS)
+    if is_def:
+        return (base, None)
+    expanded = base
+    for term, syns in SYNONYMS.items():
+        if term in query:
+            for s in syns:
+                if s not in expanded:
+                    expanded += " " + s
+        else:
+            for s in syns:
+                if s in query:
+                    if term not in expanded:
+                        expanded += " " + term
+                    break
+    if expanded == base:
+        return (base, None)
+    return (base, expanded)
+
+
 # ── Weighted Fusion（对齐生产管线 app/pipeline/fusion.py WeightedFusion）──
 
 KEYWORD_HEAVY_PATTERNS = [
@@ -416,7 +440,6 @@ def weighted_fusion(dense_results, bm25_results, query, top_k=50):
         return dense_results[:top_k]
 
     bm25_w, dense_w = _get_dynamic_weights(query)
-    qtype = _detect_query_type(query)
     has_reg = detect_regulation_entity(query)
 
     # Min-Max 归一化
@@ -429,19 +452,36 @@ def weighted_fusion(dense_results, bm25_results, query, top_k=50):
     for i, r in enumerate(dense_results):
         did = r.get("id", "")
         base = dense_w * (dense_norm[i] if i < len(dense_norm) else 0)
-        # 法条/法规查询: Dense 结果中的 child/parent chunk 降权 (BM25 更可靠)
         chunk_type = r.get("chunk_type", "")
+        # 法规查询下 Dense 的 law child/parent 降权 (BM25 更可靠)
         if has_reg and chunk_type in ("pdf_law_child", "pdf_law_parent"):
-            base *= 0.8
+            base *= 0.75
+        # 法律父子 chunk 基础加分
+        if chunk_type in ("parent", "child", "pdf_law_child", "pdf_law_parent"):
+            base += 0.06
+        if has_reg and chunk_type in ("pdf_law_child", "pdf_law_parent"):
+            base += 0.04
         merged[did] = dict(r, score=base)
 
     for i, r in enumerate(bm25_results):
         did = r.get("id", "")
         base = bm25_w * (bm25_norm[i] if i < len(bm25_norm) else 0)
-        # 法条匹配 Boost: BM25 结果中含 article_id 或法条号 → 额外加分
         text = r.get("retrieval_text", r.get("text", ""))
-        if has_reg and re.search(r"第[一二三四五六七八九十百零\d]+条", text):
-            base += 0.10
+        chunk_type = r.get("chunk_type", "")
+
+        # 法律父子 chunk 基础加分
+        if chunk_type in ("parent", "child", "pdf_law_child", "pdf_law_parent"):
+            base += 0.06
+
+        # 法规查询 Boost
+        if has_reg:
+            if re.search(r"第[一二三四五六七八九十百零\d]+条", text):
+                base += 0.10
+            if chunk_type in ("pdf_law_child", "pdf_law_parent"):
+                base += 0.05
+            if r.get("article_id"):
+                base += 0.03
+
         if did in merged:
             if base > merged[did]["score"]:
                 merged[did] = dict(r, score=base)
@@ -453,12 +493,34 @@ def weighted_fusion(dense_results, bm25_results, query, top_k=50):
 
 
 def search_one(query, top_k=5):
-    """预处理 + 5阶段检索"""
-    processed = preprocess_query(query)
-    vec = embed([processed])[0]
-    dense = milvus_dense(vec, DENSE_RECALL)
-    bm25 = local_bm25_search(processed, BM25_RECALL)
-    fused = weighted_fusion(dense, bm25, processed, DENSE_RECALL)
+    """预处理(多路变体) + 5阶段检索"""
+    base_q, expanded_q = preprocess_variants(query)
+
+    # Dense + BM25 双路检索
+    all_dense = {}
+    all_bm25 = {}
+
+    queries_to_run = [base_q]
+    if expanded_q and expanded_q != base_q:
+        queries_to_run.append(expanded_q)
+
+    for q in queries_to_run:
+        vec = embed([q])[0]
+        dense_r = milvus_dense(vec, DENSE_RECALL)
+        bm25_r = local_bm25_search(q, BM25_RECALL)
+        for r in dense_r:
+            did = r.get("id", "")
+            if did not in all_dense or r.get("score", 0) > all_dense[did].get("score", 0):
+                all_dense[did] = r
+        for r in bm25_r:
+            did = r.get("id", "")
+            if did not in all_bm25 or r.get("score", 0) > all_bm25[did].get("score", 0):
+                all_bm25[did] = r
+
+    dense = list(all_dense.values())
+    bm25 = list(all_bm25.values())
+    # 多路变体时使用 base query 做权重判断
+    fused = weighted_fusion(dense, bm25, base_q, DENSE_RECALL)
     expanded = parent_context_expand(fused)
 
     pool = expanded[:RERANK_POOL]

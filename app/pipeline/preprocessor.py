@@ -45,21 +45,39 @@ class QueryPreprocessor:
 
     def process(self, query: str) -> str:
         """
-        预处理管线：
+        预处理管线（单路）：
         1. 口语→书面语（QueryRewriter 3层规则）
         2. 同义词扩展（BM25 召回增强）—— 定义类问题跳过
         """
-        if not query:
-            return ""
+        base, expanded = self.process_variants(query)
+        return expanded or base
 
-        # Step 1: 归一化
+    def process_variants(self, query: str) -> tuple:
+        """
+        多路预处理：返回 (base_query, expanded_query_or_None)
+
+        base: 仅口语规范化，不做同义词扩展
+        expanded: base + 同义词追加（定义类跳过），None 表示与 base 相同无需第二路
+
+        供 SearchPipeline 多路检索合并使用：
+        - base 保证语义不漂移
+        - expanded 补充同义词召回
+        - 两路结果合并去重，Reranker 精排选出最优
+        """
+        if not query:
+            return ("", None)
+
+        # Step 1: 归一化（口语→书面语 + 法条号规范化）
         normalized = query_rewriter.rewrite(query)
 
-        # Step 2: 同义词扩展（定义类问题跳过，避免语义漂移）
+        # Step 2: 生成扩展变体（仅追加同义词，不做替换）
+        expanded = None
         if self.enable_synonyms and not self._is_definition_query(query):
-            normalized = self._expand_synonyms(normalized)
+            candidates = self._expand_synonyms(normalized)
+            if candidates != normalized:
+                expanded = candidates
 
-        return normalized
+        return (normalized, expanded)
 
     def _is_definition_query(self, query: str) -> bool:
         """检测是否为定义/概念解释类问题"""
