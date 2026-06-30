@@ -1,0 +1,318 @@
+{
+  "benchmark": "eval_benchmark_v4",
+  "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
+  "total_evaluated": 109,
+  "top_k": 5,
+  "cosine_threshold": 0.85,
+  "overall": {
+    "_primary": "parent_hit — 父块命中（同一法条/文章）",
+    "parent_hit@1": "19/109 = 17.4%",
+    "parent_hit@5": "95/109 = 87.2%",
+    "recall@5 (parent)": "0.8716",
+    "mrr (parent)": "0.4064",
+    "_secondary": "exact_hit — 精确 chunk ID 匹配（数据质量指标）",
+    "exact_hit@1": "19/109 = 17.4%",
+    "exact_hit@5": "83/109 = 76.1%",
+    "_cosine": "cosine_hit — 余弦 ≥ 0.85（语义相近但ID不同），不计入Miss",
+    "cosine_hit@1": "6/109 = 5.5%",
+    "cosine_hit@5": "7/109 = 6.4%",
+    "_soft": "soft_hit — 语义等价（同条但不同源），不计入 Miss",
+    "soft_hits_only": "0/109 = 0.0%",
+    "_miss": "true miss — 无任何命中",
+    "misses": "7/109 = 6.4%"
+  },
+  "parent_resolution": {
+    "total_unique_chunks": 109,
+    "with_parent_id": 0,
+    "with_article_id": 109,
+    "with_retrieval_text": 109,
+    "no_article_or_parent": 0
+  },
+  "by_chunk_count": {
+    "1": {
+      "count": 109,
+      "parent_hit@1": "19/109 = 17.4%",
+      "parent_hit@5": "95/109 = 87.2%",
+      "exact_hit@1": "19/109 = 17.4%",
+      "exact_hit@5": "83/109 = 76.1%",
+      "cosine_hit@1": "6/109 = 5.5%",
+      "cosine_hit@5": "7/109 = 6.4%",
+      "recall@5": "0.8716",
+      "mrr": "0.4064",
+      "soft_only": "0/109",
+      "miss": "7/109"
+    }
+  },
+  "by_category": {
+    "pdf_law_child": {
+      "count": 4,
+      "parent_hit@1": "1/4 = 25.0%",
+      "parent_hit@5": "4/4 = 100.0%",
+      "exact_hit@1": "1/4 = 25.0%",
+      "exact_hit@5": "4/4 = 100.0%",
+      "cosine_hit@1": "0/4 = 0.0%",
+      "cosine_hit@5": "0/4 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.5417",
+      "soft_only": "0/4",
+      "miss": "0/4"
+    },
+    "pdf_law_parent": {
+      "count": 105,
+      "parent_hit@1": "18/105 = 17.1%",
+      "parent_hit@5": "91/105 = 86.7%",
+      "exact_hit@1": "18/105 = 17.1%",
+      "exact_hit@5": "79/105 = 75.2%",
+      "cosine_hit@1": "6/105 = 5.7%",
+      "cosine_hit@5": "7/105 = 6.7%",
+      "recall@5": "0.8667",
+      "mrr": "0.4013",
+      "soft_only": "0/105",
+      "miss": "7/105"
+    }
+  },
+  "by_source_type": {
+    "regulation_article": {
+      "count": 109,
+      "parent_hit@1": "19/109 = 17.4%",
+      "parent_hit@5": "95/109 = 87.2%",
+      "exact_hit@1": "19/109 = 17.4%",
+      "exact_hit@5": "83/109 = 76.1%",
+      "cosine_hit@1": "6/109 = 5.5%",
+      "cosine_hit@5": "7/109 = 6.4%",
+      "recall@5": "0.8716",
+      "mrr": "0.4064",
+      "soft_only": "0/109",
+      "miss": "7/109"
+    }
+  },
+  "soft_hits": [],
+  "cosine_hits": [
+    {
+      "qa_id": "qa_v4_0009",
+      "question": "潜在投标人对招标文件提出异议的截止时间是什么？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_中华人民共和国招标投标法实施条例_22_32_6891"
+      ],
+      "retrieved": [
+        "parent_标法》《中华人民共和国招标投标法实施条例_27_654_5683",
+        "parent_标法》《中华人民共和国招标投标法实施条例_27_654_5708",
+        "parent_标法》《中华人民共和国招标投标法实施条例_27_654_6066",
+        "pdf_招标投标法律解读与风险防范实务_para_0283",
+        "pdf_招标投标法律解读与风险防范实务_para_0675"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0018",
+      "question": "中标通知书发出后，招标人和中标人需要在多长时间内订立书面合同？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_国家对潜在投标人或者投标人的资格条件有规_60_187_1134"
+      ],
+      "retrieved": [
+        "parent_标法》《中华人民共和国招标投标法实施条例_59_669_2802",
+        "parent_标法》《中华人民共和国招标投标法实施条例_59_669_5297",
+        "parent_标法》《中华人民共和国招标投标法实施条例_59_669_7437",
+        "parent_机电产品国际招标评标专家及专家库管理办法_73_473_3416_child1",
+        "pdf_招标投标法律解读与风险防范实务_para_0625"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0027",
+      "question": "在评标过程中，如果发现投标人以他人名义投标或串通投标，评标委员会应如何处理？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_评标委员会和评标方法暂行规定_20_144_8241"
+      ],
+      "retrieved": [
+        "parent_公路工程建设项目评标工作细则_24_538_3444_child0",
+        "parent_公路工程建设项目评标工作细则_24_538_3762_child0",
+        "parent_公路工程建设项目评标工作细则_24_538_628_child0",
+        "pdf_招标投标法律解读与风险防范实务_para_0401",
+        "pdf_招标投标法律解读与风险防范实务_para_0467"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0057",
+      "question": "在招标拍卖挂牌出让国有建设用地使用权规定中，中标人应当如何确定？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_招标拍卖挂牌出让国有建设用地使用权规定_14_354_421"
+      ],
+      "retrieved": [
+        "parent_招标拍卖挂牌出让国有建设用地使用权规定_12_353_6417_child2",
+        "parent_招标拍卖挂牌出让国有建设用地使用权规定_12_353_9965_child2",
+        "parent_招标拍卖挂牌出让国有建设用地使用权规定_19_356_1667",
+        "parent_招标拍卖挂牌出让国有建设用地使用权规定_19_356_6191",
+        "parent_招标拍卖挂牌出让国有建设用地使用权规定_19_356_7906"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0069",
+      "question": "行政监督部门在处理招标投标投诉时，有权采取哪些调查措施？相关单位和人员不配合会有什么后果？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_工程建设项目招标投标活动投诉处理办法_18_344_9890"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国招标投标法实施条例_62_48_5762",
+        "parent_中华人民共和国招标投标法实施条例_62_48_6925",
+        "parent_中华人民共和国招标投标法实施条例_62_48_8675",
+        "parent_标法》《中华人民共和国招标投标法实施条例_65_672_2360",
+        "parent_标法》《中华人民共和国招标投标法实施条例_65_672_5150"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0081",
+      "question": "根据规定，工程质量保证金的总预留比例上限是多少？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_建设工程质量保证金管理办法_5_421_7880"
+      ],
+      "retrieved": [
+        "parent_建设工程质量保证金管理办法_3_420_4067",
+        "parent_建设工程质量保证金管理办法_3_420_5727",
+        "parent_建设工程质量保证金管理办法_3_420_6416",
+        "parent_建设工程质量保证金管理办法_1_419_288",
+        "pdf_招标投标法律解读与风险防范实务_para_0365"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0086",
+      "question": "招标人不履行与中标人订立的合同，且没有提交履约保证金时，应承担什么责任？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_加配件或者售后服务量以及其他超出招标文件_59_241_951"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_85_35_3165_child0",
+        "parent_工程建设项目施工招标投标办法_85_35_3775_child0",
+        "parent_工程建设项目施工招标投标办法_85_35_9572_child0",
+        "parent_工程建设项目施工招标投标办法_85_35_3165",
+        "parent_工程建设项目施工招标投标办法_85_35_3775"
+      ]
+    }
+  ],
+  "misses": [
+    {
+      "qa_id": "qa_v4_0003",
+      "question": "评标委员会在评标前，招标人和招标机构可以查询投标文件或组织投标人介绍方案吗？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_进一步规范机电产品国际招标投标活动有关规_12_428_146"
+      ],
+      "retrieved": [
+        "parent_政府采购货物和服务招标投标管理办法_26_1209_3059_child0",
+        "parent_政府采购货物和服务招标投标管理办法_26_1209_6420_child0",
+        "parent_道路旅客运输班线经营权招标投标办法_39_641_380_child2",
+        "parent_道路旅客运输班线经营权招标投标办法_39_641_9833_child2",
+        "parent_道路旅客运输班线经营权招标投标办法_39_641_3512_child2"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0024",
+      "question": "《交通运输部部属单位政府采购管理办法》中，政府采购程序主要包括哪些步骤？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_交通运输部部属单位政府采购管理办法_19_1404_9213"
+      ],
+      "retrieved": [
+        "parent_交通运输部部属单位政府采购管理办法_30_1407_1865_child0",
+        "parent_交通运输部部属单位政府采购管理办法_30_1407_5543_child0",
+        "parent_交通运输部部属单位政府采购管理办法_30_1407_1865",
+        "parent_交通运输部部属单位政府采购管理办法_30_1407_5543",
+        "parent_交通运输部部属单位政府采购管理办法_30_1407_5552"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0048",
+      "question": "建筑工程设计招标中，联合体投标的各方需要承担什么责任？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_建筑工程设计招标投标管理办法_11_362_887"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国招标投标法_29_10_8639_child1",
+        "parent_中华人民共和国招标投标法_29_10_8862_child1",
+        "parent_中华人民共和国招标投标法_29_10_9411_child1",
+        "parent_进一步规范机电产品国际招标投标活动有关规_40_466_223_child1",
+        "parent_标法》《中华人民共和国招标投标法实施条例_35_658_793_child1"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0064",
+      "question": "政府采购代理机构具体指什么？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_政府采购代理机构管理暂行办法_1_1253_6148"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国政府采购法实施条例_11_5_5269",
+        "parent_中华人民共和国政府采购法实施条例_11_5_5355",
+        "parent_中华人民共和国政府采购法实施条例_11_5_6870",
+        "parent_中华人民共和国政府采购法实施条例_11_1093_3309",
+        "parent_中华人民共和国政府采购法实施条例_11_1093_5327"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0087",
+      "question": "根据法规，招标人能否向中标人提出压低报价的要求？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_法定代表人为同一个人的两个及两个以上法_49_238_9987"
+      ],
+      "retrieved": [
+        "parent_国家对潜在投标人或者投标人的资格条件有规_58_186_6357",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_58_186_7368",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_58_186_9859",
+        "parent_工程建设项目施工招标投标办法_58_23_3307",
+        "parent_工程建设项目施工招标投标办法_58_23_4780"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0098",
+      "question": "在招标投标活动中出现违法违规行为，应按照什么法规进行处罚？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_定的有效期内以书面形式向中标人发出中标通_66_869_6337"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国招标投标法_61_22_2566",
+        "parent_中华人民共和国招标投标法_61_22_4479",
+        "parent_中华人民共和国招标投标法_61_22_9460",
+        "parent_工程建设项目施工招标投标办法_76_31_6882",
+        "pdf_招标投标法律解读与风险防范实务_para_0724"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0105",
+      "question": "对于有服务区域范围要求但本地区供应商无法形成有效竞争的服务项目，采购人可以采取哪些措施来促进市场竞争？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_财政部关于推进和完善服务项目政府采购有关_27_1252_3381"
+      ],
+      "retrieved": [
+        "parent_财政部关于促进政府采购公平竞争优化营商环_68_1443_6719_child1",
+        "parent_财政部关于促进政府采购公平竞争优化营商环_68_1443_8694_child1",
+        "parent_财政部关于促进政府采购公平竞争优化营商环_68_1443_6538_child1",
+        "parent_《中华人民共和国中小企业促进法》等有关法_5_1418_4411_child1",
+        "pdf_招标投标法律解读与风险防范实务_para_0380"
+      ]
+    }
+  ]
+}
