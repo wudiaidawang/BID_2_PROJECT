@@ -1,0 +1,226 @@
+{
+  "benchmark": "eval_benchmark_v4",
+  "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
+  "total_evaluated": 141,
+  "top_k": 5,
+  "cosine_threshold": 0.85,
+  "overall": {
+    "_primary": "parent_hit — 父块命中（同一法条/文章）",
+    "parent_hit@1": "54/141 = 38.3%",
+    "parent_hit@5": "136/141 = 96.5%",
+    "recall@5 (parent)": "0.9645",
+    "mrr (parent)": "0.6084",
+    "_secondary": "exact_hit — 精确 chunk ID 匹配（数据质量指标）",
+    "exact_hit@1": "54/141 = 38.3%",
+    "exact_hit@5": "133/141 = 94.3%",
+    "_cosine": "cosine_hit — 余弦 ≥ 0.85（语义相近但ID不同），不计入Miss",
+    "cosine_hit@1": "2/141 = 1.4%",
+    "cosine_hit@5": "4/141 = 2.8%",
+    "_soft": "soft_hit — 语义等价（同条但不同源），不计入 Miss",
+    "soft_hits_only": "0/141 = 0.0%",
+    "_miss": "true miss — 无任何命中",
+    "misses": "1/141 = 0.7%"
+  },
+  "parent_resolution": {
+    "total_unique_chunks": 141,
+    "with_parent_id": 0,
+    "with_article_id": 120,
+    "with_retrieval_text": 141,
+    "no_article_or_parent": 21
+  },
+  "by_chunk_count": {
+    "1": {
+      "count": 141,
+      "parent_hit@1": "54/141 = 38.3%",
+      "parent_hit@5": "136/141 = 96.5%",
+      "exact_hit@1": "54/141 = 38.3%",
+      "exact_hit@5": "133/141 = 94.3%",
+      "cosine_hit@1": "2/141 = 1.4%",
+      "cosine_hit@5": "4/141 = 2.8%",
+      "recall@5": "0.9645",
+      "mrr": "0.6084",
+      "soft_only": "0/141",
+      "miss": "1/141"
+    }
+  },
+  "by_category": {
+    "pdf_case_paragraph": {
+      "count": 19,
+      "parent_hit@1": "3/19 = 15.8%",
+      "parent_hit@5": "19/19 = 100.0%",
+      "exact_hit@1": "3/19 = 15.8%",
+      "exact_hit@5": "16/19 = 84.2%",
+      "cosine_hit@1": "0/19 = 0.0%",
+      "cosine_hit@5": "0/19 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.4456",
+      "soft_only": "0/19",
+      "miss": "0/19"
+    },
+    "pdf_law_child": {
+      "count": 4,
+      "parent_hit@1": "2/4 = 50.0%",
+      "parent_hit@5": "4/4 = 100.0%",
+      "exact_hit@1": "2/4 = 50.0%",
+      "exact_hit@5": "4/4 = 100.0%",
+      "cosine_hit@1": "0/4 = 0.0%",
+      "cosine_hit@5": "0/4 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.7083",
+      "soft_only": "0/4",
+      "miss": "0/4"
+    },
+    "pdf_law_parent": {
+      "count": 116,
+      "parent_hit@1": "49/116 = 42.2%",
+      "parent_hit@5": "111/116 = 95.7%",
+      "exact_hit@1": "49/116 = 42.2%",
+      "exact_hit@5": "111/116 = 95.7%",
+      "cosine_hit@1": "2/116 = 1.7%",
+      "cosine_hit@5": "4/116 = 3.4%",
+      "recall@5": "0.9569",
+      "mrr": "0.6349",
+      "soft_only": "0/116",
+      "miss": "1/116"
+    },
+    "policy_doc": {
+      "count": 2,
+      "parent_hit@1": "0/2 = 0.0%",
+      "parent_hit@5": "2/2 = 100.0%",
+      "exact_hit@1": "0/2 = 0.0%",
+      "exact_hit@5": "2/2 = 100.0%",
+      "cosine_hit@1": "0/2 = 0.0%",
+      "cosine_hit@5": "0/2 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.4167",
+      "soft_only": "0/2",
+      "miss": "0/2"
+    }
+  },
+  "by_source_type": {
+    "regulation_article": {
+      "count": 120,
+      "parent_hit@1": "51/120 = 42.5%",
+      "parent_hit@5": "115/120 = 95.8%",
+      "exact_hit@1": "51/120 = 42.5%",
+      "exact_hit@5": "115/120 = 95.8%",
+      "cosine_hit@1": "2/120 = 1.7%",
+      "cosine_hit@5": "4/120 = 3.3%",
+      "recall@5": "0.9583",
+      "mrr": "0.6374",
+      "soft_only": "0/120",
+      "miss": "1/120"
+    },
+    "regulation_case": {
+      "count": 19,
+      "parent_hit@1": "3/19 = 15.8%",
+      "parent_hit@5": "19/19 = 100.0%",
+      "exact_hit@1": "3/19 = 15.8%",
+      "exact_hit@5": "16/19 = 84.2%",
+      "cosine_hit@1": "0/19 = 0.0%",
+      "cosine_hit@5": "0/19 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.4456",
+      "soft_only": "0/19",
+      "miss": "0/19"
+    },
+    "regulation_policy": {
+      "count": 2,
+      "parent_hit@1": "0/2 = 0.0%",
+      "parent_hit@5": "2/2 = 100.0%",
+      "exact_hit@1": "0/2 = 0.0%",
+      "exact_hit@5": "2/2 = 100.0%",
+      "cosine_hit@1": "0/2 = 0.0%",
+      "cosine_hit@5": "0/2 = 0.0%",
+      "recall@5": "1.0000",
+      "mrr": "0.4167",
+      "soft_only": "0/2",
+      "miss": "0/2"
+    }
+  },
+  "soft_hits": [],
+  "cosine_hits": [
+    {
+      "qa_id": "qa_v4_0009",
+      "question": "招标人要求投标人提交投标保证金时，保证金金额和有效期有什么法定限制？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_中华人民共和国招标投标法实施条例_25_33_9091"
+      ],
+      "retrieved": [
+        "parent_工程建设项目施工招标投标办法_37_16_706_child0",
+        "parent_工程建设项目施工招标投标办法_37_16_706",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_37_179_6430_child0",
+        "parent_公路工程建设项目招标投标管理办法_24_510_8357",
+        "parent_工程建设项目货物招标投标办法_26_231_7601"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0017",
+      "question": "供应商在政府采购中，哪些行为会导致中标无效并可能被追究法律责任？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_集中采购机构是设区的市级以上人民政府依法_72_1111_3692"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国政府采购法实施条例_74_29_8374",
+        "parent_集中采购机构是设区的市级以上人民政府依法_74_1112_257",
+        "parent_中华人民共和国政府采购法实施条例_72_28_513",
+        "pdf_招标投标法律解读与风险防范实务_para_0747",
+        "pdf_招标投标法律解读与风险防范实务_para_0737"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0030",
+      "question": "评标委员会发现投标人以弄虚作假方式投标时，应如何处理？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_评标委员会和评标方法暂行规定_20_144_7203"
+      ],
+      "retrieved": [
+        "parent_公路工程建设项目评标工作细则_24_538_7836_child0",
+        "parent_公路工程建设项目评标工作细则_24_538_7836",
+        "parent_评标委员会应组织全体评标委员学习有关规定_69_711_5381",
+        "pdf_招标投标法律解读与风险防范实务_para_0413",
+        "pdf_招标投标法律解读与风险防范实务_para_0411"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0097",
+      "question": "根据招标投标法，招标人违约不履行与中标人订立的合同，应当承担什么责任？",
+      "category": "pdf_law_parent",
+      "chunk_count": 1,
+      "expected": [
+        "parent_加配件或者售后服务量以及其他超出招标文件_59_241_2727"
+      ],
+      "retrieved": [
+        "parent_中华人民共和国招标投标法_58_21_4368_child1",
+        "parent_工程建设项目施工招标投标办法_85_35_2945",
+        "parent_工程建设项目施工招标投标办法_85_35_2945_child0",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_83_197_3093",
+        "pdf_招标投标法律解读与风险防范实务_para_0669"
+      ]
+    }
+  ],
+  "misses": [
+    {
+      "qa_id": "qa_v4_0116",
+      "question": "根据铁路建设招标投标实施办法，本办法自何时起开始施行？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_金提供方对招标投标的具体条件和程序有不同_80_716_4602"
+      ],
+      "retrieved": [
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751_child2",
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751_child1",
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751_child12",
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751",
+        "parent_铁路建设工程招标投标监管暂行办法_18_749_3382"
+      ]
+    }
+  ]
+}
