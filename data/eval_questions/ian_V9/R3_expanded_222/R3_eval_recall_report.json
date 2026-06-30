@@ -1,0 +1,242 @@
+{
+  "benchmark": "eval_benchmark_v4",
+  "pipeline": "full (BM25+Vector+RRF+Reranker+source_type_boost)",
+  "total_evaluated": 222,
+  "top_k": 5,
+  "cosine_threshold": 0.85,
+  "overall": {
+    "_primary": "parent_hit — 父块命中（同一法条/文章）",
+    "parent_hit@1": "80/222 = 36.0%",
+    "parent_hit@5": "216/222 = 97.3%",
+    "recall@5 (parent)": "0.9730",
+    "mrr (parent)": "0.5869",
+    "_secondary": "exact_hit — 精确 chunk ID 匹配（数据质量指标）",
+    "exact_hit@1": "79/222 = 35.6%",
+    "exact_hit@5": "208/222 = 93.7%",
+    "_cosine": "cosine_hit — 余弦 ≥ 0.85（语义相近但ID不同），不计入Miss",
+    "cosine_hit@1": "0/222 = 0.0%",
+    "cosine_hit@5": "1/222 = 0.5%",
+    "_soft": "soft_hit — 语义等价（同条但不同源），不计入 Miss",
+    "soft_hits_only": "0/222 = 0.0%",
+    "_miss": "true miss — 无任何命中",
+    "misses": "5/222 = 2.3%"
+  },
+  "parent_resolution": {
+    "total_unique_chunks": 222,
+    "with_parent_id": 0,
+    "with_article_id": 137,
+    "with_retrieval_text": 222,
+    "no_article_or_parent": 85
+  },
+  "by_chunk_count": {
+    "1": {
+      "count": 222,
+      "parent_hit@1": "80/222 = 36.0%",
+      "parent_hit@5": "216/222 = 97.3%",
+      "exact_hit@1": "79/222 = 35.6%",
+      "exact_hit@5": "208/222 = 93.7%",
+      "cosine_hit@1": "0/222 = 0.0%",
+      "cosine_hit@5": "1/222 = 0.5%",
+      "recall@5": "0.9730",
+      "mrr": "0.5869",
+      "soft_only": "0/222",
+      "miss": "5/222"
+    }
+  },
+  "by_category": {
+    "pdf_case_paragraph": {
+      "count": 75,
+      "parent_hit@1": "7/75 = 9.3%",
+      "parent_hit@5": "74/75 = 98.7%",
+      "exact_hit@1": "7/75 = 9.3%",
+      "exact_hit@5": "69/75 = 92.0%",
+      "cosine_hit@1": "0/75 = 0.0%",
+      "cosine_hit@5": "0/75 = 0.0%",
+      "recall@5": "0.9867",
+      "mrr": "0.3933",
+      "soft_only": "0/75",
+      "miss": "1/75"
+    },
+    "pdf_law_child": {
+      "count": 15,
+      "parent_hit@1": "7/15 = 46.7%",
+      "parent_hit@5": "14/15 = 93.3%",
+      "exact_hit@1": "7/15 = 46.7%",
+      "exact_hit@5": "14/15 = 93.3%",
+      "cosine_hit@1": "0/15 = 0.0%",
+      "cosine_hit@5": "0/15 = 0.0%",
+      "recall@5": "0.9333",
+      "mrr": "0.6833",
+      "soft_only": "0/15",
+      "miss": "1/15"
+    },
+    "pdf_law_parent": {
+      "count": 122,
+      "parent_hit@1": "60/122 = 49.2%",
+      "parent_hit@5": "120/122 = 98.4%",
+      "exact_hit@1": "59/122 = 48.4%",
+      "exact_hit@5": "117/122 = 95.9%",
+      "cosine_hit@1": "0/122 = 0.0%",
+      "cosine_hit@5": "0/122 = 0.0%",
+      "recall@5": "0.9836",
+      "mrr": "0.6874",
+      "soft_only": "0/122",
+      "miss": "2/122"
+    },
+    "policy_doc": {
+      "count": 10,
+      "parent_hit@1": "6/10 = 60.0%",
+      "parent_hit@5": "8/10 = 80.0%",
+      "exact_hit@1": "6/10 = 60.0%",
+      "exact_hit@5": "8/10 = 80.0%",
+      "cosine_hit@1": "0/10 = 0.0%",
+      "cosine_hit@5": "1/10 = 10.0%",
+      "recall@5": "0.8000",
+      "mrr": "0.6667",
+      "soft_only": "0/10",
+      "miss": "1/10"
+    }
+  },
+  "by_source_type": {
+    "regulation_article": {
+      "count": 137,
+      "parent_hit@1": "67/137 = 48.9%",
+      "parent_hit@5": "134/137 = 97.8%",
+      "exact_hit@1": "66/137 = 48.2%",
+      "exact_hit@5": "131/137 = 95.6%",
+      "cosine_hit@1": "0/137 = 0.0%",
+      "cosine_hit@5": "0/137 = 0.0%",
+      "recall@5": "0.9781",
+      "mrr": "0.6870",
+      "soft_only": "0/137",
+      "miss": "3/137"
+    },
+    "regulation_case": {
+      "count": 75,
+      "parent_hit@1": "7/75 = 9.3%",
+      "parent_hit@5": "74/75 = 98.7%",
+      "exact_hit@1": "7/75 = 9.3%",
+      "exact_hit@5": "69/75 = 92.0%",
+      "cosine_hit@1": "0/75 = 0.0%",
+      "cosine_hit@5": "0/75 = 0.0%",
+      "recall@5": "0.9867",
+      "mrr": "0.3933",
+      "soft_only": "0/75",
+      "miss": "1/75"
+    },
+    "regulation_policy": {
+      "count": 10,
+      "parent_hit@1": "6/10 = 60.0%",
+      "parent_hit@5": "8/10 = 80.0%",
+      "exact_hit@1": "6/10 = 60.0%",
+      "exact_hit@5": "8/10 = 80.0%",
+      "cosine_hit@1": "0/10 = 0.0%",
+      "cosine_hit@5": "1/10 = 10.0%",
+      "recall@5": "0.8000",
+      "mrr": "0.6667",
+      "soft_only": "0/10",
+      "miss": "1/10"
+    }
+  },
+  "soft_hits": [],
+  "cosine_hits": [
+    {
+      "qa_id": "qa_v4_0216",
+      "question": "上海市公共资源场内交易信用记分管理办法适用于哪些交易平台？",
+      "category": "policy_doc",
+      "chunk_count": 1,
+      "expected": [
+        "policy_5"
+      ],
+      "retrieved": [
+        "policy_72",
+        "policy_69",
+        "policy_123",
+        "policy_121",
+        "policy_132"
+      ]
+    }
+  ],
+  "misses": [
+    {
+      "qa_id": "qa_v4_0039",
+      "question": "投标人资格条件的基本定义是什么？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_公路工程建设项目招标投标管理办法_30_513_2217"
+      ],
+      "retrieved": [
+        "pdf_招标投标法律解读与风险防范实务_para_0212",
+        "pdf_招标投标法律解读与风险防范实务_para_0292",
+        "pdf_招标投标法律解读与风险防范实务_para_0540",
+        "pdf_招标投标法律解读与风险防范实务_para_0265",
+        "pdf_招标投标法律解读与风险防范实务_para_0253"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0122",
+      "question": "《铁路建设工程招标投标实施办法》中规定，本办法的施行日期是什么时候？",
+      "chunk_count": 1,
+      "category": "pdf_law_parent",
+      "expected": [
+        "parent_金提供方对招标投标的具体条件和程序有不同_80_716_4602"
+      ],
+      "retrieved": [
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751_child1",
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751_child12",
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751_child2",
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751_child6",
+        "parent_铁路工程建设项目招标投标管理办法_59_775_1751"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0132",
+      "question": "根据招标投标法实施条例，开标时如果投标人少于3个应该怎么办？",
+      "chunk_count": 1,
+      "category": "pdf_law_child",
+      "expected": [
+        "parent_中华人民共和国招标投标法实施条例_44_40_6536_child0"
+      ],
+      "retrieved": [
+        "pdf_招标投标法律解读与风险防范实务_para_0384",
+        "parent_重大装备自主化依托工程设备招标采购活动的_11_1051_6546_child0",
+        "parent_国家对潜在投标人或者投标人的资格条件有规_37_179_6430_child1",
+        "pdf_招标投标法律解读与风险防范实务_para_0435",
+        "pdf_招标投标法律解读与风险防范实务_para_0434"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0140",
+      "question": "我们公司计划参与一个政府投资的工程项目招标，但项目还在审批阶段，资金也还没完全落实。请问这种情况下我们能不能先发布招标公告？",
+      "chunk_count": 1,
+      "category": "pdf_case_paragraph",
+      "expected": [
+        "pdf_招标投标法律解读与风险防范实务_para_0138"
+      ],
+      "retrieved": [
+        "parent_招标公告和公示信息发布管理办法_2_274_9758_child1",
+        "parent_招标公告和公示信息发布管理办法_2_274_9758_child0",
+        "parent_招标公告和公示信息发布管理办法_2_274_9758_child3",
+        "parent_招标公告和公示信息发布管理办法_20_273_9366",
+        "parent_工程建设项目申报材料增加招标内容和核准招_5_167_1956_child1"
+      ]
+    },
+    {
+      "qa_id": "qa_v4_0220",
+      "question": "上海市公共资源交易平台有哪些分平台？",
+      "chunk_count": 1,
+      "category": "policy_doc",
+      "expected": [
+        "policy_100"
+      ],
+      "retrieved": [
+        "policy_125",
+        "policy_77",
+        "policy_0",
+        "policy_67",
+        "policy_83"
+      ]
+    }
+  ]
+}
