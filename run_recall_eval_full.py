@@ -21,7 +21,7 @@ from app.core.model_client import remote_embed
 QA_PATH = "data/eval_questions/eval_benchmark_v4.json"
 TOP_K = 5
 COSINE_THRESHOLD = 0.85
-COLLECTIONS = ["policy_v8"]
+COLLECTIONS = ["policy_v9"]
 
 
 def _adapt_v2_qa(qa: dict) -> dict:

@@ -27,7 +27,7 @@ RAW_DIR = Path(__file__).parent / "data" / "raw"
 PDF_DIR = Path(__file__).parent / "data" / "pdfs"
 
 # ★ 使用新集合名，不覆盖旧的 policy 集合
-COLLECTION_NAME = "policy_v8"
+COLLECTION_NAME = "policy_v9"
 
 # 10个PDF全部处理
 PDF_CONFIGS = [

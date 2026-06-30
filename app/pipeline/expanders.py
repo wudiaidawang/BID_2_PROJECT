@@ -78,7 +78,12 @@ class ParentContextExpander:
             article_id = str(meta.get("article_id", ""))
             parent_id = meta.get("parent_id", "")
 
+            # 即使是 article_id 已被 parent 覆盖，child 也保留自身 ID 参与 rerank
             if article_id and article_id in seen_articles:
+                parent = parents.get(parent_id)
+                if parent:
+                    child["parent_content"] = parent.get("text", "")
+                enriched.append(child)
                 continue
             if article_id:
                 seen_articles.add(article_id)

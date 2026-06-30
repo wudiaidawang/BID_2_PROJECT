@@ -240,17 +240,17 @@ class LegalStructureParser:
         for kw in self.TOC_KEYWORDS:
             if kw in cleaned:
                 return False
-        # 先通过正则匹配真正标题
+
+        # ★ 先做强否决：含正文特征词+无法规后缀+长度>20 → 不是标题
+        if len(cleaned) > 20 and not any(cleaned.endswith(s) for s in ['法', '条例', '办法', '规定', '细则', '通知', '意见', '函', '批复']):
+            for bw in BODY_PATTERN_WORDS:
+                if bw in cleaned:
+                    return False
+
+        # 再通过正则匹配真正标题
         for pattern in DOC_TITLE_PATTERNS:
             if pattern.search(cleaned):
-                # 已经是合法标题模式，不再用 body word 拒绝
                 return True
-        # 排除正文特征：无法规后缀 + 含正文特征词 + 长度较长 -> 不是标题
-        if not any(cleaned.endswith(s) for s in ['法', '条例', '办法', '规定', '细则', '通知', '意见', '函', '批复']):
-            if len(cleaned) > 20:
-                for bw in BODY_PATTERN_WORDS:
-                    if bw in cleaned:
-                        return False
         return False
 
     def _should_skip(self, title: str) -> bool:
