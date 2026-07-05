@@ -269,16 +269,57 @@ BIDDING_KEYWORDS = [
     "招标", "投标", "采购", "围标", "串标", "中标",
     "标书", "标段", "评标", "开标",
 ]
+# 提问意图词 — 只要命中其一，即使用户加了"谢谢""你好"，也不拦截为寒暄
+QUESTION_INTENT_KEYWORDS = [
+    "什么", "怎么", "如何", "为什么", "为何", "是否", "哪些",
+    "哪家", "哪个", "哪条", "哪种",
+    "认定", "处罚", "规定", "流程", "条件", "要求",
+    "可以吗", "行吗", "对吗", "有效吗", "合法吗",
+    "怎么处理", "如何处理", "怎么办", "怎么做",
+    "多久", "多少", "多少钱", "什么时候",
+    "能不能", "可不可以", "需不需要",
+]
 
 
 def quick_intercept(question: str) -> Optional[Dict]:
-    """快速拦截问候/致谢/告别/无关问题 — 纯关键词，零 LLM 调用"""
+    """快速拦截问候/致谢/告别/无关问题 — 纯关键词，零 LLM 调用
+
+    策略：
+    1. 检测是否有明确提问意图（疑问词、？等）→ 有则放行
+    2. 检测是否有招投标业务关键词 → 有则放行
+    3. 去除礼貌词后既无意图又无业务 → 纯寒暄，快速响应
+    4. 最后检测无关领域（天气/股票/美食等）→ 拦截拒答
+    """
     if not settings.intent_quick_intercept:
         return None
 
     q = question.strip().lower()
-    q_clean = re.sub(r'[^一-龥a-zA-Z0-9]', '', q)
+    q_clean = re.sub(r'[^一-龥a-zA-Z0-9?？]', '', q)
 
+    # ── Step 1: 去掉所有礼貌词，看剩下什么 ──
+    all_courtesy = GREETING_KEYWORDS + THANKS_KEYWORDS + GOODBYE_KEYWORDS
+    q_no_courtesy = q_clean
+    for kw in all_courtesy:
+        q_no_courtesy = q_no_courtesy.replace(kw, '')
+
+    # ── Step 2: 提问意图检测 — 有问号或疑问词 → 放行 ──
+    has_question_intent = (
+        '?' in q_no_courtesy or '？' in q_no_courtesy
+        or any(kw in q_no_courtesy for kw in QUESTION_INTENT_KEYWORDS)
+    )
+
+    if has_question_intent:
+        # 有明确提问意图 + 礼帽词 → 不拦截，正常走检索
+        return None
+
+    # ── Step 3: 业务关键词检测 ──
+    has_bidding = any(kw in q for kw in BIDDING_KEYWORDS)
+
+    if has_bidding:
+        # 涉及招投标但无显式提问词 → 可能是专业聊天/陈述，也放行
+        return None
+
+    # ── Step 4: 既无意图又无业务 → 纯问候/致谢/告别 ──
     for kw in GREETING_KEYWORDS:
         if kw in q_clean:
             return {"type": "quick_response", "complexity": "single_step",
@@ -294,12 +335,10 @@ def quick_intercept(question: str) -> Optional[Dict]:
             return {"type": "quick_response", "complexity": "single_step",
                     "response": "再见！如有问题，随时回来咨询。"}
 
-    # 无关领域检测
-    has_bidding = any(kw in q for kw in BIDDING_KEYWORDS)
-    if not has_bidding:
-        for kw in UNRELATED_KEYWORDS:
-            if kw in q:
-                return {"type": "unrelated", "complexity": "single_step"}
+    # ── Step 5: 无关领域检测 —— 无招投标关键词 + 命中无关词 → 拒答 ──
+    for kw in UNRELATED_KEYWORDS:
+        if kw in q:
+            return {"type": "unrelated", "complexity": "single_step"}
 
     return None
 

@@ -1,0 +1,10 @@
+=== Miss 模式分布 ===
+  131 条: 法条间竞争(law→other_law)
+   27 条: 教科书被法条挤出(textbook→law)
+   25 条: 政策文档竞争(policy)
+   19 条: 其他(pdf_case_sliding)
+   13 条: 教科书自干扰(textbook→textbook)
+    9 条: 法条被教科书挤出(law→textbook)
+    2 条: 案例被教科书挤出(case→textbook)
+
+总计: 226 misses

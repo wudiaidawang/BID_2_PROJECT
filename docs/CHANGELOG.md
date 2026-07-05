@@ -4,6 +4,142 @@
 
 ---
 
+## 2026-07-05 — V14 Header 领域注入 + 高频 Miss Chunk 跨法规混淆治理（最终版）
+
+### V14 召回评测
+
+- **R@5: 92.7%**（V13: 92.0%，+0.7%），miss 从 226 降至 **208**（-18 条）
+- Dense-only Pool@30 微降（92.6%→92.3%），BM25 Pool@30 微升（96.8%→97.1%）
+- 主要收益在 Reranker 环节：领域/主题/关键词 header 帮助精排区分跨法规相似条文
+
+### Header 领域/主题/关键词注入
+
+- **`fix_header_enrich.py`** — 独立脚本，为目标 chunk 的 `retrieval_text` header 注入领域/主题/关键词
+- Header 格式：`《法规名》\n领域：XX\n主题：XX\n关键词：XX\n章节\n法条文本`
+- **`app/core/parent_chunk_builder.py`** — `ParentChunkBuilder` 接受 `domain_topic_map` 参数，构建时自动注入
+- 覆盖 33 个 (law_name, article_id) 对，涵盖 10 个领域：建设工程(8)、机电产品国际招标(6)、招标投标(6)、政府采购(5)、房屋建筑(1)、电子招标投标(1)、道路运输(1)、铁路工程(1)、公共资源交易(1)
+- 教科书（招标投标法律解读与风险防范实务）按关键词模糊匹配定位 chunk
+
+### Miss 结构分析 (208 条)
+
+| 类别 | 数量 | 占比 | 治理策略 |
+|------|------|------|---------|
+| 已 enrichment 仍 miss | 59 | 28% | embedding 分辨力天花板 |
+| 未 enrichment 法规 miss | 56 | 27% | 6 个高频已补，其余 44 条单次出现 |
+| 教科书内部竞争 | 47 | 23% | 已加 3 条高频 header |
+| policy_doc | 25 | 12% | 非 header 问题 |
+| case_sliding | 21 | 10% | 案例片段同质化 |
+
+### 服务器工作区治理
+
+- 所有评测文件统一至 `~/group_three_5_11/data_pan/`
+- 禁止在其他目录创建立文件夹，防止"公司爆炸"
+
+---
+
+## 2026-07-05 — V11 评测体系优化 + 融合策略 AB 对比 + Dense/BM25 差距诊断
+
+### V11 召回评测
+
+- **移除 comparison 题型**：A vs B 对比型问题单独分拆，评测集从 3146 题精简至 2832 题
+- **R@5 跃升至 92.0%**（V10: 89.5%），miss 从 330 降至 **226**
+- V10→V11 实际增益 +2.5%，主要来自评测集净化而非模型改进
+- 服务器端 `eval_v11/` 目录独立部署，RRF 变体 AB 对比在 screen 会话中运行
+
+### RRF vs Weighted AB 对比
+
+- 在 2832 题评测集上对比两种融合策略，**Reranker 后 R@5 差异仅 0.1%**（Weighted 92.0% vs RRF 92.1%）
+- RRF 融合阶段反而劣于 Weighted（85.8% vs 87.2%，-1.4%），但 Reranker 强力拉回
+- **结论：融合策略不是当前瓶颈**，Reranker 后的教科书挤占法条问题才是
+
+### Child Chunk 差异化 Header
+
+- **`app/core/child_chunk_builder.py`** — 每个 child 的 `retrieval_text` header 加入子块序号和内容预览（前 25 字）
+- 格式：`[法规名] 第X条 [子1: 预览...] [SEP] 原文`
+- 目的：避免同 parent 下各 child embedding 同质化，提升召回区分度
+
+### 法律实体注册中心扩展
+
+- **`app/core/legal_entity_registry.py`** — 新增领域术语注册表 `_DOMAIN_ENTITIES`
+- 覆盖：采购方式（公开招标/竞争性谈判等）、平台/系统名、评标方法、招投标角色、关键概念、文档类型
+- 触发 `detect_domain_entity()` → Weighted Fusion BM25 动态权重 0.75
+
+### Weighted Fusion 动态权重优化
+
+- **`app/pipeline/fusion.py`** — 三处调整：
+  - `semantic_heavy` BM25 权重 0.40→0.60（Dense 侧语义弱，降低依赖）
+  - 新增领域术语检测分支：命中→BM25=0.75, Dense=0.25
+  - 法规实体查询 BM25 保持 0.80
+
+### Router 智能拦截增强
+
+- **`app/core/router.py`** — `quick_intercept` 重构
+- 新增 `QUESTION_INTENT_KEYWORDS`（什么/怎么/如何/哪些/认定/处罚 等 20+ 个提问意图词）
+- 策略：先检测提问意图→放行；再检测招投标关键词→放行；去礼貌词后两者皆无→纯寒暄
+- 修复了带"谢谢""你好"的招投标问题被误判为寒暄的 Bug
+
+### 法律结构解析器增强
+
+- **`app/core/legal_structure_parser.py`** — 两个新增正则：
+  - `REGULATION_END_PATTERN` — 文档边界检测（"本办法自...施行。"），截断被误归入法条的后继文档
+  - `APPENDIX_ABBREVIATED_PATTERN` — 空白附件标记检测（"附件(略)"），防止后续乱码污染 chunk
+
+### Reranker 输入格式优化
+
+- **`app/pipeline/pipeline.py`** — reranker 输入从 `parent_content or retrieval_text` 改为 `child_text + "\n[法规上下文]\n" + parent_text`
+- 确保 Reranker 同时看到 child 精确匹配 + parent 完整上下文，用显式分隔符降低混淆
+
+### Dense vs BM25 差距诊断
+
+- Dense R@5=78.0% vs BM25 R@5=86.4%，差距 8.4%
+- 差距 53% 来自 Pool@30 覆盖率不足（Dense 找不到目标），47% 来自排序精度不足（找到但排不进 Top5）
+- 根因：(1) BGE-M3 通用模型未做法律领域适配，(2) 2612/2832 题 difficulty=synonym，Dense 语义桥接能力不足，(3) 长 parent chunk 向量稀释
+
+### 智谱代码审查
+
+- `docs/code_review/v8_recall_diagnosis_zhipu.md` — V8 召回诊断（融合策略/BM25 优势/Parent Expansion 零贡献）
+- `docs/code_review/law_chunk_homogeneity_zhipu.md` — 法律 Chunk 同质化治理方案
+- `docs/code_review/law_child_diagnosis_zhipu.md` — Law Child 专项诊断
+- `docs/code_review/v11_recall_diagnosis_zhipu.md` — V11 召回诊断（7 个分析维度，待发送）
+
+### 清理
+
+- 删除 `init_policy_collection.py`（已被 `init_scripts/` 替代）
+- 删除 `init_scripts/init_policy.py`（已废弃）
+- 删除 V6/V7 旧评测中间文件
+
+---
+
+## 2026-07-03 — V10 相邻法条上下文扩展 + Parent 污染治理 + 召回评测
+
+### 相邻法条上下文扩展
+
+- **`app/pipeline/expanders.py`** — `ParentContextExpander` 重构。Child chunk 命中时，`parent_content` 从原来的"拼接 parent 全文"改为"拼接相邻法条上下文"
+- 格式：【上一条】+ `===== 当前命中 =====` + 【下一条】，约束：同法规 + 同章节，防止跨法规噪音
+- 边界处理：章节首条无上一条、末条无下一条、独条只输出当前
+- 新增懒加载法条邻接索引 `_article_index`：`{(law_name, chapter): {article_id_int: doc}}`
+
+### Parent 污染治理
+
+- **`init_scripts/init_policy_collection.py`** — 删除长法条 parent 入库逻辑（line 160-167），长法条只存 child，避免 parent 在检索阶段抢 child 的 Top1
+- **`eval_standalone.py`** — 新增 `_filter_parents_with_children()` 运行时黑名单。预扫描全量文档标记有 child 的 article，检索时 parent 一经命中便拦截
+- **`eval_standalone.py`** — `_get_field()` 修复：支持 JSON string 格式 metadata 解析（`chapter` 字段嵌在 Milvus metadata JSON blob 中）
+
+### V10 召回评测
+
+- 3146 题，三轮评测：
+  - **Round 1**（相邻上下文）：R@1=67.5%, R@3=84.6%, **R@5=89.4%**（+0.4% vs V9）
+  - **Round 3**（+parent 黑名单）：R@1=68.5%, R@3=85.0%, **R@5=89.5%**（+0.5% vs V9）
+- **pdf_law_child** R@1 从 31.9% → 55.0%（+23.1%），相邻上下文对 child chunk 效果显著
+- 当前瓶颈：pdf_case_paragraph（35% miss）+ pdf_law_parent（34% miss），合计占 69% miss
+
+### 已废弃路径
+
+- `policy_v10` collection 重建后因切块参数不一致（child_split_threshold 1000 vs 800），ID 映射后 R@5 跌至 69.2%，已删除
+- `ParentContextRetriever`（`app/core/parent_context_retriever.py`）零引用，确认可安全移除
+
+---
+
 ## 2026-06-29 — V6 双基准策略与真实用户 Benchmark（详见 [CHANGELOG_2026-06-29_V6双基准策略与真实用户Benchmark](CHANGELOG_2026-06-29_V6双基准策略与真实用户Benchmark.md)）
 
 - 双基准体系确立：V5 回归测试 + V6 真实用户模拟

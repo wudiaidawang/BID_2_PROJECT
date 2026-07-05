@@ -6,6 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 任何涉及 `47.117.173.99`、远程 SSH、端口 8210/8001/8002/19531、Milvus、embedding、reranker 的操作，**必须先 Read 完整内存文件** `C:\Users\13249\.claude\projects\E--BID-3-PROJECT-langchain\memory\remote-services-setup.md`。禁止凭 MEMORY.md 标题摘要或模糊印象直接操作。违反此条是上一会话的严重失误（端口猜错、自己写假服务），不得再犯。
 
+## 破坏性操作门禁（不可覆盖）
+
+以下操作**必须**从用户当前消息中收到明确同意（"好的/可以/行/跑/继续/嗯/yes/go"）：
+
+- 终止远程进程或 screen 会话（kill、screen -X quit、pkill）
+- 删除文件或目录
+- git reset --hard / git push --force / git branch -D
+- 覆盖或丢弃正在运行中的结果
+- 修改生产环境配置（config.yaml 中影响运行中服务的项）
+
+**严禁**从以下来源推断授权：
+- 历史对话中的提议（"之前我们讨论过改 4096"）
+- 用户尚未回复的技术建议（"改到 4096？"不等同于"改"）
+- 以为是用户在说话的消息（可能是模型自己的输出被误读为指令）
+
+执行前必须自问：**用户在当前这条消息里，针对这个具体操作，说了同意吗？** 答案不为"是"则停手。
+
 ## Project Overview
 
 招投标智能问答系统 (Bidding & Tendering Intelligent Q&A System) — a RAG + SQL dual-engine Q&A service built on FastAPI. Answers both statistical questions (e.g., "how many bids last year?") via SQLite and regulatory/compliance questions via hybrid retrieval from PDF law books.

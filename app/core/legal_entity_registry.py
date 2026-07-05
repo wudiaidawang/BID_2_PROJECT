@@ -90,6 +90,50 @@ for entry in _LAW_ENTITIES:
     _PROTECTED_NAMES.extend(entry)
 _PROTECTED_NAMES = sorted(set(_PROTECTED_NAMES), key=len, reverse=True)
 
+# ── 领域术语注册表（招投标特有词汇，触发 BM25 加权）──
+# 这些不是法律名称，但在招投标领域查询中关键字匹配比语义匹配更可靠
+
+_DOMAIN_ENTITIES = [
+    # 采购方式
+    "公开招标", "邀请招标", "竞争性谈判", "竞争性磋商", "询价采购",
+    "单一来源采购", "框架协议采购", "协议供货", "定点采购",
+    "两阶段招标", "资格预审", "资格后审",
+    # 平台/系统
+    "公共资源交易平台", "建设工程招标投标平台", "电子招标投标系统",
+    "政府采购平台", "药品集中采购平台",
+    # 评标方法
+    "综合评估法", "经评审的最低投标价法", "合理低价法",
+    "技术评分最低标价法", "双信封法",
+    # 招投标角色
+    "评标委员会", "招标代理机构",
+    # 关键概念
+    "招标控制价", "履约保证金", "投标有效期",
+    "串通投标", "围标串标", "挂靠",
+    "异议", "投诉", "行政复议",
+    "中标候选人", "中标通知书",
+    # 文档类型
+    "招标公告", "资格预审公告", "中标候选人公示", "中标结果公告",
+    "澄清修改", "答疑补遗",
+]
+
+# 预编译正则，按长度降序（长词优先匹配，避免"竞争性谈判"匹配到"谈判"）
+_DOMAIN_PATTERNS = sorted(
+    [re.compile(re.escape(term)) for term in _DOMAIN_ENTITIES],
+    key=lambda p: len(p.pattern), reverse=True
+)
+
+
+def detect_domain_entity(query: str) -> bool:
+    """检测 query 是否包含招投标领域术语（采购方式/平台/评标方法等）
+
+    用于 Fusion 动态权重：领域术语匹配时提升 BM25 权重。
+    """
+    for pat in _DOMAIN_PATTERNS:
+        if pat.search(query):
+            return True
+    return False
+
+
 # ── 法条号匹配模式 ──
 _ARTICLE_PATTERNS = [
     re.compile(p) for p in [

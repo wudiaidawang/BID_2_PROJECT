@@ -31,6 +31,7 @@ CHUNK_TYPES = {
     "pdf_law_sliding":      "PDF法律条文滑动窗口 (policy)",
     "pdf_case_sliding":     "PDF案例分析滑动窗口 (policy, 旧)",
     "pdf_case_paragraph":   "PDF案例分析段落归并 (policy, 实务用)",
+    "pdf_textbook_structured": "PDF教科书结构化段落 (policy, 法律解读/风险防范实务)",
 }
 
 # ── 规范字段定义 ──
@@ -179,7 +180,9 @@ def infer_source_type(collection: str, chunk: dict) -> str:
     if ct == "bid_project":
         return "bid"
 
-    # regulation 子类
+    # regulation 子类（顺序重要：textbook 优先于 case 匹配）
+    if ct.startswith("pdf_textbook_"):
+        return "regulation_textbook"
     if ct.startswith("pdf_case_"):
         return "regulation_case"
     if ct == "opinion_news" or _get("category") == "opinion":

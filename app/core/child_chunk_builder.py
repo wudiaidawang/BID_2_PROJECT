@@ -196,8 +196,14 @@ class ChildChunkBuilder:
 
             chunk_id = f"{parent_id}_child{i}"
 
-            # retrieval_text = header + 子块内容 → 参与向量化和 BM25
-            retrieval_text = f"{header}\n{seg}" if (self.header_enabled and header) else seg
+            # retrieval_text = 差异化header + [SEP] + 子块内容 → 参与向量化和 BM25
+            # 每个 child 的 header 包含子块序号和内容预览，避免同 parent 下各 child 同质化
+            if self.header_enabled and header:
+                preview = seg[:25].replace("\n", "")
+                child_header = f"{header} [子{i+1}: {preview}...]"
+                retrieval_text = f"{child_header}\n[SEP]\n{seg}"
+            else:
+                retrieval_text = seg
             # text = 子块原文 → 用户展示
             text = seg
 

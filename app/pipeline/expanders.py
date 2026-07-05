@@ -1,11 +1,11 @@
 """
 上下文扩展器 —— ParentContextExpander (法律) + NoopExpander (通用)
 
-法律路径: child chunk → 查询 parent → 附加 parent_content → 按 article_id 去重
+法律路径: child chunk → 查询 parent → 相邻法条上下文扩展 → 按 article_id 去重
 通用路径: 直通，不做任何处理
 """
 
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 
 from app.storage import get_vector_store
 from app.schema.metadata import normalize_chunk
@@ -36,6 +36,8 @@ class ParentContextExpander:
         self._store = store or get_vector_store()
         self._enabled = settings.legal_parent_context_enabled
         self._parent_cache: Dict[str, Dict[str, Dict]] = {}
+        self._article_index: Dict[Tuple[str, str], Dict[int, Dict]] = {}
+        self._index_built = False
 
     @property
     def enabled(self) -> bool:
@@ -73,10 +75,11 @@ class ParentContextExpander:
                     seen_articles.add(article_id)
                 enriched.append(r)
 
-        # 处理旧格式 child chunks
+        # 处理旧格式 child chunks —— 相邻法条上下文扩展
         if child_fallbacks:
             parent_ids = self._collect_parent_ids(child_fallbacks)
             parents = self._batch_get_parents(parent_ids, collection)
+            self._ensure_article_index(collection)
 
             for child in child_fallbacks:
                 meta = child.get("metadata") or child.get("data", {})
@@ -90,14 +93,112 @@ class ParentContextExpander:
 
                 parent = parents.get(parent_id)
                 if parent:
-                    child["parent_content"] = parent.get("text", "")
-                    child["parent_metadata"] = parent.get("metadata", {})
+                    law_name = parent.get("law_name", "") or meta.get("law_name", "")
+                    chapter = (parent.get("metadata", {}).get("chapter", "")
+                               or parent.get("chapter", "")
+                               or meta.get("chapter", ""))
+                    current_text = parent.get("text", "")
+                    child["parent_content"] = self._get_adjacent_context(
+                        law_name, chapter, article_id, current_text
+                    )
                 else:
                     child["parent_content"] = child.get("text", "")
                 enriched.append(child)
 
         enriched.sort(key=lambda x: x.get("score", 0), reverse=True)
         return enriched
+
+    def _ensure_article_index(self, collection: str):
+        """构建法条邻接索引 —— 按 (law_name, chapter) 分组，article_id 排序。
+
+        仅包含 parent chunk（parent_id 为空），排除 child/sliding。
+        索引结构: {(law_name, chapter): {article_id_int: doc}}
+        """
+        if self._index_built:
+            return
+        all_docs = self._store.get_all_documents(collection)
+        index: Dict[Tuple[str, str], Dict[int, Dict]] = {}
+
+        for doc in all_docs:
+            meta = doc.get("metadata", {})
+            parent_id = meta.get("parent_id", doc.get("parent_id", ""))
+            if parent_id:
+                continue
+            law_name = meta.get("law_name", doc.get("law_name", ""))
+            chapter = meta.get("chapter", doc.get("chapter", ""))
+            article_id_str = meta.get("article_id", doc.get("article_id", ""))
+
+            if not law_name or not article_id_str:
+                continue
+            try:
+                aid = int(article_id_str)
+            except ValueError:
+                continue
+
+            key = (law_name, chapter)
+            if key not in index:
+                index[key] = {}
+            index[key][aid] = doc
+
+        self._article_index = index
+        self._index_built = True
+
+    def _get_adjacent_context(self, law_name: str, chapter: str,
+                              article_id: str, current_text: str) -> str:
+        """构建相邻法条上下文，格式:
+
+        【上一条】第X条
+        <前一条全文>
+
+        ===== 当前命中 =====
+        【当前条文】第Y条
+        <当前全文>
+
+        【下一条】第Z条
+        <下一条全文>
+
+        约束: 同法规 + 同章节，跨法规跨章节不拼接。
+        """
+        try:
+            aid = int(article_id)
+        except ValueError:
+            return current_text
+
+        group = self._article_index.get((law_name, chapter), {})
+        if not group:
+            return current_text
+
+        sorted_ids = sorted(group.keys())
+        try:
+            pos = sorted_ids.index(aid)
+        except ValueError:
+            return current_text
+
+        prev_id = sorted_ids[pos - 1] if pos > 0 else None
+        next_id = sorted_ids[pos + 1] if pos < len(sorted_ids) - 1 else None
+
+        # 当前条文标签（优先用 parent 原本的中文条号）
+        current_label = f"第{article_id}条"
+        if aid in group:
+            current_article = group[aid].get("metadata", {}).get("article", "")
+            if current_article:
+                current_label = current_article
+
+        parts: List[str] = []
+
+        if prev_id is not None:
+            prev_doc = group[prev_id]
+            prev_article = prev_doc.get("metadata", {}).get("article", f"第{prev_id}条")
+            parts.append(f"【上一条】{prev_article}\n{prev_doc.get('text', '')}")
+
+        parts.append(f"===== 当前命中 =====\n【当前条文】{current_label}\n{current_text}")
+
+        if next_id is not None:
+            next_doc = group[next_id]
+            next_article = next_doc.get("metadata", {}).get("article", f"第{next_id}条")
+            parts.append(f"【下一条】{next_article}\n{next_doc.get('text', '')}")
+
+        return "\n\n".join(parts)
 
     def _collect_parent_ids(self, child_results: List[Dict]) -> Set[str]:
         ids = set()
@@ -137,3 +238,5 @@ class ParentContextExpander:
             self._parent_cache.pop(collection, None)
         else:
             self._parent_cache.clear()
+        self._article_index.clear()
+        self._index_built = False

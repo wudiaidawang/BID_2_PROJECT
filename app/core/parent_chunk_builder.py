@@ -10,13 +10,21 @@ from app.core.legal_structure_parser import LawDocument, ChapterInfo, ArticleInf
 
 
 class ParentChunkBuilder:
-    """将结构化法律文档转为 parent chunks"""
+    """将结构化法律文档转为 parent chunks。
+
+    domain_topic_map: 可选, Dict[(law_name, article_id), Dict]
+        为特定法规-条款注入领域/主题/关键词到 header 中，
+        解决不同法规相似条文的向量混淆问题。
+        格式: {(law_name, str(aid)): {"domain": "...", "topic": "...", "keywords": [...]}}
+    """
 
     def __init__(self, source: str = "", header_injection: bool = True,
-                 chunk_type: str = "parent"):
+                 chunk_type: str = "parent",
+                 domain_topic_map: dict | None = None):
         self.source = source
         self.header_injection = header_injection
         self.chunk_type = chunk_type
+        self.domain_topic_map = domain_topic_map or {}
         self._counter = 0
 
     def build(self, documents: List[LawDocument]) -> List[Dict]:
@@ -52,16 +60,16 @@ class ParentChunkBuilder:
         content = art.content
         chunk_id = self._make_chunk_id(law_name, art.article_id, content)
 
-        full_header = self._make_header(law_name, chapter, art.article_text)
+        full_header = self._make_header(law_name, chapter, art.article_text, str(art.article_id))
 
         # 短法条使用紧凑 header，减少 embedding 稀释
         if len(content) < 200:
-            embedding_header = self._make_compact_header(law_name, chapter, art.article_text)
+            embedding_header = self._make_compact_header(law_name, chapter, art.article_text, str(art.article_id))
         else:
             embedding_header = full_header
 
-        # retrieval_text = header + 正文 → 参与向量化和 BM25
-        retrieval_text = f"{embedding_header}\n{content}" if self.header_injection else content
+        # retrieval_text = header + [SEP] + 正文 → 参与向量化和 BM25
+        retrieval_text = f"{embedding_header}\n[SEP]\n{content}" if self.header_injection else content
         # text = 原始正文 → 用户展示，无 header 污染
         text = content
 
@@ -97,19 +105,29 @@ class ParentChunkBuilder:
         return f"parent_{safe_name}_{article_id}_{self._counter}_{content_hash}"
 
     def _make_header(self, law_name: str, chapter: str,
-                     article_text: str) -> str:
+                     article_text: str, article_id: str = "") -> str:
         """生成层级 header 字符串用于 embedding 注入"""
         parts = [f"《{law_name}》"]
+        # 领域/主题/关键词 enrichment（仅匹配的 law-article 对启用）
+        enrichment = self.domain_topic_map.get((law_name, article_id))
+        if enrichment:
+            parts.append(f"领域：{enrichment['domain']}")
+            parts.append(f"主题：{enrichment['topic']}")
+            parts.append(f"关键词：{','.join(enrichment['keywords'])}")
         if chapter:
             parts.append(chapter)
         parts.append(article_text)
         return "\n".join(parts)
 
     def _make_compact_header(self, law_name: str, chapter: str,
-                             article_text: str) -> str:
+                             article_text: str, article_id: str = "") -> str:
         """生成紧凑 header —— 用于短法条，减少 embedding 稀释"""
         short_name = law_name.replace("中华人民共和国", "").replace("法律法规全书", "法规全书")
         parts = [f"《{short_name}》"]
+        enrichment = self.domain_topic_map.get((law_name, article_id))
+        if enrichment:
+            parts.append(f"领域：{enrichment['domain']}")
+            parts.append(f"主题：{enrichment['topic']}")
         if chapter:
             parts.append(chapter)
         parts.append(article_text)

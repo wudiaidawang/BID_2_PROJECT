@@ -331,7 +331,12 @@ class SearchPipeline:
 
         documents = []
         for d in candidates[:settings.reranker_candidate_pool]:
-            doc_text = d.get("parent_content") or d.get("retrieval_text", d.get("text", ""))
+            child_text = d.get("retrieval_text", d.get("text", ""))
+            parent_text = d.get("parent_content", "")
+            if parent_text and parent_text != child_text:
+                doc_text = child_text + "\n[法规上下文]\n" + parent_text
+            else:
+                doc_text = child_text
             documents.append(doc_text[:settings.reranker_max_input_length])
 
         indices = self.reranker.rerank(query, documents, top_k)

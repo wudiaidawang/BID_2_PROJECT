@@ -10,7 +10,7 @@ import numpy as np
 from typing import List, Dict, Tuple
 
 from config import settings
-from app.core.legal_entity_registry import detect_regulation_entity
+from app.core.legal_entity_registry import detect_regulation_entity, detect_domain_entity
 from app.pipeline.retrievers import chinese_tokenize, VectorRetriever, BM25Retriever
 
 
@@ -113,14 +113,18 @@ class WeightedFusion:
     def _get_dynamic_weights(self, query: str) -> Tuple[float, float]:
         qtype = self._detect_query_type(query)
         has_reg = self._detect_regulation_entity(query)
+        has_domain = detect_domain_entity(query)
 
         # 法规实体查询 → BM25 最重（法条号/法规名精确匹配 BM25 更强）
         if has_reg:
             return (0.80, 0.20)
+        # 领域术语查询 → BM25 加重（采购方式/平台名/评标方法等关键字匹配更可靠）
+        if has_domain:
+            return (0.75, 0.25)
         if qtype == "keyword_heavy":
             return (0.75, 0.25)
         elif qtype == "semantic_heavy":
-            return (0.40, 0.60)
+            return (0.60, 0.40)
         return (0.65, 0.35)
 
     def _compute_boost(self, text: str, metadata: Dict = None,

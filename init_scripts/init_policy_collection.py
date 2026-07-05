@@ -26,7 +26,7 @@ RAW_DIR = Path(__file__).parent / "data" / "raw"
 PDF_DIR = Path(__file__).parent / "data" / "pdfs"
 
 # ★ 使用新集合名，不覆盖旧的 policy 集合
-COLLECTION_NAME = "policy_v4"
+COLLECTION_NAME = "policy_v10"
 
 # 10个PDF全部处理
 PDF_CONFIGS = [
@@ -156,15 +156,6 @@ def chunk_by_structure(full_text: str, pdf_name: str):
         all_texts.append(c["text"])
         all_metadatas.append(c["metadata"])
         all_ids.append(c["chunk_id"])
-
-    # 长法条的parent-only chunks
-    searchable_ids = {p["chunk_id"] for p in searchable_parents}
-    for p in parents:
-        if p["chunk_id"] not in searchable_ids:
-            all_rt.append(p["retrieval_text"])
-            all_texts.append(p["text"])
-            all_metadatas.append(p["metadata"])
-            all_ids.append(p["chunk_id"])
 
     return all_rt, all_texts, all_metadatas, all_ids
 

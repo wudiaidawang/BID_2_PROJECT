@@ -30,6 +30,16 @@
     "top1_id": "policy_125"
   },
   {
+    "question": "What is defined as an 'actual control enterprise' under this notification?",
+    "expected_id": "policy_53",
+    "law_name": "国务院国有资产监督管理委员会关于中央企业国有产权置换有关事项的通知",
+    "span": "single",
+    "type": "policy_doc",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国审计法实施条例_19_288_2982"
+  },
+  {
     "question": "What is the applicant's responsibility regarding the authenticity of submitted materials?",
     "expected_id": "policy_95",
     "law_name": "信息来源：技术交易    浏览次数：",
@@ -190,6 +200,16 @@
     "top1_id": "parent_中华人民共和国政府采购法实施条例_67_73_228"
   },
   {
+    "question": "招标文件售后不退的规定是什么？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0271",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_重大装备自主化依托工程设备招标采购活动的_15_2927_1256"
+  },
+  {
     "question": "投标报价总价与单价不一致时的修正规则是什么？",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0321",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -228,6 +248,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_39_1847_8799"
+  },
+  {
+    "question": "投标截止时停止接收投标文件，截止后收到的投标文件如何处理？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0430",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_重大装备自主化依托工程设备招标采购活动的_22_2934_558"
   },
   {
     "question": "招标人与中标人应当在什么时间范围内订立书面合同？",
@@ -347,17 +377,7 @@
     "type": "pdf_case_paragraph",
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0487"
-  },
-  {
-    "question": "工程建设项目强制招标的范围包括哪些？",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0005",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0105"
+    "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_51_1859_2599"
   },
   {
     "question": "招标投标法律体系中，《招标投标法》与《政府采购法》的适用关系是什么？",
@@ -368,6 +388,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0099"
+  },
+  {
+    "question": "工程建设项目强制招标的范围包括哪些？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0005",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0105"
   },
   {
     "question": "不同品牌投标人参加同一合同项下投标时，评标方法如何处理？",
@@ -557,7 +587,7 @@
     "type": "pdf_case_paragraph",
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0712"
+    "top1_id": "parent_集中采购机构是设区的市级以上人民政府依法_71_3115_9123_child1"
   },
   {
     "question": "资格审查的方式有哪些？",
@@ -608,6 +638,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0318"
+  },
+  {
+    "question": "为什么招标人应选择排名第一的中标候选人为中标人？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0596",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0597"
   },
   {
     "question": "当排名第一的中标候选人不符合条件时，招标人如何处理？",
@@ -1140,7 +1180,7 @@
     "top1_id": "parent_公路养护工程施工招标投标管理暂行规定_18_1581_5392"
   },
   {
-    "question": "铁路建设工程质量安全事故与招投标挂钩办法中，不同等级事故的责任单位处罚规定是什么？",
+    "question": "铁路建设工程质量安全事故与招投标挂钩办法中，一般事故的处罚规定是什么？",
     "expected_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_10_1995_4042_child0",
     "law_name": "铁路建设工程质量安全事故与招投标挂钩办法",
     "span": "single",
@@ -1150,7 +1190,7 @@
     "top1_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_10_1995_4042"
   },
   {
-    "question": "铁路建设工程质量安全事故与招投标挂钩办法中，一般事故的处罚规定是什么？",
+    "question": "铁路建设工程质量安全事故与招投标挂钩办法中，不同等级事故的责任单位处罚规定是什么？",
     "expected_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_10_1995_4042_child0",
     "law_name": "铁路建设工程质量安全事故与招投标挂钩办法",
     "span": "single",
@@ -1247,7 +1287,7 @@
     "type": "pdf_law_child",
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0470"
+    "top1_id": "parent_政府采购货物和服务招标投标管理办法_62_65_8068"
   },
   {
     "question": "国家食品药品监督管理总局采购与招标管理办法中，药品生产企业配送方式有哪些规定？",
@@ -1320,14 +1360,14 @@
     "top1_id": "parent_交通运输主管部门根据各自的职责按照本办法_58_1717_1604"
   },
   {
-    "question": "政府采购合同已经履行，给采购人、供应商造成损失的，责任由谁承担？",
-    "expected_id": "parent_中华人民共和国政府采购法实施条例_71_79_421_child1",
-    "law_name": "中华人民共和国政府采购法实施条例",
+    "question": "想了解《中华人民共和国电子签名法》的具体规定",
+    "expected_id": "opinion_1697",
+    "law_name": "中华人民共和国电子签名法",
     "span": "single",
-    "type": "pdf_law_child",
-    "question_type": "responsibility",
+    "type": "opinion_news",
+    "question_type": "definition",
     "retrieval_difficulty": "direct",
-    "top1_id": "parent_中华人民共和国政府采购法实施条例_71_79_421"
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0075"
   },
   {
     "question": "国采中心对供应商违规行为的监督职责及违规后的责任追究是怎样的？同时，办法的施行时间是什么？",
@@ -1470,16 +1510,6 @@
     "top1_id": "parent_中华人民共和国预算法_69_3204_1334_child1"
   },
   {
-    "question": "在水利工程招标投标管理规定下，招标人对投标人评标标准和方法有要求，该规定的评标方法有哪些可选方式？同时该规定的监理单位相关调整政策是什么？",
-    "expected_id": "parent_水利工程建设项目招标投标管理规定_16_2293_6975",
-    "law_name": "水利工程建设项目招标投标管理规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_水利工程建设项目监理招标投标管理办法_37_2331_6194"
-  },
-  {
     "question": "在水利工程招标投标管理规定中，招标人在一个项目中对所有投标人评标标准和方法有什么要求？同时该规定的监理单位相关调整政策是什么？",
     "expected_id": "parent_水利工程建设项目招标投标管理规定_16_2293_6975",
     "law_name": "水利工程建设项目招标投标管理规定",
@@ -1488,6 +1518,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_水利工程建设项目招标投标管理规定_33_2266_2904"
+  },
+  {
+    "question": "在水利工程招标投标管理规定下，招标人对投标人评标标准和方法有要求，该规定的评标方法有哪些可选方式？同时该规定的监理单位相关调整政策是什么？",
+    "expected_id": "parent_水利工程建设项目招标投标管理规定_16_2293_6975",
+    "law_name": "水利工程建设项目招标投标管理规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_水利工程建设项目监理招标投标管理办法_44_2338_1977"
   },
   {
     "question": "机电产品国际招标投标活动中，主管部门及其工作人员在监督检查时应遵守什么保密规定，同时招标文件允许联合体投标的规定是什么？",
@@ -1680,16 +1720,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0292"
   },
   {
-    "question": "招标人确定投标人编制投标文件的时间和资格审查的规定分别是什么？",
-    "expected_id": "parent_工程建设项目货物招标投标办法_30_671_1840",
-    "law_name": "工程建设项目货物招标投标办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_经营性公路建设项目投资人招标投标管理规定_16_1735_536"
-  },
-  {
     "question": "招标文件发售时间及投标人编制投标文件时间的规定是什么？",
     "expected_id": "parent_工程建设项目货物招标投标办法_30_671_1840",
     "law_name": "工程建设项目货物招标投标办法",
@@ -1698,6 +1728,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_进一步规范机电产品国际招标投标活动有关规_26_1320_6854"
+  },
+  {
+    "question": "招标人确定投标人编制投标文件的时间和资格审查的规定分别是什么？",
+    "expected_id": "parent_工程建设项目货物招标投标办法_30_671_1840",
+    "law_name": "工程建设项目货物招标投标办法",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_经营性公路建设项目投资人招标投标管理规定_16_1735_536"
   },
   {
     "question": "招标人对投标人资格审查的规定及该办法制定的依据是什么？",
@@ -1718,16 +1758,6 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_经营性公路建设项目投资人招标投标管理规定_16_1735_536"
-  },
-  {
-    "question": "投标人是指什么？以及招标人发售招标文件的规定有哪些？",
-    "expected_id": "parent_工程建设项目货物招标投标办法_32_673_6301",
-    "law_name": "工程建设项目货物招标投标办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0267"
   },
   {
     "question": "在《中华人民共和国行政处罚法》中，作出行政处罚决定与返还罚没款项等行为的责任追究方式分别是什么？",
@@ -1980,22 +2010,22 @@
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_21_1095_9894"
   },
   {
-    "question": "投标人报名数量未达时，评标环节与资格审查的业务场景关联规定是什么？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_28_1102_9522"
-  },
-  {
     "question": "在实际投标人报名数量未达到招标公告规定的情况下，关于评标方法的应用和工程担保制度的实施有哪些具体规定？",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
     "span": "cross_chunk",
     "type": "pdf_law_child",
     "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_28_1102_9522"
+  },
+  {
+    "question": "投标人报名数量未达时，评标环节与资格审查的业务场景关联规定是什么？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_28_1102_9522"
   },
@@ -2010,16 +2040,6 @@
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_28_1102_9522"
   },
   {
-    "question": "在推行经评审的最低投标价法时，除完善评标标准和程序外，还需推行什么制度来建立风险防范机制？以及该制度由谁实施？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child6",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "procedure",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0478"
-  },
-  {
     "question": "在招标投标活动中，若要同时推行工程量清单计价方式和多种评标方法，应如何操作？",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child9",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -2028,6 +2048,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0487"
+  },
+  {
+    "question": "在推行经评审的最低投标价法时，除完善评标标准和程序外，还需推行什么制度来建立风险防范机制？以及该制度由谁实施？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child6",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "procedure",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0478"
   },
   {
     "question": "招标人自行办理招标事宜需满足哪些条件？？以及资格预审文件一旦发出能否擅自更改？",
@@ -2067,7 +2097,7 @@
     "type": "pdf_law_parent",
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0349"
+    "top1_id": "parent_中华人民共和国政府采购法_2_2958_1524"
   },
   {
     "question": "政府采购中对供应商的限制条款依据是什么？",
@@ -2120,16 +2150,6 @@
     "top1_id": "parent_农业基本建设项目招标投标管理规定_8_2827_8858"
   },
   {
-    "question": "参考《中央国家机关政府采购中心电子竞价采购管理办法》和建筑工程施工合同纠纷案例，当供应商以实际施工人具备相应资质为由主张权利时，其诉求能否得到支持？",
-    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_37_3621_737",
-    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
-    "span": "cross_doc",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_建工集团公司建设工程施工合同纠纷案_10_5599"
-  },
-  {
     "question": "结合《中央国家机关政府采购中心电子竞价采购管理办法》和司法案例，当供应商因串通投标被处罚时，其行为涉嫌触犯哪些法律条款？",
     "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_37_3621_737",
     "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
@@ -2140,6 +2160,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0728"
   },
   {
+    "question": "参考《中央国家机关政府采购中心电子竞价采购管理办法》和建筑工程施工合同纠纷案例，当供应商以实际施工人具备相应资质为由主张权利时，其诉求能否得到支持？",
+    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_37_3621_737",
+    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
+    "span": "cross_doc",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_建工集团公司建设工程施工合同纠纷案_10_5599"
+  },
+  {
     "question": "综合《政府采购货物和服务招标投标管理办法》与《中华人民共和国政府采购法实施条例》，投标人串通投标的法律责任有哪些？",
     "expected_id": "parent_政府采购货物和服务招标投标管理办法_37_38_153",
     "law_name": "政府采购货物和服务招标投标管理办法",
@@ -2147,7 +2177,7 @@
     "type": "pdf_law_parent",
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0397"
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_67_145_9251"
   },
   {
     "question": "投标人存在不同投标人的投标文件异常一致或者投标报价呈规律性差异的情形，结合相关案例和法规，应该如何认定和处理？",
@@ -2230,16 +2260,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0473"
   },
   {
-    "question": "评标委员会组建原则与建设工程施工合同纠纷案，如何共同体现评标活动的法律效力？",
-    "expected_id": "policy_20",
-    "law_name": "评标委员会和评标方法暂行规定",
-    "span": "cross_doc",
-    "type": "policy_doc",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0450"
-  },
-  {
     "question": "非国家工作人员行贿与串通投标政策，结合案例如何共同界定招投标违法行为的刑事责任？",
     "expected_id": "policy_20",
     "law_name": "评标委员会和评标方法暂行规定",
@@ -2280,6 +2300,16 @@
     "top1_id": "parent_道路旅客运输班线经营权招标投标办法_28_1788_5229"
   },
   {
+    "question": "建筑施工合同纠纷中是否存在非国家工作人员行贿行为？合同履行过程中存在哪些问题？",
+    "expected_id": "pdf_建设工程施工合同纠纷案_8_3049",
+    "law_name": "建设工程施工合同纠纷案",
+    "span": "cross_doc",
+    "type": "pdf_case_sliding",
+    "question_type": "case_reasoning",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_非国家工作人员行贿案_3_9694"
+  },
+  {
     "question": "建筑施工合同纠纷中是否存在串通投标、受贿行为？合同履行及法律适用情况如何？",
     "expected_id": "pdf_建设工程施工合同纠纷案_8_3049",
     "law_name": "建设工程施工合同纠纷案",
@@ -2298,6 +2328,16 @@
     "question_type": "case_reasoning",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_非国家工作人员行贿案_7_2360"
+  },
+  {
+    "question": "在涉及建设工程施工合同纠纷案件以及运输服务公司串通投标引发的不正当竞争纠纷案件中，关于合同效力的认定标准有何异同？",
+    "expected_id": "pdf_建工集团公司建设工程施工合同纠纷案_3_5263",
+    "law_name": "建工集团公司建设工程施工合同纠纷案",
+    "span": "cross_doc",
+    "type": "pdf_case_sliding",
+    "question_type": "comparison",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_6_3308"
   },
   {
     "question": "在涉及建设工程施工合同纠纷案件以及北京市政府采购项目档案管理政策文件中，关于档案保存的要求有何关联？",
@@ -2397,7 +2437,7 @@
     "type": "policy_doc",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "parent_药品集中采购监督管理办法_84_2674_3732"
+    "top1_id": "parent_进一步规范机电产品国际招标投标活动有关规_28_1293_4025"
   },
   {
     "question": "上海市公共资源交易平台都有哪些分平台？",
@@ -2420,19 +2460,19 @@
     "top1_id": "parent_政府采购评审专家管理办法_9_3537_3999"
   },
   {
-    "question": "文件中提到的公共资源交易平台系统包括哪些平台？",
-    "expected_id": "policy_101",
-    "law_name": "【建设工程】施工电子招标投标应用指南",
+    "question": "文件中提到的公共资源交易平台系统由哪些平台组成？",
+    "expected_id": "policy_96",
+    "law_name": "【建设工程】设计电子招标投标应用指南",
     "span": "single",
     "type": "policy_doc",
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
-    "top1_id": "parent_公共资源交易平台公共资源交易平台管理暂行_8_4077_2414"
+    "top1_id": "parent_公共资源交易平台公共资源交易平台管理暂行_45_4116_8681"
   },
   {
-    "question": "文件中提到的公共资源交易平台系统由哪些平台组成？",
-    "expected_id": "policy_96",
-    "law_name": "【建设工程】设计电子招标投标应用指南",
+    "question": "文件中提到的公共资源交易平台系统包括哪些平台？",
+    "expected_id": "policy_101",
+    "law_name": "【建设工程】施工电子招标投标应用指南",
     "span": "single",
     "type": "policy_doc",
     "question_type": "definition",
@@ -2590,6 +2630,16 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_15_16_366"
   },
   {
+    "question": "资格预审公告和招标公告需要包含哪些内容？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0182",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0200"
+  },
+  {
     "question": "招标文件卖出去后能退吗？",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0271",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -2598,6 +2648,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_工程建设项目施工招标投标办法_15_16_366"
+  },
+  {
+    "question": "用邀请招标方式采购时，哪些供应商能买招标文件？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0271",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国政府采购法_34_2991_2173"
   },
   {
     "question": "评标时发现投标文件有疑问或错误，该怎么处理？",
@@ -2637,7 +2697,7 @@
     "type": "pdf_case_paragraph",
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_串通投标、受贿案_5_130"
+    "top1_id": "parent_监督处理中华人民共和国行政处罚法_29_845_3529"
   },
   {
     "question": "没提交技术支持文件属于哪种招标投标违规行为？",
@@ -2780,16 +2840,6 @@
     "top1_id": "parent_评标委员会和评标方法暂行规定_19_410_3005"
   },
   {
-    "question": "评标委员会成员评审时要遵守哪些规定？",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0466",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "definition",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_评标委员会和评标方法暂行规定_13_404_3898"
-  },
-  {
     "question": "评标委员会成员该怎么履行职责？",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0466",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -2797,6 +2847,16 @@
     "type": "pdf_case_paragraph",
     "question_type": "responsibility",
     "retrieval_difficulty": "synonym",
+    "top1_id": "parent_评标委员会和评标方法暂行规定_13_404_3898"
+  },
+  {
+    "question": "评标委员会成员评审时要遵守哪些规定？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0466",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "definition",
+    "retrieval_difficulty": "direct",
     "top1_id": "parent_评标委员会和评标方法暂行规定_13_404_3898"
   },
   {
@@ -3070,6 +3130,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0391"
   },
   {
+    "question": "招标过程中评标都有哪些方法？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0477",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "procedure",
+    "retrieval_difficulty": "direct",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0483"
+  },
+  {
     "question": "资格后审是在什么时候进行的资格审查？",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0211",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -3237,7 +3307,7 @@
     "type": "pdf_case_paragraph",
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0507"
+    "top1_id": "parent_工程建设项目施工招标投标办法_51_53_6271"
   },
   {
     "question": "刑法第223条第一款讲了什么内容？",
@@ -3320,6 +3390,16 @@
     "top1_id": "parent_招标拍卖挂牌出让国有建设用地使用权规定_20_1030_6412"
   },
   {
+    "question": "投标人串通投标报价，损害利益且情节严重，会有什么法律后果？",
+    "expected_id": "pdf_非国家工作人员行贿案_4_7494",
+    "law_name": "非国家工作人员行贿案",
+    "span": "single",
+    "type": "pdf_case_sliding",
+    "question_type": "definition",
+    "retrieval_difficulty": "direct",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0729"
+  },
+  {
     "question": "庄某某施工队完成的地上四层以上部分的工程款怎么结算？",
     "expected_id": "pdf_建设工程施工合同纠纷案_20_409",
     "law_name": "建设工程施工合同纠纷案",
@@ -3330,16 +3410,6 @@
     "top1_id": "pdf_建设工程施工合同纠纷案_27_5322"
   },
   {
-    "question": "这个案子里的商业秘密有什么实际用处？",
-    "expected_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_1_6525",
-    "law_name": "运输服务公司串通投标不正当竞争纠纷案",
-    "span": "single",
-    "type": "pdf_case_sliding",
-    "question_type": "definition",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_5_900"
-  },
-  {
     "question": "这个案子判决中关于商业秘密侵权要怎么承担责任？",
     "expected_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_1_6525",
     "law_name": "运输服务公司串通投标不正当竞争纠纷案",
@@ -3348,6 +3418,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_3_1767"
+  },
+  {
+    "question": "这个案子里的商业秘密有什么实际用处？",
+    "expected_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_1_6525",
+    "law_name": "运输服务公司串通投标不正当竞争纠纷案",
+    "span": "single",
+    "type": "pdf_case_sliding",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_5_900"
   },
   {
     "question": "没有资质的实际施工人借别人的资质中标后，工程款结算依据是什么？",
@@ -3400,16 +3480,6 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_55_57_9752"
   },
   {
-    "question": "采购人确定采购需求需要依据什么？",
-    "expected_id": "parent_政府采购货物和服务招标投标管理办法_10_3368_5831",
-    "law_name": "政府采购货物和服务招标投标管理办法",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_政务信息系统政府采购管理暂行办法_4_3345_4934"
-  },
-  {
     "question": "政府采购中，采购人采购标的前需要做哪些准备？",
     "expected_id": "parent_政府采购货物和服务招标投标管理办法_10_3368_5831",
     "law_name": "政府采购货物和服务招标投标管理办法",
@@ -3418,6 +3488,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "direct",
     "top1_id": "parent_《中华人民共和国政府采购法实施条例》等有_10_4000_9542"
+  },
+  {
+    "question": "采购人确定采购需求需要依据什么？",
+    "expected_id": "parent_政府采购货物和服务招标投标管理办法_10_3368_5831",
+    "law_name": "政府采购货物和服务招标投标管理办法",
+    "span": "single",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_政务信息系统政府采购管理暂行办法_4_3345_4934"
   },
   {
     "question": "招标代理机构在招标业务中不能做什么？",
@@ -3490,16 +3570,6 @@
     "top1_id": "parent_系统工程综合评标专家库管理办法_18_1903_9963"
   },
   {
-    "question": "工程建设项目施工招标投标办法里哪些情况下可以邀请招标？",
-    "expected_id": "parent_工程建设项目施工招标投标办法_11_11_9938",
-    "law_name": "工程建设项目施工招标投标办法",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_民政部工程建设项目招标投标管理办法_6_2905_7084"
-  },
-  {
     "question": "中央国家机关政府采购中心负责监督什么？",
     "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_38_3622_3285",
     "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
@@ -3520,6 +3590,16 @@
     "top1_id": "parent_评标委员会应组织全体评标委员学习有关规定_58_1959_608"
   },
   {
+    "question": "《电子招标投标办法》是什么时候开始实施的？",
+    "expected_id": "parent_电子招标投标办法_66_768_4062",
+    "law_name": "电子招标投标办法",
+    "span": "single",
+    "type": "pdf_law_parent",
+    "question_type": "definition",
+    "retrieval_difficulty": "direct",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0075"
+  },
+  {
     "question": "《政府采购法》里，对采购人指定供应商有什么限制？",
     "expected_id": "parent_中华人民共和国政府采购法_64_3022_2370",
     "law_name": "中华人民共和国政府采购法",
@@ -3538,16 +3618,6 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_28_1102_9522_child0"
-  },
-  {
-    "question": "这个法规里，供应商违规了会有哪些责任追究情况？",
-    "expected_id": "parent_集中采购机构是设区的市级以上人民政府依法_77_3117_5199",
-    "law_name": "集中采购机构是设区的市级以上人民政府依法",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "definition",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_中华人民共和国政府采购法_77_3035_5741"
   },
   {
     "question": "评标专家在哪些情况下会被禁止参加评标？",
@@ -3680,16 +3750,6 @@
     "top1_id": "parent_公路养护工程施工招标投标管理暂行规定_18_1581_5392"
   },
   {
-    "question": "铁路建设工程质量安全事故与招投标挂钩办法里，不同等级事故的责任单位怎么处罚？",
-    "expected_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_10_1995_4042_child0",
-    "law_name": "铁路建设工程质量安全事故与招投标挂钩办法",
-    "span": "single",
-    "type": "pdf_law_child",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_6_1991_2508"
-  },
-  {
     "question": "铁路建设工程质量安全事故与招投标挂钩办法中，一般事故的处罚规定是什么？",
     "expected_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_10_1995_4042_child0",
     "law_name": "铁路建设工程质量安全事故与招投标挂钩办法",
@@ -3698,6 +3758,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_10_1995_4042"
+  },
+  {
+    "question": "铁路建设工程质量安全事故与招投标挂钩办法里，不同等级事故的责任单位怎么处罚？",
+    "expected_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_10_1995_4042_child0",
+    "law_name": "铁路建设工程质量安全事故与招投标挂钩办法",
+    "span": "single",
+    "type": "pdf_law_child",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_铁路建设工程质量安全事故与招投标挂钩办法_6_1991_2508"
   },
   {
     "question": "政府采购需求和履约验收管理的指导思想是什么？",
@@ -3760,16 +3830,6 @@
     "top1_id": "parent_机电产品国际招标评标专家及专家库管理办法_67_1348_5817_child0"
   },
   {
-    "question": "招标人自己办理施工招标需要满足什么条件？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child1",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "single",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_房屋建筑和市政基础设施工程施工招标投标管_10_1131_5682"
-  },
-  {
     "question": "监理招标的投标人须知主要包含哪些内容？",
     "expected_id": "parent_农业基本建设项目招标投标管理规定_20_2841_2384_child4",
     "law_name": "农业基本建设项目招标投标管理规定",
@@ -3778,6 +3838,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_水利工程建设项目监理招标投标管理办法_19_2313_6933"
+  },
+  {
+    "question": "招标人自己办理施工招标需要满足什么条件？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child1",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "single",
+    "type": "pdf_law_child",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_房屋建筑和市政基础设施工程施工招标投标管_10_1131_5682"
   },
   {
     "question": "政府采购货物和服务招标投标管理办法中，评分计算公式是什么？",
@@ -3910,14 +3980,14 @@
     "top1_id": "parent_政府采购货物和服务招标投标管理办法_64_47_4268"
   },
   {
-    "question": "国采中心对违规的供应商有什么处理措施？这个办法是根据什么制定的？",
-    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_38_3622_3285",
-    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
+    "question": "《中华人民共和国电子签名法》的具体规定有哪些？",
+    "expected_id": "opinion_1697",
+    "law_name": "中华人民共和国电子签名法",
+    "span": "single",
+    "type": "opinion_news",
     "question_type": "definition",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_中央国家机关政府采购中心货物和服务定点采_24_3685_2289"
+    "retrieval_difficulty": "direct",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0075"
   },
   {
     "question": "成交供应商违约有哪些情况？还有这个办法什么时候开始实施的，旧的是不是废除了？",
@@ -3928,6 +3998,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中央国家机关政府采购中心货物和服务定点采_47_3823_8531"
+  },
+  {
+    "question": "国采中心对违规的供应商有什么处理措施？这个办法是根据什么制定的？",
+    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_38_3622_3285",
+    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中央国家机关政府采购中心货物和服务定点采_24_3685_2289"
   },
   {
     "question": "成交供应商违约有哪些情况？这个办法是什么时候发布的，文件编号是多少？",
@@ -3970,16 +4050,6 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_69_71_3771"
   },
   {
-    "question": "招标人设置了标底，招标代理机构又泄露了信息，这样的情况下中标结果会怎么样？",
-    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_55_536_8166",
-    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_中华人民共和国招标投标法_52_55_402"
-  },
-  {
     "question": "招标人有标底的情况下，中标人没按时退还投标保证金和利息，招标人该负什么责任？",
     "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_55_536_8166",
     "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
@@ -3988,6 +4058,16 @@
     "question_type": "responsibility",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0650"
+  },
+  {
+    "question": "招标人设置了标底，招标代理机构又泄露了信息，这样的情况下中标结果会怎么样？",
+    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_55_536_8166",
+    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国招标投标法_52_55_402"
   },
   {
     "question": "招标过程中既有不招标行为又有中标无效的情况，招标人应该采取哪些补救措施？",
@@ -4000,16 +4080,6 @@
     "top1_id": "parent_中华人民共和国招标投标法实施条例_81_162_5036"
   },
   {
-    "question": "如果一个必须招标的项目被拆开来逃避招标，而且中标人和招标代理机构有串通行为，这个中标结果还有效吗？",
-    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_69_550_2504",
-    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_中华人民共和国招标投标法_50_53_8938"
-  },
-  {
     "question": "如果一个必须招标的项目被拆开来逃避招标，监管部门该怎么处理？还有，招标通知书发出后，招标人改了中标结果要负什么责任？",
     "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_68_549_8321",
     "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
@@ -4017,7 +4087,7 @@
     "type": "pdf_law_parent",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0639"
+    "top1_id": "parent_中华人民共和国招标投标法_45_48_147"
   },
   {
     "question": "谈判小组拟定谈判文件时，供应商需要遵守哪些关于提供货物或服务的承诺？",
@@ -4220,16 +4290,6 @@
     "top1_id": "parent_公共资源交易平台公共资源交易平台管理暂行_41_4112_8437"
   },
   {
-    "question": "在《政府采购货物和服务招标投标管理办法》中，哪些情况算作投标人串通投标导致投标无效？另外，这个办法里采购人对采购标的的市场情况调查的内容是什么？",
-    "expected_id": "parent_政府采购货物和服务招标投标管理办法_10_3368_5831",
-    "law_name": "政府采购货物和服务招标投标管理办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "case_reasoning",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0393"
-  },
-  {
     "question": "政府采购招标中，如果投标人串通投标，投标会被判无效，那投标有效期的规定和地方实施办法制定之间有什么联系？",
     "expected_id": "parent_政府采购货物和服务招标投标管理办法_87_3455_761",
     "law_name": "政府采购货物和服务招标投标管理办法",
@@ -4250,16 +4310,6 @@
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_31_1105_9301_child0"
   },
   {
-    "question": "政府采购招标中，如果投标人串通投标，评标时评标基准价怎么算？依据是什么？",
-    "expected_id": "parent_政府采购货物和服务招标投标管理办法_37_38_153",
-    "law_name": "政府采购货物和服务招标投标管理办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_政府采购货物和服务招标投标管理办法_55_57_1958"
-  },
-  {
     "question": "政府采购招标时，如果投标人找同一个单位帮忙投标，会被废标，那资格预审公告的规定和投标有效期规定之间有什么联系？",
     "expected_id": "parent_政府采购货物和服务招标投标管理办法_87_3455_761",
     "law_name": "政府采购货物和服务招标投标管理办法",
@@ -4268,6 +4318,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0204"
+  },
+  {
+    "question": "政府采购招标中，如果投标人串通投标，评标时评标基准价怎么算？依据是什么？",
+    "expected_id": "parent_政府采购货物和服务招标投标管理办法_37_38_153",
+    "law_name": "政府采购货物和服务招标投标管理办法",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_政府采购货物和服务招标投标管理办法_55_57_1958"
   },
   {
     "question": "投标人如果撤回了投标文件，采购方会不会退保证金？法律依据是什么？",
@@ -4380,16 +4440,6 @@
     "top1_id": "parent_建筑工程方案设计招标投标管理办法_16_1093_1480"
   },
   {
-    "question": "大型公共建筑招标时，如果报名的投标人不够，招标人需要提交书面报告，同时招标人自己办理招标事宜需要什么条件？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "definition",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_房屋建筑和市政基础设施工程施工招标投标管_10_1131_5682"
-  },
-  {
     "question": "大型公共建筑招标过程中，如果报名的投标人不够，应该怎么开展评标和中标管理相关工作？",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -4410,16 +4460,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0517"
   },
   {
-    "question": "大型公共建筑招标时，如果报名的投标人不够，招标方该怎么用工程量清单计价和设定最高限价？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0517"
-  },
-  {
     "question": "大型公共建筑招标时，如果报名的投标人不够，招标方审查潜在投标人要注意什么？",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -4428,6 +4468,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_建筑工程方案设计招标投标管理办法_16_1093_1480"
+  },
+  {
+    "question": "大型公共建筑招标时，如果报名的投标人不够，招标方该怎么用工程量清单计价和设定最高限价？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0517"
   },
   {
     "question": "大型公共建筑招标时，如果报名的投标人不够，评标时怎么分配资源，防止恶意低价抢标？",
@@ -4460,6 +4510,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0044"
   },
   {
+    "question": "招标设定最高限价的条件和时间要求是什么？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child23",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_政府采购货物和服务招标投标管理办法_12_12_6131"
+  },
+  {
     "question": "中标候选人怎么公示，公示时间有什么要求？",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child23",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -4478,16 +4538,6 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0518"
-  },
-  {
-    "question": "招标设定最高限价的条件和时间要求是什么？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child23",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_政府采购货物和服务招标投标管理办法_12_12_6131"
   },
   {
     "question": "资格审查的原则是什么？怎么通知拟邀请的申请人？",
@@ -4510,16 +4560,6 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_10_510_7544"
   },
   {
-    "question": "招标人怎么设定最高限价？有什么作用？评标方法有什么科学性要求？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child2",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0517"
-  },
-  {
     "question": "招标人自己办理招标的条件和监督程序是什么？中标候选人公示有什么要求？",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child2",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -4530,14 +4570,14 @@
     "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_16_1823_4267"
   },
   {
-    "question": "中标候选人公示制度有什么要求？招标人评标时怎么确定中标候选人？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child14",
+    "question": "招标人怎么设定最高限价？有什么作用？评标方法有什么科学性要求？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child2",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
     "span": "cross_chunk",
     "type": "pdf_law_child",
-    "question_type": "procedure",
+    "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "parent_铁路工程建设项目招标投标管理办法_37_2113_1535"
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0517"
   },
   {
     "question": "招标人评标时要考虑哪些因素？对投标人资格审查有什么要求？",
@@ -4548,6 +4588,16 @@
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0192"
+  },
+  {
+    "question": "中标候选人公示制度有什么要求？招标人评标时怎么确定中标候选人？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child14",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "procedure",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_铁路工程建设项目招标投标管理办法_37_2113_1535"
   },
   {
     "question": "招标过程中怎么防止串通投标和哄抬标价？招标人评标时怎么用科学方法？",
@@ -4610,6 +4660,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0384"
   },
   {
+    "question": "实际报名人数不够的情况下，评标方法怎么用？工程担保制度怎么实施？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_28_1102_9522"
+  },
+  {
     "question": "当投标人报名人数不够时，评标环节和资格审查在业务场景上有什么关联规定？",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -4630,14 +4690,14 @@
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_35_1109_6380"
   },
   {
-    "question": "实际报名人数不够的情况下，评标方法怎么用？工程担保制度怎么实施？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
+    "question": "用经评审的最低投标价法时，除了完善评标标准和程序，还需要推行什么制度来防范风险？谁来实施？",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child6",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
     "span": "cross_chunk",
     "type": "pdf_law_child",
-    "question_type": "condition_check",
+    "question_type": "procedure",
     "retrieval_difficulty": "synonym",
-    "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_28_1102_9522"
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0478"
   },
   {
     "question": "招标投标活动中，怎么同时推行工程量清单计价和多种评标方法？",
@@ -4648,16 +4708,6 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0483"
-  },
-  {
-    "question": "用经评审的最低投标价法时，除了完善评标标准和程序，还需要推行什么制度来防范风险？谁来实施？",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child6",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "procedure",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0478"
   },
   {
     "question": "招标人自己组织招标需要满足什么条件？资格预审文件发出后还能不能随便改？",
@@ -4707,7 +4757,7 @@
     "type": "pdf_law_parent",
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0349"
+    "top1_id": "parent_中华人民共和国政府采购法_2_2958_1524"
   },
   {
     "question": "政府采购法实施条例里对财政性资金是怎么定义的？政府采购项目适用范围又是怎么规定的？",
@@ -4770,16 +4820,6 @@
     "top1_id": "parent_农业基本建设项目招标投标管理规定_14_2834_9468"
   },
   {
-    "question": "结合《中央国家机关政府采购中心电子竞价采购管理办法》和司法案例，供应商因串通投标被处罚时，可能触犯哪些法律条款？",
-    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_37_3621_737",
-    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
-    "span": "cross_doc",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0728"
-  },
-  {
     "question": "参考《中央国家机关政府采购中心电子竞价采购管理办法》和建筑工程施工合同纠纷案例，供应商以实际施工人有相应资质为由主张权利，这种诉求能被支持吗？",
     "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_37_3621_737",
     "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
@@ -4790,6 +4830,16 @@
     "top1_id": "pdf_建工集团公司建设工程施工合同纠纷案_9_6686"
   },
   {
+    "question": "结合《中央国家机关政府采购中心电子竞价采购管理办法》和司法案例，供应商因串通投标被处罚时，可能触犯哪些法律条款？",
+    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_37_3621_737",
+    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
+    "span": "cross_doc",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0728"
+  },
+  {
     "question": "综合《政府采购货物和服务招标投标管理办法》与《中华人民共和国政府采购法实施条例》，投标人串通投标需要承担哪些法律责任？",
     "expected_id": "parent_政府采购货物和服务招标投标管理办法_37_38_153",
     "law_name": "政府采购货物和服务招标投标管理办法",
@@ -4797,7 +4847,7 @@
     "type": "pdf_law_parent",
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0397"
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_67_145_9251"
   },
   {
     "question": "不同投标人的投标文件异常一致或者报价有规律性差异，这种情况结合相关案例和法规，该怎么认定和处理？",
@@ -4820,16 +4870,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0461"
   },
   {
-    "question": "政府采购评审专家收了供应商的贿赂，结合招标投标法律解读与风险防范实务，该怎么处理？",
-    "expected_id": "parent_中华人民共和国政府采购法实施条例_75_87_2635",
-    "law_name": "中华人民共和国政府采购法实施条例",
-    "span": "cross_doc",
-    "type": "pdf_law_parent",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0469"
-  },
-  {
     "question": "投标人串通投标损害招标人利益时，法律规定了什么刑罚和条件？结合运输服务公司串通投标不正当竞争纠纷案，分析法律判例特点。",
     "expected_id": "parent_中华人民共和国政府采购法实施条例_75_87_2635",
     "law_name": "中华人民共和国政府采购法实施条例",
@@ -4847,7 +4887,17 @@
     "type": "pdf_law_parent",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0302"
+    "top1_id": "parent_工程建设项目施工招标投标办法_10_12_387"
+  },
+  {
+    "question": "按照工程建设项目施工招标投标办法，在允许邀请招标的情况下，中标后签订和履行合同有哪些责任规定？",
+    "expected_id": "parent_工程建设项目施工招标投标办法_11_11_9938",
+    "law_name": "工程建设项目施工招标投标办法",
+    "span": "cross_doc",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_工程建设项目施工招标投标办法_84_88_243"
   },
   {
     "question": "在工程建设项目施工招标投标办法允许邀请招标的情况下，串通投标这类违法行为怎么认定和处罚？",
@@ -4860,14 +4910,14 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_74_78_2130"
   },
   {
-    "question": "按照工程建设项目施工招标投标办法，在允许邀请招标的情况下，中标后签订和履行合同有哪些责任规定？",
+    "question": "在工程建设项目施工招标投标办法允许邀请招标的情况下，非国家工作人员行贿这类违法行为怎么认定？",
     "expected_id": "parent_工程建设项目施工招标投标办法_11_11_9938",
     "law_name": "工程建设项目施工招标投标办法",
     "span": "cross_doc",
     "type": "pdf_law_parent",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "parent_工程建设项目施工招标投标办法_85_89_8446"
+    "top1_id": "pdf_非国家工作人员行贿案_4_7494"
   },
   {
     "question": "按照工程建设项目施工招标投标办法，在允许邀请招标的情况下，评标委员会怎么组建？评标原则具体包括哪些内容？",
@@ -4887,17 +4937,7 @@
     "type": "pdf_law_parent",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0055"
-  },
-  {
-    "question": "在工程建设项目施工招标投标办法允许邀请招标的情况下，非国家工作人员行贿这类违法行为怎么认定？",
-    "expected_id": "parent_工程建设项目施工招标投标办法_11_11_9938",
-    "law_name": "工程建设项目施工招标投标办法",
-    "span": "cross_doc",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_非国家工作人员行贿案_3_9694"
+    "top1_id": "parent_工程建设项目施工招标投标办法_11_509_9747"
   },
   {
     "question": "评标委员会组建原则和建设工程施工合同纠纷案例，如何共同体现评标活动的法律效力？",
@@ -4910,6 +4950,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0473"
   },
   {
+    "question": "串通投标、受贿政策和案例，如何共同完善招投标市场的监管体系？",
+    "expected_id": "policy_20",
+    "law_name": "评标委员会和评标方法暂行规定",
+    "span": "cross_doc",
+    "type": "policy_doc",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_串通投标、受贿案_5_130"
+  },
+  {
     "question": "非国家工作人员行贿和串通投标政策，结合案例怎么共同界定招投标违法行为的刑事责任？",
     "expected_id": "policy_20",
     "law_name": "评标委员会和评标方法暂行规定",
@@ -4918,6 +4968,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_非国家工作人员行贿案_3_9694"
+  },
+  {
+    "question": "投标担保有什么作用？结合招投标法规和建设工程施工合同纠纷案例说说它的实际意义？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0359",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "cross_doc",
+    "type": "pdf_case_paragraph",
+    "question_type": "case_reasoning",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0370"
   },
   {
     "question": "评标委员会组建不规范加上投标人串通投标，评标结果还有效吗？结合法规和串通投标受贿案例说明？",
@@ -4948,6 +5008,16 @@
     "question_type": "case_reasoning",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_非国家工作人员行贿案_7_2360"
+  },
+  {
+    "question": "建设工程施工合同纠纷案和运输公司串标不正当竞争案，在认定合同效力时有什么相同点和不同点？",
+    "expected_id": "pdf_建工集团公司建设工程施工合同纠纷案_3_5263",
+    "law_name": "建工集团公司建设工程施工合同纠纷案",
+    "span": "cross_doc",
+    "type": "pdf_case_sliding",
+    "question_type": "comparison",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_12_3612"
   },
   {
     "question": "建设工程施工合同纠纷案和北京市政府采购档案管理政策，对档案保存有什么共同要求？",
@@ -5070,16 +5140,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0572"
   },
   {
-    "question": "招标文件里设置投标人资格条件需要遵循什么原则？",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0450",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "definition",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0253"
-  },
-  {
     "question": "电子招标投标交易平台和行政监督平台怎么对接？",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0678",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -5088,6 +5148,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_电子招标投标办法_48_745_3861"
+  },
+  {
+    "question": "招标文件里设置投标人资格条件需要遵循什么原则？",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0450",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0253"
   },
   {
     "question": "电子招标投标公共服务平台怎么实现专家资源共享？",
@@ -5140,16 +5210,6 @@
     "top1_id": "pdf_建设工程施工合同纠纷案_19_3817"
   },
   {
-    "question": "最高法院在（2018）最高法民再389号再审判决中怎么认定克拉玛依市某油田技术服务有限公司、谭某的法律责任？",
-    "expected_id": "pdf_建工集团公司建设工程施工合同纠纷案_4_6196",
-    "law_name": "建工集团公司建设工程施工合同纠纷案",
-    "span": "single",
-    "type": "pdf_case_sliding",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_3_1767"
-  },
-  {
     "question": "串通竞买行为为什么不能算作串通投标罪？",
     "expected_id": "pdf_建设工程施工合同纠纷案_30_8844",
     "law_name": "建设工程施工合同纠纷案",
@@ -5168,6 +5228,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_建设工程施工合同纠纷案_20_409"
+  },
+  {
+    "question": "最高法院在（2018）最高法民再389号再审判决中怎么认定克拉玛依市某油田技术服务有限公司、谭某的法律责任？",
+    "expected_id": "pdf_建工集团公司建设工程施工合同纠纷案_4_6196",
+    "law_name": "建工集团公司建设工程施工合同纠纷案",
+    "span": "single",
+    "type": "pdf_case_sliding",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_3_1767"
   },
   {
     "question": "克拉玛依那家运输公司说的经济损失该怎么算？",
@@ -5190,16 +5260,6 @@
     "top1_id": "parent_政府采购货物和服务招标投标管理办法_82_90_4127"
   },
   {
-    "question": "评标专家和评标专家库管理暂行办法中的第四十六条跟哪个暂行规定有关联？",
-    "expected_id": "parent_集中采购机构是设区的市级以上人民政府依法_50_3091_2592",
-    "law_name": "集中采购机构是设区的市级以上人民政府依法",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_评标专家和评标专家库管理暂行办法_46_474_2589"
-  },
-  {
     "question": "道路客运班线经营权招标中，联合体投标需要满足什么条件？",
     "expected_id": "parent_评标委员会应组织全体评标委员学习有关规定_79_1980_6306",
     "law_name": "评标委员会应组织全体评标委员学习有关规定",
@@ -5208,6 +5268,16 @@
     "question_type": "responsibility",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_道路旅客运输班线经营权招标投标办法_22_1782_1858"
+  },
+  {
+    "question": "评标专家和评标专家库管理暂行办法中的第四十六条跟哪个暂行规定有关联？",
+    "expected_id": "parent_集中采购机构是设区的市级以上人民政府依法_50_3091_2592",
+    "law_name": "集中采购机构是设区的市级以上人民政府依法",
+    "span": "single",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_评标专家和评标专家库管理暂行办法_46_474_2589"
   },
   {
     "question": "评标报告里推荐的中标候选人名单需要包含哪些额外信息？",
@@ -5220,16 +5290,6 @@
     "top1_id": "parent_投资项目招标投标管理办法_18_2555_6979"
   },
   {
-    "question": "水利工程建设项目重要设备材料采购招标投标中，招标文件需要明确哪些评标标准的评价指标和权重？",
-    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_24_3611_4571",
-    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_水利工程建设项目重要设备材料采购招标投标_37_2400_9931"
-  },
-  {
     "question": "招标投标违法行为记录公告暂行办法里，公告部门怎么处理公告记录材料？",
     "expected_id": "parent_中华人民共和国招标投标法实施条例_24_97_6672",
     "law_name": "中华人民共和国招标投标法实施条例",
@@ -5238,6 +5298,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_招标投标违法行为记录公告暂行办法_11_969_7015"
+  },
+  {
+    "question": "水利工程建设项目重要设备材料采购招标投标中，招标文件需要明确哪些评标标准的评价指标和权重？",
+    "expected_id": "parent_中央国家机关政府采购中心电子竞价采购管理_24_3611_4571",
+    "law_name": "中央国家机关政府采购中心电子竞价采购管理办法",
+    "span": "single",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_水利工程建设项目重要设备材料采购招标投标_37_2400_9931"
   },
   {
     "question": "上海公共资源场内交易信用记分范围",
@@ -5310,16 +5380,6 @@
     "top1_id": "parent_药品集中采购监督管理办法_15_2605_4422"
   },
   {
-    "question": "公共资源交易平台系统组成",
-    "expected_id": "policy_96",
-    "law_name": "【建设工程】设计电子招标投标应用指南",
-    "span": "single",
-    "type": "policy_doc",
-    "question_type": "definition",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_公共资源交易平台公共资源交易平台管理暂行_45_4116_8681"
-  },
-  {
     "question": "公共资源交易平台系统包括哪些平台",
     "expected_id": "policy_101",
     "law_name": "【建设工程】施工电子招标投标应用指南",
@@ -5328,6 +5388,16 @@
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
     "top1_id": "policy_125"
+  },
+  {
+    "question": "公共资源交易平台系统组成",
+    "expected_id": "policy_96",
+    "law_name": "【建设工程】设计电子招标投标应用指南",
+    "span": "single",
+    "type": "policy_doc",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_公共资源交易平台公共资源交易平台管理暂行_45_4116_8681"
   },
   {
     "question": "竞争性磋商采购供应商不足处理",
@@ -5448,6 +5518,26 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "policy_125"
+  },
+  {
+    "question": "招标投标法实施条例工程建设项目范畴",
+    "expected_id": "policy_7",
+    "law_name": "中华人民共和国招标投标法实施条例",
+    "span": "single",
+    "type": "policy_doc",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_2_73_8241"
+  },
+  {
+    "question": "招标投标法实施条例 工程建设项目 类型",
+    "expected_id": "policy_7",
+    "law_name": "中华人民共和国招标投标法实施条例",
+    "span": "single",
+    "type": "policy_doc",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_2_73_8241"
   },
   {
     "question": "围标行为 招标投标法实施条例 处理",
@@ -5580,6 +5670,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0538"
   },
   {
+    "question": "开标后投标文件逾期招标人措施",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0532",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0337"
+  },
+  {
     "question": "资格预审文件发售期要求",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0201",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -5588,6 +5688,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国招标投标法实施条例_16_89_9077"
+  },
+  {
+    "question": "刑法 欺诈签订合同 行为",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0750",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0416"
   },
   {
     "question": "工程建设项目 不进行施工招标 情形",
@@ -5600,16 +5710,6 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_12_13_520"
   },
   {
-    "question": "投标人 投标文件 按时送达 安全到达",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0334",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0332"
-  },
-  {
     "question": "招标人 投标文件 签收 保存 规定",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0334",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -5620,6 +5720,16 @@
     "top1_id": "parent_中华人民共和国招标投标法_28_31_8829"
   },
   {
+    "question": "投标人 投标文件 按时送达 安全到达",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0334",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0332"
+  },
+  {
     "question": "投标人 弄虚作假 骗取中标 合同效力",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0412",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -5628,6 +5738,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国招标投标法实施条例_68_147_2184"
+  },
+  {
+    "question": "招标投标 同一法定代表人 多个法人 投标规定",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0302",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0303"
   },
   {
     "question": "资格预审 资格后审",
@@ -5650,16 +5770,6 @@
     "top1_id": "parent_电子招标投标办法_27_720_6231"
   },
   {
-    "question": "招标人 中标人 签订合同 时间",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0621",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "definition",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_政府采购货物和服务招标投标管理办法_71_76_2035"
-  },
-  {
     "question": "签约主体 中标人资格",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0670",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -5670,14 +5780,14 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0622"
   },
   {
-    "question": "评标专家违法怎么处理",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0476",
+    "question": "招标人 中标人 签订合同 时间",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0621",
     "law_name": "招标投标法律解读与风险防范实务",
     "span": "single",
     "type": "pdf_case_paragraph",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_铁路建设工程评标专家库及评标专家管理办法_22_2047_2167"
+    "question_type": "definition",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_政府采购货物和服务招标投标管理办法_71_76_2035"
   },
   {
     "question": "评标委员会解散条件",
@@ -5688,6 +5798,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "scenario",
     "top1_id": "parent_公路工程建设项目评标工作细则_38_1536_34"
+  },
+  {
+    "question": "评标专家违法怎么处理",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0476",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "responsibility",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_铁路建设工程评标专家库及评标专家管理办法_22_2047_2167"
   },
   {
     "question": "投标人投标效力权利义务",
@@ -5717,7 +5837,17 @@
     "type": "pdf_case_paragraph",
     "question_type": "procedure",
     "retrieval_difficulty": "direct",
-    "top1_id": "parent_电子招标投标办法_28_721_3946"
+    "top1_id": "parent_电子招标投标办法_27_720_6231"
+  },
+  {
+    "question": "电子评标环境要求",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0086",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_电子招标投标办法_33_726_137"
   },
   {
     "question": "联合体 单独投标 结果",
@@ -5728,6 +5858,16 @@
     "question_type": "case_reasoning",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国招标投标法实施条例_37_110_8654"
+  },
+  {
+    "question": "招标文件 评标总价 计算方法",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0230",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_政府采购货物和服务招标投标管理办法_55_57_1958_child1"
   },
   {
     "question": "招标文件 联合体投标 规定",
@@ -5760,16 +5900,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0073"
   },
   {
-    "question": "评标委员会成员评审规定",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0466",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "definition",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_中华人民共和国招标投标法实施条例_49_123_764"
-  },
-  {
     "question": "评标委员会成员职责",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0466",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -5778,6 +5908,16 @@
     "question_type": "responsibility",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国招标投标法_44_47_5826"
+  },
+  {
+    "question": "评标委员会成员评审规定",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0466",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "definition",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_49_123_764"
   },
   {
     "question": "未交投标保证金处理",
@@ -5810,14 +5950,14 @@
     "top1_id": "parent_中华人民共和国招标投标法实施条例_40_113_6732"
   },
   {
-    "question": "评标标准规定",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0249",
+    "question": "该书编写目的",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0766",
     "law_name": "招标投标法律解读与风险防范实务",
     "span": "single",
     "type": "pdf_case_paragraph",
-    "question_type": "definition",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_水利工程建设项目招标投标管理规定_34_2267_2348"
+    "question_type": "announcement_interpretation",
+    "retrieval_difficulty": "direct",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0002"
   },
   {
     "question": "工程分包何时招标",
@@ -5828,6 +5968,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0120"
+  },
+  {
+    "question": "评标标准规定",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0249",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_水利工程建设项目招标投标管理规定_34_2267_2348"
   },
   {
     "question": "招标投标法 政府采购法 适用关系",
@@ -5960,6 +6110,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0705"
   },
   {
+    "question": "工程咨询公司 评标委员会 违规规定",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0456",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0455"
+  },
+  {
     "question": "评标委员会技术经济专家人数要求",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0456",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -6000,6 +6160,16 @@
     "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_34_1842_967"
   },
   {
+    "question": "资格预审文件投诉要求",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0676",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_机电产品国际招标评标专家及专家库管理办法_36_1364_4068"
+  },
+  {
     "question": "投标人资格法律限制",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0292",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -6008,16 +6178,6 @@
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0242"
-  },
-  {
-    "question": "资格预审文件投诉要求",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0676",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0210"
   },
   {
     "question": "政府采购质疑主体",
@@ -6067,7 +6227,7 @@
     "type": "pdf_case_paragraph",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "direct",
-    "top1_id": "parent_设计施工总承包招标的评标采用综合评分法_62_1479_6310"
+    "top1_id": "parent_铁路工程建设项目招标投标管理办法_52_2129_580"
   },
   {
     "question": "招标投标弄虚作假 查处 手段",
@@ -6127,7 +6287,7 @@
     "type": "pdf_case_paragraph",
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0747"
+    "top1_id": "parent_集中采购机构是设区的市级以上人民政府依法_71_3115_9123"
   },
   {
     "question": "招标投标 报价 特殊规定",
@@ -6160,16 +6320,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0581"
   },
   {
-    "question": "招标代理服务费内容位置",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0006",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "definition",
-    "retrieval_difficulty": "direct",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0175"
-  },
-  {
     "question": "资格审查方式有哪些",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0006",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -6178,6 +6328,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "direct",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0192"
+  },
+  {
+    "question": "招标代理服务费内容位置",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0006",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "definition",
+    "retrieval_difficulty": "direct",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0175"
   },
   {
     "question": "招标文件澄清修改操作",
@@ -6237,7 +6397,17 @@
     "type": "pdf_case_paragraph",
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0415"
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_68_147_2184"
+  },
+  {
+    "question": "禁止转包 法律依据",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0652",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "definition",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0659"
   },
   {
     "question": "招标人 中标人 履约 违约 影响",
@@ -6298,16 +6468,6 @@
     "question_type": "responsibility",
     "retrieval_difficulty": "direct",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0746"
-  },
-  {
-    "question": "经评审最低投标价法应用场景",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0478",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "comparison",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_评标委员会和评标方法暂行规定_30_423_9752"
   },
   {
     "question": "综合评估法评分方式",
@@ -6400,16 +6560,6 @@
     "top1_id": "pdf_建工集团公司建设工程施工合同纠纷案_10_5599"
   },
   {
-    "question": "建设工程施工不正当手段中标结果有效",
-    "expected_id": "pdf_建设工程施工合同纠纷案_25_795",
-    "law_name": "建设工程施工合同纠纷案",
-    "span": "single",
-    "type": "pdf_case_sliding",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_招标拍卖挂牌出让国有建设用地使用权规定_25_1035_9207"
-  },
-  {
     "question": "建设工程合同纠纷验收合格发包方未付款承包方维权",
     "expected_id": "pdf_建设工程施工合同纠纷案_5_5307",
     "law_name": "建设工程施工合同纠纷案",
@@ -6418,6 +6568,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_建工集团公司建设工程施工合同纠纷案_10_5599"
+  },
+  {
+    "question": "建设工程施工不正当手段中标结果有效",
+    "expected_id": "pdf_建设工程施工合同纠纷案_25_795",
+    "law_name": "建设工程施工合同纠纷案",
+    "span": "single",
+    "type": "pdf_case_sliding",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_招标拍卖挂牌出让国有建设用地使用权规定_25_1035_9207"
   },
   {
     "question": "招标单位 投标人 串通 行为认定",
@@ -6438,6 +6598,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_招标拍卖挂牌出让国有建设用地使用权规定_2_1012_8949"
+  },
+  {
+    "question": "投标人 串通投标报价 损害利益 情节严重 法律后果",
+    "expected_id": "pdf_非国家工作人员行贿案_4_7494",
+    "law_name": "非国家工作人员行贿案",
+    "span": "single",
+    "type": "pdf_case_sliding",
+    "question_type": "definition",
+    "retrieval_difficulty": "direct",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0729"
   },
   {
     "question": "庄某某施工队 地上四层以上 工程款 结算方式",
@@ -6650,16 +6820,6 @@
     "top1_id": "parent_公路养护工程市场准入暂行规定_13_1556_2858"
   },
   {
-    "question": "招标人 退还投标保证金 最迟时间",
-    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_63_544_1884",
-    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_工程建设项目施工招标投标办法_63_65_1656"
-  },
-  {
     "question": "不正当手段中标 处罚",
     "expected_id": "parent_评标委员会应组织全体评标委员学习有关规定_68_1969_3481",
     "law_name": "评标委员会应组织全体评标委员学习有关规定",
@@ -6668,16 +6828,6 @@
     "question_type": "responsibility",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_评标委员会和评标方法暂行规定_55_448_7179"
-  },
-  {
-    "question": "串通投标行贿中标法律后果",
-    "expected_id": "parent_评标委员会应组织全体评标委员学习有关规定_68_1969_3481",
-    "law_name": "评标委员会应组织全体评标委员学习有关规定",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_中华人民共和国招标投标法实施条例_53_146_8968"
   },
   {
     "question": "管理办法 解释主体",
@@ -6750,16 +6900,6 @@
     "top1_id": "parent_道路旅客运输班线经营权招标投标办法_2_1759_5055"
   },
   {
-    "question": "政府采购法 采购人 指定供应商 限制",
-    "expected_id": "parent_中华人民共和国政府采购法_64_3022_2370",
-    "law_name": "中华人民共和国政府采购法",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_中华人民共和国政府采购法实施条例_20_22_5733"
-  },
-  {
     "question": "政府采购货物服务招标投标管理办法 资格预审公告 内容",
     "expected_id": "parent_政府采购货物和服务招标投标管理办法_15_3373_7250",
     "law_name": "政府采购货物和服务招标投标管理办法",
@@ -6768,6 +6908,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "direct",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0200"
+  },
+  {
+    "question": "政府采购法 采购人 指定供应商 限制",
+    "expected_id": "parent_中华人民共和国政府采购法_64_3022_2370",
+    "law_name": "中华人民共和国政府采购法",
+    "span": "single",
+    "type": "pdf_law_parent",
+    "question_type": "responsibility",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_中华人民共和国政府采购法实施条例_20_22_5733"
   },
   {
     "question": "规避招标处罚措施",
@@ -6940,16 +7090,6 @@
     "top1_id": "parent_采购人和采购代理机构收到暂停采购活动通知_45_3498_8644"
   },
   {
-    "question": "政府采购 财政部门 采购环节 标准 程序",
-    "expected_id": "parent_集中采购机构是设区的市级以上人民政府依法_19_3133_6771_child4",
-    "law_name": "集中采购机构是设区的市级以上人民政府依法",
-    "span": "single",
-    "type": "pdf_law_child",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_中华人民共和国政府采购法实施条例_32_36_4739"
-  },
-  {
     "question": "电子竞价 采购公告 时间",
     "expected_id": "parent_发布竞价需求和供应商报价时应提交的承诺等_35_3625_8069_child5",
     "law_name": "发布竞价需求和供应商报价时应提交的承诺等规定",
@@ -6958,6 +7098,16 @@
     "question_type": "responsibility",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中央国家机关政府采购中心电子竞价采购管理_23_3606_8367"
+  },
+  {
+    "question": "政府采购 财政部门 采购环节 标准 程序",
+    "expected_id": "parent_集中采购机构是设区的市级以上人民政府依法_19_3133_6771_child4",
+    "law_name": "集中采购机构是设区的市级以上人民政府依法",
+    "span": "single",
+    "type": "pdf_law_child",
+    "question_type": "responsibility",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国政府采购法实施条例_32_36_4739"
   },
   {
     "question": "公共资源交易平台管理暂行办法 实施时间",
@@ -7000,16 +7150,6 @@
     "top1_id": "parent_机电产品国际招标评标专家及专家库管理办法_67_1348_5817_child0"
   },
   {
-    "question": "招标人自行施工招标条件",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child1",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "single",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "direct",
-    "top1_id": "parent_农业基本建设项目招标投标管理规定_15_2835_7401"
-  },
-  {
     "question": "监理招标投标人须知内容",
     "expected_id": "parent_农业基本建设项目招标投标管理规定_20_2841_2384_child4",
     "law_name": "农业基本建设项目招标投标管理规定",
@@ -7018,6 +7158,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_水利工程建设项目监理招标投标管理办法_19_2313_6933"
+  },
+  {
+    "question": "招标人自行施工招标条件",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child1",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "single",
+    "type": "pdf_law_child",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "direct",
+    "top1_id": "parent_农业基本建设项目招标投标管理规定_15_2835_7401"
   },
   {
     "question": "政府采购货物服务招标投标评分计算公式",
@@ -7100,16 +7250,6 @@
     "top1_id": "parent_进一步规范机电产品国际招标投标活动有关规_42_1337_605"
   },
   {
-    "question": "招标不合理条件限制潜在投标人 违法行为",
-    "expected_id": "parent_机电产品国际招标评标专家及专家库管理办法_94_1383_2821_child0",
-    "law_name": "机电产品国际招标评标专家及专家库管理办法",
-    "span": "single",
-    "type": "pdf_law_child",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_34_1842_967"
-  },
-  {
     "question": "最低评标价法评标依据内容",
     "expected_id": "parent_进一步规范机电产品国际招标投标活动有关规_21_1315_6167_child4",
     "law_name": "进一步规范机电产品国际招标投标活动有关规定",
@@ -7118,6 +7258,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国政府采购法实施条例_34_38_4541"
+  },
+  {
+    "question": "招标不合理条件限制潜在投标人 违法行为",
+    "expected_id": "parent_机电产品国际招标评标专家及专家库管理办法_94_1383_2821_child0",
+    "law_name": "机电产品国际招标评标专家及专家库管理办法",
+    "span": "single",
+    "type": "pdf_law_child",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_34_1842_967"
   },
   {
     "question": "公共资源交易平台统一平台原则",
@@ -7230,16 +7380,6 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_69_71_3771"
   },
   {
-    "question": "标底 中标人未退保证金 招标人责任",
-    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_55_536_8166",
-    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_中华人民共和国招标投标法_60_63_4244"
-  },
-  {
     "question": "标底 招标代理泄露信息 中标结果影响",
     "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_55_536_8166",
     "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
@@ -7248,6 +7388,16 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国招标投标法_52_55_402"
+  },
+  {
+    "question": "标底 中标人未退保证金 招标人责任",
+    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_55_536_8166",
+    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "responsibility",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国招标投标法_60_63_4244"
   },
   {
     "question": "不招标 中标无效 补救措施",
@@ -7280,16 +7430,6 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_60_62_9627"
   },
   {
-    "question": "规避招标 监管部门处理 改中标结果 责任",
-    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_68_549_8321",
-    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_工程建设项目施工招标投标办法_68_70_4200"
-  },
-  {
     "question": "招标人何时退还投标保证金 中标结果变更 责任",
     "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_63_544_1884",
     "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
@@ -7298,6 +7438,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_工程建设项目勘察设计招标投标办法_44_621_8999"
+  },
+  {
+    "question": "规避招标 监管部门处理 改中标结果 责任",
+    "expected_id": "parent_国家对潜在投标人或者投标人的资格条件有规_68_549_8321",
+    "law_name": "国家对潜在投标人或者投标人的资格条件有规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_工程建设项目施工招标投标办法_68_70_4200"
   },
   {
     "question": "定点采购 规定",
@@ -7557,7 +7707,7 @@
     "type": "pdf_law_parent",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "policy_14"
+    "top1_id": "parent_公共资源交易平台公共资源交易平台管理暂行_42_4113_9916"
   },
   {
     "question": "公共资源交易平台 系统对接 处理方式 整合范围",
@@ -7578,16 +7728,6 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0602"
-  },
-  {
-    "question": "政府采购 撤销投标文件 投标保证金 退还 验收规定",
-    "expected_id": "parent_政府采购货物和服务招标投标管理办法_23_3382_4555",
-    "law_name": "政府采购货物和服务招标投标管理办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_政府采购货物和服务招标投标管理办法_38_39_3475"
   },
   {
     "question": "政府采购 采购标的市场调查 采购需求确定标准 资格预审公告",
@@ -7697,17 +7837,7 @@
     "type": "pdf_law_parent",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0221"
-  },
-  {
-    "question": "招标文件发售时间 编制投标文件时间 规定",
-    "expected_id": "parent_工程建设项目货物招标投标办法_30_671_1840",
-    "law_name": "工程建设项目货物招标投标办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_进一步规范机电产品国际招标投标活动有关规_26_1320_6854"
+    "top1_id": "parent_水利工程建设项目重要设备材料采购招标投标_15_2377_5103"
   },
   {
     "question": "招标人 编制投标文件时间 资格审查 规定",
@@ -7718,6 +7848,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_经营性公路建设项目投资人招标投标管理规定_16_1735_536"
+  },
+  {
+    "question": "招标文件发售时间 编制投标文件时间 规定",
+    "expected_id": "parent_工程建设项目货物招标投标办法_30_671_1840",
+    "law_name": "工程建设项目货物招标投标办法",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_进一步规范机电产品国际招标投标活动有关规_26_1320_6854"
   },
   {
     "question": "招标人 资格审查 规定 依据",
@@ -7740,16 +7880,6 @@
     "top1_id": "parent_经营性公路建设项目投资人招标投标管理规定_16_1735_536"
   },
   {
-    "question": "潜在投标人 资格审查 依据 招标文件发售 天数",
-    "expected_id": "parent_工程建设项目货物招标投标办法_15_655_2195",
-    "law_name": "工程建设项目货物招标投标办法",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0267"
-  },
-  {
     "question": "投标人 定义 制定依据",
     "expected_id": "parent_工程建设项目货物招标投标办法_1_640_8251",
     "law_name": "工程建设项目货物招标投标办法",
@@ -7758,6 +7888,16 @@
     "question_type": "definition",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_政府采购货物和服务招标投标管理办法_30_31_7391"
+  },
+  {
+    "question": "潜在投标人 资格审查 依据 招标文件发售 天数",
+    "expected_id": "parent_工程建设项目货物招标投标办法_15_655_2195",
+    "law_name": "工程建设项目货物招标投标办法",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0267"
   },
   {
     "question": "投标人 定义 招标文件发售 规定",
@@ -7770,16 +7910,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0267"
   },
   {
-    "question": "设计招标 中标人 书面报告期限 评标管理 重点",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_36_1110_7387",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "procedure",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_评标委员会应组织全体评标委员学习有关规定_58_1959_608"
-  },
-  {
     "question": "设计招标 评标条件 书面报告 要求",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_36_1110_7387",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -7788,6 +7918,16 @@
     "question_type": "responsibility",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_设计施工总承包招标的评标采用综合评分法_8_1487_9283"
+  },
+  {
+    "question": "设计招标 中标人 书面报告期限 评标管理 重点",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_36_1110_7387",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "procedure",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_评标委员会应组织全体评标委员学习有关规定_58_1959_608"
   },
   {
     "question": "设计招标 中标人 书面报告期限 重大偏差 处理规定",
@@ -7820,6 +7960,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0206"
   },
   {
+    "question": "施工招标 投标人不足 招标公告条件 资格审查内容",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_36_1110_7387",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_工程建设项目施工招标投标办法_20_22_7565"
+  },
+  {
     "question": "设计招标 投标人不足 评标方法 恶意低价抢标规范",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_36_1110_7387",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -7838,16 +7988,6 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_评标委员会和评标方法暂行规定_22_420_6210"
-  },
-  {
-    "question": "施工招标 投标人不足 招标公告条件 资格审查内容",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_36_1110_7387",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_工程建设项目施工招标投标办法_20_22_7565"
   },
   {
     "question": "大型公共建筑 投标人不足 书面报告 项目经理管理",
@@ -7910,16 +8050,6 @@
     "top1_id": "parent_建筑工程方案设计招标投标管理办法_16_1093_1480"
   },
   {
-    "question": "大型公共建筑招标 投标人不足 评标 防止恶意低价抢标",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_27_1101_7822"
-  },
-  {
     "question": "大型公共建筑招标 投标人不足 招标人备案 能力证明",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -7930,6 +8060,16 @@
     "top1_id": "parent_房屋建筑和市政基础设施工程施工招标投标管_11_1133_9229"
   },
   {
+    "question": "大型公共建筑招标 投标人不足 评标 防止恶意低价抢标",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_44_1118_698",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_27_1101_7822"
+  },
+  {
     "question": "招标人组织评标 能力条件",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child23",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -7937,17 +8077,7 @@
     "type": "pdf_law_child",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0044"
-  },
-  {
-    "question": "招标设定最高限价 条件 时间要求",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child23",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_政府采购货物和服务招标投标管理办法_20_21_8081"
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_10_83_6914"
   },
   {
     "question": "中标候选人 公示制度 时间要求",
@@ -7958,6 +8088,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0578"
+  },
+  {
+    "question": "招标设定最高限价 条件 时间要求",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child23",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_政府采购货物和服务招标投标管理办法_20_21_8081"
   },
   {
     "question": "工程量清单计价招标要求 最高限价规定",
@@ -7987,7 +8127,7 @@
     "type": "pdf_law_child",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "parent_房屋建筑和市政基础设施工程施工招标投标管_12_1134_4970"
+    "top1_id": "parent_工程建设项目施工招标投标办法_10_12_387"
   },
   {
     "question": "工程项目评标方法 评标标准完善",
@@ -8040,6 +8180,16 @@
     "top1_id": "parent_水利工程建设项目重要设备材料采购招标投标_15_2377_5103"
   },
   {
+    "question": "预防串通投标哄抬标价 科学评标方法",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child14",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "comparison",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0517"
+  },
+  {
     "question": "中标候选人公示制度 评标确定中标候选人标准",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child14",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -8060,14 +8210,14 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0384"
   },
   {
-    "question": "预防串通投标哄抬标价 科学评标方法",
+    "question": "招标人自行招标备案条件 投标人不足招标流程",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child14",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
     "span": "cross_chunk",
     "type": "pdf_law_child",
-    "question_type": "comparison",
+    "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0517"
+    "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_16_1823_4267"
   },
   {
     "question": "投标人报名不足 评标方法工程担保规范",
@@ -8080,16 +8230,6 @@
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_31_1105_9301"
   },
   {
-    "question": "招标人自行招标备案条件 投标人不足招标流程",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child14",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_标法》《中华人民共和国招标投标法实施条例_16_1823_4267"
-  },
-  {
     "question": "投标人不足评标方法选择 评标工作内容规定",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child14",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -8098,6 +8238,16 @@
     "question_type": "comparison",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_评标委员会和评标方法暂行规定_21_412_533"
+  },
+  {
+    "question": "投标人不足评标环节 资格审查业务场景关联",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_政府采购货物和服务招标投标管理办法_43_44_5411"
   },
   {
     "question": "投标人不足评标环节 资格审查例外条件",
@@ -8117,17 +8267,7 @@
     "type": "pdf_law_child",
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0384"
-  },
-  {
-    "question": "投标人不足评标环节 资格审查业务场景关联",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child10",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0197"
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0370"
   },
   {
     "question": "投标人不足招标人自行招标条件 评标方法选用",
@@ -8140,16 +8280,6 @@
     "top1_id": "parent_农业基本建设项目招标投标管理规定_15_2835_7401"
   },
   {
-    "question": "最低投标价法 风险防范制度 实施主体",
-    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child6",
-    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "procedure",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0478"
-  },
-  {
     "question": "招标投标 工程量清单计价 多种评标方法",
     "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child9",
     "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
@@ -8158,6 +8288,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国政府采购法实施条例_34_38_4541"
+  },
+  {
+    "question": "最低投标价法 风险防范制度 实施主体",
+    "expected_id": "parent_明确或实际投标人报名数量未达到招标公告中_47_1121_6724_child6",
+    "law_name": "明确或实际投标人报名数量未达到招标公告中规定",
+    "span": "cross_chunk",
+    "type": "pdf_law_child",
+    "question_type": "procedure",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0478"
   },
   {
     "question": "招标人自行招标条件 资格预审文件发出后能否更改",
@@ -8220,16 +8360,6 @@
     "top1_id": "parent_中华人民共和国政府采购法_45_3002_8054"
   },
   {
-    "question": "政府采购 评审专家 违规 化整为零 规避招标 处罚",
-    "expected_id": "parent_中华人民共和国政府采购法实施条例_75_87_2635",
-    "law_name": "中华人民共和国政府采购法实施条例",
-    "span": "cross_chunk",
-    "type": "pdf_law_parent",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_机电产品国际招标评标专家及专家库管理办法_93_1382_9104"
-  },
-  {
     "question": "政府采购法实施条例 财政性资金定义 适用范围",
     "expected_id": "parent_中华人民共和国政府采购法实施条例_1_3048_2293",
     "law_name": "中华人民共和国政府采购法实施条例",
@@ -8238,6 +8368,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国政府采购法实施条例_2_2_1097"
+  },
+  {
+    "question": "政府采购 评审专家 违规 化整为零 规避招标 处罚",
+    "expected_id": "parent_中华人民共和国政府采购法实施条例_75_87_2635",
+    "law_name": "中华人民共和国政府采购法实施条例",
+    "span": "cross_chunk",
+    "type": "pdf_law_parent",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_机电产品国际招标评标专家及专家库管理办法_93_1382_9104"
   },
   {
     "question": "政府采购工程 适用法律 供应商赔偿责任",
@@ -8260,14 +8400,14 @@
     "top1_id": "parent_中华人民共和国政府采购法_84_3043_89"
   },
   {
-    "question": "政府采购工程货物服务适用什么法律 合同履行损失责任谁承担",
-    "expected_id": "parent_中华人民共和国政府采购法实施条例_7_8_1442",
-    "law_name": "中华人民共和国政府采购法实施条例",
+    "question": "农业基本建设项目招标投标规定 仪器设备材料招标文件编制要求？施工评标考虑方面？",
+    "expected_id": "parent_农业基本建设项目招标投标管理规定_20_2841_2384_child4",
+    "law_name": "农业基本建设项目招标投标管理规定",
     "span": "cross_chunk",
-    "type": "pdf_law_parent",
+    "type": "pdf_law_child",
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
-    "top1_id": "parent_政府采购货物和服务招标投标管理办法_73_3438_2446"
+    "top1_id": "parent_农业基本建设项目招标投标管理规定_20_2841_2384"
   },
   {
     "question": "农业基本建设项目招标投标规定 施工评标因素？仪器设备材料评标要求？",
@@ -8278,16 +8418,6 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_农业基本建设项目招标投标管理规定_41_2862_489"
-  },
-  {
-    "question": "农业基本建设项目招标投标规定 仪器设备材料招标文件编制要求？施工评标考虑方面？",
-    "expected_id": "parent_农业基本建设项目招标投标管理规定_20_2841_2384_child4",
-    "law_name": "农业基本建设项目招标投标管理规定",
-    "span": "cross_chunk",
-    "type": "pdf_law_child",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_农业基本建设项目招标投标管理规定_20_2841_2384"
   },
   {
     "question": "政府采购 非招标采购 竞争性谈判情形 询价流程要求",
@@ -8410,16 +8540,6 @@
     "top1_id": "parent_工程建设项目施工招标投标办法_74_78_2130"
   },
   {
-    "question": "工程建设项目邀请招标 非国家工作人员行贿认定",
-    "expected_id": "parent_工程建设项目施工招标投标办法_11_11_9938",
-    "law_name": "工程建设项目施工招标投标办法",
-    "span": "cross_doc",
-    "type": "pdf_law_parent",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_非国家工作人员行贿案_3_9694"
-  },
-  {
     "question": "工程建设项目邀请招标 评标委员会组建评标原则",
     "expected_id": "parent_工程建设项目施工招标投标办法_11_11_9938",
     "law_name": "工程建设项目施工招标投标办法",
@@ -8428,6 +8548,16 @@
     "question_type": "scenario_judgment",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_明确或实际投标人报名数量未达到招标公告中_27_1101_7822"
+  },
+  {
+    "question": "工程建设项目邀请招标 非国家工作人员行贿认定",
+    "expected_id": "parent_工程建设项目施工招标投标办法_11_11_9938",
+    "law_name": "工程建设项目施工招标投标办法",
+    "span": "cross_doc",
+    "type": "pdf_law_parent",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_非国家工作人员行贿案_3_9694"
   },
   {
     "question": "评标委员会组建 投标担保 招标投标 责任划分",
@@ -8470,16 +8600,6 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0450"
   },
   {
-    "question": "串通投标 不正当竞争 招投标法规",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0359",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "cross_doc",
-    "type": "pdf_case_paragraph",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0390"
-  },
-  {
     "question": "评标委员会不规范 串通投标 评标结果 有效",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0359",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -8488,6 +8608,16 @@
     "question_type": "announcement_interpretation",
     "retrieval_difficulty": "scenario",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0455"
+  },
+  {
+    "question": "串通投标 不正当竞争 招投标法规",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0359",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "cross_doc",
+    "type": "pdf_case_paragraph",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_中华人民共和国招标投标法实施条例_53_146_8968"
   },
   {
     "question": "建筑施工合同纠纷 非国家工作人员行贿 合同问题",
@@ -8520,16 +8650,6 @@
     "top1_id": "pdf_非国家工作人员行贿案_3_9694"
   },
   {
-    "question": "政府采购档案管理 合同履行 影响",
-    "expected_id": "pdf_非国家工作人员行贿案_5_347",
-    "law_name": "非国家工作人员行贿案",
-    "span": "cross_doc",
-    "type": "pdf_case_sliding",
-    "question_type": "scenario_judgment",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_《中华人民共和国政府采购法实施条例》等有_25_4016_9740"
-  },
-  {
     "question": "串标 施工合同效力 认定 不正当竞争",
     "expected_id": "pdf_非国家工作人员行贿案_5_347",
     "law_name": "非国家工作人员行贿案",
@@ -8538,6 +8658,16 @@
     "question_type": "case_reasoning",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_12_3612"
+  },
+  {
+    "question": "政府采购档案管理 合同履行 影响",
+    "expected_id": "pdf_非国家工作人员行贿案_5_347",
+    "law_name": "非国家工作人员行贿案",
+    "span": "cross_doc",
+    "type": "pdf_case_sliding",
+    "question_type": "scenario_judgment",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_《中华人民共和国政府采购法实施条例》等有_25_4016_9740"
   },
   {
     "question": "建设工程施工合同纠纷 北京市政府采购档案管理 档案保存 要求",
@@ -8610,16 +8740,6 @@
     "top1_id": "pdf_串通投标、受贿案_3_1174"
   },
   {
-    "question": "央企资产评估备案金额标准",
-    "expected_id": "policy_59",
-    "law_name": "财政部、生态环境部关于印发环境标志产品政府采购品目清单的通知",
-    "span": "single",
-    "type": "policy_doc",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "policy_54"
-  },
-  {
     "question": "中标人 未响应实质性条款 改正阶段",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0329",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -8628,6 +8748,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0621"
+  },
+  {
+    "question": "央企资产评估备案金额标准",
+    "expected_id": "policy_59",
+    "law_name": "财政部、生态环境部关于印发环境标志产品政府采购品目清单的通知",
+    "span": "single",
+    "type": "policy_doc",
+    "question_type": "responsibility",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "policy_54"
   },
   {
     "question": "评标委员会 未独立评审 中标结果无效 怎么处理",
@@ -8670,6 +8800,16 @@
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0572"
   },
   {
+    "question": "电子招标交易平台如何对接监督平台",
+    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0678",
+    "law_name": "招标投标法律解读与风险防范实务",
+    "span": "single",
+    "type": "pdf_case_paragraph",
+    "question_type": "condition_check",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_电子招标投标办法_48_745_3861"
+  },
+  {
     "question": "投标人资格条件原则",
     "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0450",
     "law_name": "招标投标法律解读与风险防范实务",
@@ -8688,16 +8828,6 @@
     "question_type": "case_reasoning",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_招标投标法律解读与风险防范实务_para_0082"
-  },
-  {
-    "question": "电子招标交易平台如何对接监督平台",
-    "expected_id": "pdf_招标投标法律解读与风险防范实务_para_0678",
-    "law_name": "招标投标法律解读与风险防范实务",
-    "span": "single",
-    "type": "pdf_case_paragraph",
-    "question_type": "condition_check",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_电子招标投标办法_48_745_3861"
   },
   {
     "question": "锅炉厂冷渣器质量问题解除合同",
@@ -8720,6 +8850,16 @@
     "top1_id": "parent_政府采购货物和服务招标投标管理办法_27_28_3546"
   },
   {
+    "question": "庄某某施工队地下室和地上一至三层工程造价",
+    "expected_id": "pdf_串通投标、受贿案_2_4719",
+    "law_name": "串通投标、受贿案",
+    "span": "single",
+    "type": "pdf_case_sliding",
+    "question_type": "procedure",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "pdf_建设工程施工合同纠纷案_19_3817"
+  },
+  {
     "question": "借资质中标工程验收合格工程款结算依据",
     "expected_id": "pdf_建工集团公司建设工程施工合同纠纷案_0_1793",
     "law_name": "建工集团公司建设工程施工合同纠纷案",
@@ -8738,16 +8878,6 @@
     "question_type": "condition_check",
     "retrieval_difficulty": "synonym",
     "top1_id": "pdf_非国家工作人员行贿案_5_347"
-  },
-  {
-    "question": "庄某某施工队地下室和地上一至三层工程造价",
-    "expected_id": "pdf_串通投标、受贿案_2_4719",
-    "law_name": "串通投标、受贿案",
-    "span": "single",
-    "type": "pdf_case_sliding",
-    "question_type": "procedure",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "pdf_建设工程施工合同纠纷案_19_3817"
   },
   {
     "question": "最高法民再389号油田公司责任认定",
@@ -8780,16 +8910,6 @@
     "top1_id": "pdf_运输服务公司串通投标不正当竞争纠纷案_14_6320"
   },
   {
-    "question": "道路旅客运输 班线经营权 招标 联合投标 条件",
-    "expected_id": "parent_评标委员会应组织全体评标委员学习有关规定_79_1980_6306",
-    "law_name": "评标委员会应组织全体评标委员学习有关规定",
-    "span": "single",
-    "type": "pdf_law_parent",
-    "question_type": "responsibility",
-    "retrieval_difficulty": "synonym",
-    "top1_id": "parent_道路旅客运输班线经营权招标投标办法_6_1763_4306"
-  },
-  {
     "question": "财政部门政府采购监督违法后果",
     "expected_id": "parent_水利工程建设项目监理招标投标管理办法_24_2318_3077",
     "law_name": "水利工程建设项目监理招标投标管理办法",
@@ -8798,6 +8918,16 @@
     "question_type": "procedure",
     "retrieval_difficulty": "synonym",
     "top1_id": "parent_中华人民共和国政府采购法实施条例_77_89_3609"
+  },
+  {
+    "question": "道路旅客运输 班线经营权 招标 联合投标 条件",
+    "expected_id": "parent_评标委员会应组织全体评标委员学习有关规定_79_1980_6306",
+    "law_name": "评标委员会应组织全体评标委员学习有关规定",
+    "span": "single",
+    "type": "pdf_law_parent",
+    "question_type": "responsibility",
+    "retrieval_difficulty": "synonym",
+    "top1_id": "parent_道路旅客运输班线经营权招标投标办法_6_1763_4306"
   },
   {
     "question": "评标专家和评标专家库管理暂行办法第四十六条关联规定",

@@ -28,6 +28,21 @@ ARTICLE_BOUNDARY_PATTERN = re.compile(
 # 子项匹配: （一）（二）... 或 (一)(二)...
 SUBSECTION_PATTERN = re.compile(r'[（(]([一二三四五六七八九十\d]+)[）)]')
 
+# ── 文档边界检测（截断被误归入法条的后继文档）─────────────────
+# "本办法/条例/规定/细则/通知/规程/规范自...施行/执行/生效。"
+REGULATION_END_PATTERN = re.compile(
+    r'本(?:法|办法|条例|规定|细则|通知|规程|规范|规则)'
+    r'.{0,12}'
+    r'(?:自|于)'
+    r'.{0,40}'
+    r'(?:施行|执行|生效|起施行|起执行)'
+    r'[。；;]'
+)
+# "附件：(略)" 或 "附件（略）" — 法规末尾的省略附件标记
+APPENDIX_ABBREVIATED_PATTERN = re.compile(
+    r'附件\s*[：:（(]?\s*[（(]?\s*(?:略|从略|此处省略|详见附件|见附件)\s*[）)]?'
+)
+
 # 文档标题模式 — 匹配中国法律命名规范
 # 注意: Python 3 的 \w 默认匹配 Unicode 汉字，必须用 [a-zA-Z0-9_] 替代
 DOC_TITLE_PATTERNS = [
@@ -35,6 +50,8 @@ DOC_TITLE_PATTERNS = [
     re.compile(r'^中华人民共和国.+[法条例办法]$'),
     # 关于...的通知/意见/函/规定
     re.compile(r'^关于.{4,}[通知意见函规定]$'),
+    # X部门/机构关于...的通知/意见/函/规定（如"建设部关于加强...若干意见"）
+    re.compile(r'^.{2,8}[部局委办厅署院会]关于.{4,}(?:若干)?[通知意见函规定]$'),
     # X法 / X条例 / X办法 / X细则 / X规定 / X通知 / X暂行办法 / X实施办法
     # 上限 24：容纳长法规名（如"中央国家机关政府采购和服务定点采购管理"16字+后缀"办法"2字）
     re.compile(r'^[^\s，。；！？、：（）\(\)\da-zA-Z0-9_]{2,24}(暂行|实施)?(法|条例|办法|细则|规定|通知)$'),
@@ -441,11 +458,48 @@ class LegalStructureParser:
                 header = parts[i].strip()
                 body = parts[i + 1].strip() if i + 1 < len(parts) else ""
                 i += 2
+                # 截断被误归入法条的后继文档内容
+                body = self._trim_article_tail(body)
                 result.append((header, body))
             else:
                 i += 1
 
         return result
+
+    def _trim_article_tail(self, body: str) -> str:
+        """
+        截断被误归入法条正文的后继文档内容。
+
+        触发条件：
+        1. 法条正文包含施行日期句（"本办法自...施行。"）
+        2. 之后出现了附件省略标记（"附件：(略)"）
+        3. 附件标记之后还有大量内容 → 判定为后继文档混入
+
+        返回：截断后的 body（保留到附件标记为止）
+        """
+        if not body or len(body) < 60:
+            return body
+
+        end_match = REGULATION_END_PATTERN.search(body)
+        if not end_match:
+            return body
+
+        # 检查施行日期之后是否有附件省略标记
+        post_end = body[end_match.end():]
+        appendix_match = APPENDIX_ABBREVIATED_PATTERN.search(post_end)
+        if not appendix_match:
+            return body
+
+        # 附件标记后还有多少内容？
+        appendix_end_in_post = appendix_match.end()
+        tail = post_end[appendix_end_in_post:].strip()
+
+        # 尾部实质性内容 > 100 字符 → 判定为后继文档混入，截断
+        if len(tail) > 100:
+            cut_point = end_match.end() + appendix_end_in_post
+            return body[:cut_point].strip()
+
+        return body
 
     def _parse_article(self, header: str, content: str) -> Optional[ArticleInfo]:
         """解析单条法条"""

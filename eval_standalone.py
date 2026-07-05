@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone V6 召回评测 — 本地 jieba BM25 + 远程 Embedding/Reranker + 各阶段分解，N 并发"""
+"""Standalone V10 召回评测 — 本地 jieba BM25 + 远程 Embedding/Reranker + 相邻法条上下文扩展，N 并发"""
 
 import json, re, sys, threading, time, os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -15,7 +15,7 @@ from rank_bm25 import BM25Okapi
 MILVUS_URL = "http://localhost:19531"
 MODEL_URL = "http://localhost:8210"
 DB = "panxin_dev"
-COLLECTION = "policy"
+COLLECTION = "policy_v9"
 DENSE_FIELD = "dense_vector"
 OUTPUT_FIELDS = [
     "retrieval_text", "text", "title", "source_doc",
@@ -29,10 +29,21 @@ TOP_K = 5
 DENSE_RECALL = 50
 BM25_RECALL = 50
 RERANK_POOL = 30
+STAGE_POOL = 30  # 各阶段统一对比口径（与 reranker 入口一致）
 WORKERS = 3
 
-EVAL_PATH = Path(__file__).parent / "data" / "eval_questions" / "v7" / "v7_benchmark.jsonl"
-OUTPUT_PATH = Path(__file__).parent / "data" / "eval_questions" / "v7" / "v7_recall_report.md"
+EVAL_PATH = Path(__file__).parent / "data" / "eval_questions" / "v9" / "v9_canonical.jsonl"
+OUTPUT_PATH = Path(__file__).parent / "data" / "eval_questions" / "v14" / "v14_recall_report.md"
+
+# ── source_type 权重提升（对齐生产管线 app/pipeline/pipeline.py post-rerank boost）──
+SOURCE_TYPE_BOOST = {
+    "regulation_article": 1.15,
+    "regulation_case": 1.05,
+    "regulation_textbook": 1.03,
+    "regulation_opinion": 1.0,
+    "regulation_policy": 1.0,
+    "bid": 1.0,
+}
 
 _lock = threading.Lock()
 _thread_local = threading.local()
@@ -124,35 +135,125 @@ def build_parent_map():
 
 
 def _get_field(doc: dict, key: str) -> str:
-    """优先顶层字段，其次从 metadata/data 嵌套中取（兼容实体原始格式）"""
+    """优先顶层字段，其次从 metadata/data 嵌套中取（兼容 JSON string 和 dict 格式）"""
     val = doc.get(key, "")
     if val:
         return str(val)
     meta = doc.get("metadata") or doc.get("data", {})
-    return str(meta.get(key, "")) if meta else ""
+    if isinstance(meta, str):
+        try:
+            meta = json.loads(meta)
+        except json.JSONDecodeError:
+            return ""
+    if isinstance(meta, dict):
+        return str(meta.get(key, ""))
+    return ""
+
+
+# ── 法条邻接索引（V10: 相邻法条上下文扩展）──
+_article_index: dict = {}  # {(law_name, chapter): {article_id_int: entity}}
+
+
+def build_article_index():
+    """从已拉取的文档构建法条邻接索引，仅包含 parent chunk"""
+    global _article_index
+    if _article_index:
+        return
+    if not _bm25_docs:
+        build_local_bm25()
+    index: dict = {}
+    for d in _bm25_docs:
+        law_name = _get_field(d, "law_name")
+        article_id_str = _get_field(d, "article_id")
+        parent_id = _get_field(d, "parent_id")
+        if not law_name or not article_id_str or parent_id:
+            continue
+        try:
+            aid = int(article_id_str)
+        except ValueError:
+            continue
+        chapter = _get_field(d, "chapter")
+        key = (law_name, chapter)
+        if key not in index:
+            index[key] = {}
+        index[key][aid] = d
+    _article_index = index
+    print(f"[ArticleIndex] {sum(len(v) for v in index.values())} parent articles indexed")
+
+
+def _get_adjacent_context_eval(law_name: str, chapter: str, article_id: str,
+                               current_text: str) -> str:
+    """构建相邻法条上下文（eval 版，与生产管线 expanders.py 对齐）"""
+    try:
+        aid = int(article_id)
+    except ValueError:
+        return current_text
+
+    group = _article_index.get((law_name, chapter), {})
+    if not group:
+        return current_text
+
+    sorted_ids = sorted(group.keys())
+    try:
+        pos = sorted_ids.index(aid)
+    except ValueError:
+        return current_text
+
+    prev_id = sorted_ids[pos - 1] if pos > 0 else None
+    next_id = sorted_ids[pos + 1] if pos < len(sorted_ids) - 1 else None
+
+    current_label = f"第{article_id}条"
+    if aid in group:
+        current_article = _get_field(group[aid], "article")
+        if current_article:
+            current_label = current_article
+
+    parts: list = []
+
+    if prev_id is not None:
+        prev_doc = _entity_to_doc(group[prev_id])
+        prev_article = _get_field(group[prev_id], "article") or f"第{prev_id}条"
+        parts.append(f"【上一条】{prev_article}\n{prev_doc.get('text', '')}")
+
+    parts.append(f"===== 当前命中 =====\n【当前条文】{current_label}\n{current_text}")
+
+    if next_id is not None:
+        next_doc = _entity_to_doc(group[next_id])
+        next_article = _get_field(group[next_id], "article") or f"第{next_id}条"
+        parts.append(f"【下一条】{next_article}\n{next_doc.get('text', '')}")
+
+    return "\n\n".join(parts)
 
 
 def parent_context_expand(results: list) -> list:
-    """Child chunk → 查找 parent，注入 parent_content。（不去重，保留全部候选项供 reranker 精排）"""
+    """Child chunk → 相邻法条上下文扩展 (V10)，不新增候选。"""
     if not _parent_map:
         build_parent_map()
+    build_article_index()
 
     enriched = []
     for r in results:
-        r = dict(r)  # 浅拷贝，避免污染上游 fused 列表
-        chapter_context = _get_field(r, "chapter_context")
+        r = dict(r)
         chunk_type = _get_field(r, "chunk_type")
 
-        if chapter_context:
-            r["parent_content"] = chapter_context
-        elif chunk_type.endswith("_child"):
+        if chunk_type.endswith("_child"):
             parent_id = _get_field(r, "parent_id")
             parent_entity = _parent_map.get(parent_id) if parent_id else None
             if parent_entity:
                 parent_doc = _entity_to_doc(parent_entity)
-                r["parent_content"] = parent_doc.get("text", "")
+                law_name = parent_doc.get("law_name", "")
+                chapter = _get_field(parent_entity, "chapter")
+                article_id = _get_field(parent_entity, "article_id")
+                current_text = parent_doc.get("text", "")
+                r["parent_content"] = _get_adjacent_context_eval(
+                    law_name, chapter, article_id, current_text
+                )
             else:
                 r["parent_content"] = r.get("text", "")
+        else:
+            chapter_context = _get_field(r, "chapter_context")
+            if chapter_context:
+                r["parent_content"] = chapter_context
 
         enriched.append(r)
 
@@ -162,7 +263,10 @@ def parent_context_expand(results: list) -> list:
 
 def _get_client():
     if not hasattr(_thread_local, "client"):
-        _thread_local.client = httpx.Client(timeout=httpx.Timeout(60))
+        _thread_local.client = httpx.Client(
+            transport=httpx.HTTPTransport(proxy=None),
+            timeout=httpx.Timeout(60),
+        )
     return _thread_local.client
 
 
@@ -187,6 +291,33 @@ def _post_milvus(endpoint, payload):
     if body.get("code") != 0:
         raise RuntimeError(f"Milvus error code={body.get('code')}: {body.get('message','')}")
     return body.get("data", {})
+
+
+def infer_source_type(chunk: dict) -> str:
+    """运行时推演 source_type（对齐 app/schema/metadata.py）。
+    chunk_type → source_type 映射:
+      regulation_* / pdf_law_* → regulation_article
+      pdf_textbook_*           → regulation_textbook
+      pdf_case_*               → regulation_case
+      opinion_news             → regulation_opinion
+      policy_doc               → regulation_policy
+      bid_*                    → bid
+    """
+    ct = str(chunk.get("chunk_type", ""))
+    if ct.startswith("pdf_textbook_"):
+        return "regulation_textbook"
+    if ct.startswith("pdf_case_"):
+        return "regulation_case"
+    if ct == "opinion_news" or str(chunk.get("category", "")) == "opinion":
+        return "regulation_opinion"
+    if ct == "policy_doc":
+        return "regulation_policy"
+    if ct == "bid_project":
+        return "bid"
+    # pdf_law_*, regulation_*, sliding, parent, child → regulation_article
+    if ct.startswith("regulation_") or ct.startswith("pdf_law_"):
+        return "regulation_article"
+    return "regulation_article"
 
 
 def _entity_to_doc(entity, score=None):
@@ -392,7 +523,7 @@ SEMANTIC_HEAVY_PATTERNS = [
 ]
 
 # ── 法规实体检测从统一注册中心导入 ──
-from app.core.legal_entity_registry import detect_regulation_entity
+from app.core.legal_entity_registry import detect_regulation_entity, detect_domain_entity
 
 
 def _detect_query_type(query: str) -> str:
@@ -410,13 +541,16 @@ def _get_dynamic_weights(query: str) -> tuple:
     """根据查询类型返回 (bm25_weight, dense_weight)"""
     qtype = _detect_query_type(query)
     has_regulation = detect_regulation_entity(query)
+    has_domain = detect_domain_entity(query)
 
     if has_regulation:
         return (0.80, 0.20)  # 法条/法规名 → BM25 最重
+    if has_domain:
+        return (0.75, 0.25)  # 领域术语 → BM25 加重
     if qtype == "keyword_heavy":
         return (0.75, 0.25)
     elif qtype == "semantic_heavy":
-        return (0.40, 0.60)
+        return (0.60, 0.40)
     return (0.65, 0.35)
 
 
@@ -492,6 +626,48 @@ def weighted_fusion(dense_results, bm25_results, query, top_k=50):
     return sorted_results[:top_k]
 
 
+# ── 全量 parent 黑名单: 标记所有"有 child 的 article"──
+_child_exists: set = set()  # {(law_name, article_id), ...}
+
+
+def build_child_blacklist():
+    """扫描全部文档，建立 parent 黑名单：同一 article 下存在 child 的 parent 一律拦截"""
+    global _child_exists
+    if _child_exists:
+        return
+    if not _bm25_docs:
+        build_local_bm25()
+    for d in _bm25_docs:
+        ct = _get_field(d, "chunk_type")
+        if ct.endswith("_child"):
+            law_name = _get_field(d, "law_name")
+            aid = _get_field(d, "article_id")
+            if law_name and aid:
+                _child_exists.add((law_name, aid))
+    print(f"[ParentFilter] {len(_child_exists)} articles have children")
+
+
+def _filter_parents_with_children(results: list) -> list:
+    """全量 parent 黑名单过滤：同一 article 下有 child 的 parent，直接从候选池移除"""
+    if not _child_exists:
+        build_child_blacklist()
+    if not _child_exists:
+        return results
+    filtered = []
+    removed = 0
+    for r in results:
+        ct = _get_field(r, "chunk_type")
+        pid = _get_field(r, "parent_id")
+        if not ct.endswith("_child") and not pid:
+            law_name = _get_field(r, "law_name")
+            aid = _get_field(r, "article_id")
+            if (law_name, aid) in _child_exists:
+                removed += 1
+                continue
+        filtered.append(r)
+    return filtered
+
+
 def search_one(query, top_k=5):
     """预处理(多路变体) + 5阶段检索"""
     base_q, expanded_q = preprocess_variants(query)
@@ -521,14 +697,25 @@ def search_one(query, top_k=5):
     bm25 = list(all_bm25.values())
     # 多路变体时使用 base query 做权重判断
     fused = weighted_fusion(dense, bm25, base_q, DENSE_RECALL)
+    # 标注 source_type（对齐生产管线 pipeline.py:304-307）
+    for r in fused:
+        r["source_type"] = infer_source_type(r)
+    # V10: 同法规同 article 下 child 优先，剔除 parent
+    fused = _filter_parents_with_children(fused)
     expanded = parent_context_expand(fused)
 
     pool = expanded[:RERANK_POOL]
-    docs_for_rerank = [
-        r.get("parent_content") or r.get("retrieval_text") or r.get("text", "")
-        for r in pool
-    ]
-    docs_for_rerank = [d[:1024] for d in docs_for_rerank]
+    docs_for_rerank = []
+    for r in pool:
+        child_text = r.get("retrieval_text") or r.get("text", "")
+        parent_text = r.get("parent_content", "")
+        if parent_text and parent_text != child_text:
+            # child 文本优先，parent 上下文追加在后面，确保 reranker 看到匹配片段
+            combined = child_text + "\n[法规上下文]\n" + parent_text
+        else:
+            combined = child_text
+        docs_for_rerank.append(combined[:2048])
+    docs_for_rerank = docs_for_rerank  # keep variable name compatible
     if docs_for_rerank:
         reranked = rerank(query, docs_for_rerank, top_k)
         results = []
@@ -538,6 +725,12 @@ def search_one(query, top_k=5):
                 r = dict(pool[idx])
                 r["score"] = rr["score"]
                 results.append(r)
+        # ── source_type 权重提升 (post-rerank, 对齐生产管线 pipeline.py:345-352) ──
+        for r in results:
+            boost = SOURCE_TYPE_BOOST.get(r.get("source_type", ""), 1.0)
+            if boost != 1.0:
+                r["score"] = r.get("score", 0.0) * boost
+        results.sort(key=lambda x: x.get("score", 0), reverse=True)
         return results[:top_k], dense, bm25, fused, expanded
     return expanded[:top_k], dense, bm25, fused, expanded
 
@@ -561,6 +754,14 @@ def _get_rank(result_list, target_ids, top_k=5):
     return 0
 
 
+def _hit_pool(result_list, target_ids, pool_size=STAGE_POOL):
+    """target 是否在 result_list 前 pool_size 条中"""
+    for r in result_list[:pool_size]:
+        if r.get("id", "") in target_ids:
+            return True
+    return False
+
+
 def eval_one(qa):
     question = qa["question"]
     expected_id = qa.get("expected_chunk_id", "")
@@ -581,6 +782,8 @@ def eval_one(qa):
     except Exception as e:
         return {
             "final_rank": 0, "dense_rank": 0, "bm25_rank": 0, "fused_rank": 0, "expanded_rank": 0,
+            "dense_pool": False, "bm25_pool": False, "fused_pool": False, "expanded_pool": False,
+            "final_pool": False,
             "qa_type": qa_type, "span": span,
             "question_type": question_type, "retrieval_difficulty": retrieval_difficulty,
             "benchmark_level": benchmark_level,
@@ -596,50 +799,50 @@ def eval_one(qa):
     fused_rank = _get_rank(fused_results, target_ids)
     expanded_rank = _get_rank(expanded_results, target_ids)
 
+    # Pool@30: 各阶段统一口径（target 是否进 top 30，与 reranker 入口对齐）
+    dense_pool = _hit_pool(dense_results, target_ids)
+    bm25_pool = _hit_pool(bm25_results, target_ids)
+    fused_pool = _hit_pool(fused_results, target_ids)
+    expanded_pool = _hit_pool(expanded_results, target_ids)
+
+    base_fields = {
+        "qa_type": qa_type, "span": span,
+        "question_type": question_type, "retrieval_difficulty": retrieval_difficulty,
+        "benchmark_level": benchmark_level,
+        "dense_rank": dense_rank, "bm25_rank": bm25_rank,
+        "fused_rank": fused_rank, "expanded_rank": expanded_rank,
+        "dense_pool": dense_pool, "bm25_pool": bm25_pool,
+        "fused_pool": fused_pool, "expanded_pool": expanded_pool,
+    }
+
     if not final_results:
         return {
-            "final_rank": 0, "dense_rank": dense_rank, "bm25_rank": bm25_rank, "fused_rank": fused_rank, "expanded_rank": expanded_rank,
-            "qa_type": qa_type, "span": span,
-            "question_type": question_type, "retrieval_difficulty": retrieval_difficulty,
-            "benchmark_level": benchmark_level,
-            "miss_info": {
-                "question": question[:100],
-                "expected_id": expected_id[:60],
-                "results": "NO RESULTS",
-            },
+            **base_fields, "final_rank": 0,
+            "miss_info": {"question": question[:100], "expected_id": expected_id[:60], "results": "NO RESULTS"},
         }
 
     final_rank = _get_rank(final_results, target_ids)
+    final_pool = True  # final 本身 ≤5，进了 final 就是进了 pool
 
     if final_rank == 0:
         return {
-            "final_rank": 0, "dense_rank": dense_rank, "bm25_rank": bm25_rank, "fused_rank": fused_rank, "expanded_rank": expanded_rank,
-            "qa_type": qa_type, "span": span,
-            "question_type": question_type, "retrieval_difficulty": retrieval_difficulty,
-            "benchmark_level": benchmark_level,
+            **base_fields, "final_rank": 0, "final_pool": _hit_pool(final_results, target_ids, len(final_results)),
             "miss_info": {
-                "question": question[:100],
-                "expected_id": expected_id[:60],
-                "law_name": law_name[:40],
-                "span": span,
-                "type": qa_type,
-                "question_type": question_type,
-                "retrieval_difficulty": retrieval_difficulty,
+                "question": question[:100], "expected_id": expected_id[:60],
+                "law_name": law_name[:40], "span": span, "type": qa_type,
+                "question_type": question_type, "retrieval_difficulty": retrieval_difficulty,
                 "top1_id": final_results[0].get("id", "")[:60] if final_results else "",
             },
         }
     return {
-        "final_rank": final_rank, "dense_rank": dense_rank, "bm25_rank": bm25_rank, "fused_rank": fused_rank, "expanded_rank": expanded_rank,
-        "qa_type": qa_type, "span": span,
-        "question_type": question_type, "retrieval_difficulty": retrieval_difficulty,
-        "benchmark_level": benchmark_level,
+        **base_fields, "final_rank": final_rank, "final_pool": True,
         "miss_info": None,
     }
 
 
 def evaluate():
     print("=" * 60)
-    print(f"V6 Standalone Recall Eval — {WORKERS} workers (local jieba BM25)")
+    print(f"V10 Standalone Recall Eval — {WORKERS} workers (local jieba BM25 + adjacent article context)")
     print("=" * 60)
 
     # 预热本地 BM25 索引和 Parent 查找表
@@ -653,9 +856,10 @@ def evaluate():
     def _make_stat():
         return {"total": 0, "hits": {1: 0, 3: 0, 5: 0}}
 
-    # 各阶段独立统计
+    # 各阶段独立统计 (R@K + Pool@30)
     stage_names = ["dense", "bm25", "fused", "expanded", "final"]
     stage_hits = {s: {1: 0, 3: 0, 5: 0} for s in stage_names}
+    stage_pool = {s: 0 for s in stage_names}  # Pool@30: target 是否在 top 30 内
     by_type = defaultdict(_make_stat)
     by_span = defaultdict(_make_stat)
     by_qtype = defaultdict(_make_stat)
@@ -689,7 +893,7 @@ def evaluate():
                 by_rdiff[rdiff]["total"] += 1
                 by_blevel[blevel]["total"] += 1
 
-                # 汇总各阶段 hit
+                # 汇总各阶段 R@K hit
                 for stage, rank_val in [("dense", dense_rank), ("bm25", bm25_rank),
                                          ("fused", fused_rank), ("expanded", expanded_rank),
                                          ("final", final_rank)]:
@@ -699,6 +903,15 @@ def evaluate():
                         stage_hits[stage][3] += 1; stage_hits[stage][5] += 1
                     elif rank_val in (4, 5):
                         stage_hits[stage][5] += 1
+
+                # 汇总 Pool@30 (统一口径)
+                for stage, pool_flag in [("dense", r.get("dense_pool", False)),
+                                          ("bm25", r.get("bm25_pool", False)),
+                                          ("fused", r.get("fused_pool", False)),
+                                          ("expanded", r.get("expanded_pool", False)),
+                                          ("final", r.get("final_pool", False))]:
+                    if pool_flag:
+                        stage_pool[stage] += 1
 
                 # final 维度统计（与旧版兼容）
                 if final_rank == 1:
@@ -717,7 +930,8 @@ def evaluate():
                     elapsed = time.time() - t0
                     eta = elapsed / completed * (total - completed) if completed else 0
                     print(f"  [{completed}/{total}] {completed/total*100:.0f}%  "
-                          f"R@1={stage_hits['final'][1]}  R@5={stage_hits['final'][5]}  "
+                          f"R@5={stage_hits['final'][5]}  "
+                          f"Pool D={stage_pool['dense']} B={stage_pool['bm25']} F={stage_pool['fused']} E={stage_pool['expanded']}  "
                           f"{elapsed:.0f}s  ETA {eta:.0f}s")
 
     # ── 输出 ──
@@ -726,15 +940,16 @@ def evaluate():
     print(f"Total: {total}")
     print("=" * 60)
 
-    print(f"\n## 各阶段召回率对比")
-    print(f"| 阶段 | Recall@1 | Recall@3 | Recall@5 |")
-    print(f"|------|----------|----------|----------|")
+    print(f"\n## 各阶段召回率对比（统一 Pool@30 口径）")
+    print(f"| 阶段 | Recall@1 | Recall@3 | Recall@5 | Pool@30 |")
+    print(f"|------|----------|----------|----------|---------|")
     stage_labels = {"dense": "Dense only", "bm25": "BM25 (jieba)", "fused": "Weighted fused", "expanded": "Parent expanded", "final": "Reranker final"}
     for s in stage_names:
         r1 = stage_hits[s][1] / total * 100 if total else 0
         r3 = stage_hits[s][3] / total * 100 if total else 0
         r5 = stage_hits[s][5] / total * 100 if total else 0
-        print(f"| {stage_labels[s]} | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% |")
+        p30 = stage_pool[s] / total * 100 if total else 0
+        print(f"| {stage_labels[s]} | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% | {p30:.1f}% |")
 
     def _print_section(title, data):
         print(f"\n## {title}")
@@ -760,23 +975,24 @@ def evaluate():
                 print(f"     top1: {m.get('top1_id','')[:70]}")
 
     # ── 写报告 ──
-    _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses)
+    _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses, stage_pool)
     print(f"\n报告已输出: {OUTPUT_PATH}")
 
 
-def _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses):
+def _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses, stage_pool=None):
     lines = [
-        "# V7 召回评测报告 — Chunk ID 匹配（加权融合 + 法条Boost）",
+        "# V9 召回评测报告 — Chunk ID 匹配（加权融合 + 法条Boost + Parent上下文增强）",
         "",
-        f"**评测集**: v7_benchmark.jsonl, {total} 题 (canonical + natural + robust)",
+        f"**评测集**: v8_canonical.jsonl, {total} 题",
         "**评测方式**: 纯 chunk ID 匹配（expected_chunk_id / acceptable_chunk_ids）",
-        "**融合策略**: Weighted Fusion（Min-Max 归一化 + 动态权重 + 法条检测 Boost）",
+        "**融合策略**: Weighted Fusion（Min-Max 归一化 + 动态权重 semantic 0.55/0.45 + 法条检测 Boost）",
+        f"**统一口径**: Pool@30 = 各阶段取 top 30 看 target 是否在池中（与 reranker 入口对齐）",
         "**BM25**: 本地 jieba 分词",
         "",
         "## 各阶段召回率对比",
         "",
-        "| 阶段 | Recall@1 | Recall@3 | Recall@5 |",
-        "|------|----------|----------|----------|",
+        "| 阶段 | Recall@1 | Recall@3 | Recall@5 | Pool@30 |",
+        "|------|----------|----------|----------|---------|",
     ]
     stage_labels = {"dense": "Dense only", "bm25": "BM25 (jieba)", "fused": "Weighted fused", "expanded": "Parent expanded", "final": "Reranker final"}
     for s in stage_labels:
@@ -784,7 +1000,8 @@ def _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_bl
         r1 = sh[1] / total * 100 if total else 0
         r3 = sh[3] / total * 100 if total else 0
         r5 = sh[5] / total * 100 if total else 0
-        lines.append(f"| {stage_labels[s]} | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% |")
+        p30 = stage_pool.get(s, 0) / total * 100 if stage_pool and total else 0
+        lines.append(f"| {stage_labels[s]} | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% | {p30:.1f}% |")
     lines.append("")
 
     # final/reranker 整体

@@ -1,4 +1,4 @@
-# 招投标智能问答系统 v5.3
+# 招投标智能问答系统 v5.4
 
 RAG + SQL 双引擎招投标智能问答平台 — 基于 FastAPI，Milvus 向量库 + BGE-M3 远程 Embedding，三库检索（regulations + bids + policy），6 大数据分类，fast/think 双模自适应路由。
 
@@ -348,57 +348,46 @@ search_unified(query)
 
 ## 评估
 
-```bash
-# V4 评测（1000 题，RRF 融合 + BGE-Reranker 精排）
-python run_recall_eval_full.py
+### V14 召回评测 (2026-07-05)
 
-# 生成评测集
-python gen_eval_benchmark_v4.py    # V4 生成器（11 字段，增强提示词，断点续跑）
-python gen_eval_benchmark_v2.py    # V2 生成器
-```
+**评测集**: V9 Canonical, 2832 题 | **管线**: Dense + BM25 → Weighted Fusion → Parent Context → BGE-Reranker | **Collection**: policy_v9
+
+| 指标 | R@1 | R@3 | R@5 | Miss |
+|------|-----|-----|-----|------|
+| 最终 (Reranker) | 66.3% | 86.4% | **92.7%** | 208 |
+| Dense only | 53.0% | 72.4% | 77.6% | — |
+| BM25 (jieba) | 62.3% | 80.5% | 86.6% | — |
+| Weighted fused | 62.6% | 81.1% | 87.5% | — |
+
+**按 chunk_type R@5**: opinion_news 100.0% | policy_doc 96.6% | pdf_law_child 92.8% | pdf_law_parent 90.9% | pdf_case_sliding 90.6% | pdf_case_structured 89.0%
+
+**按 question_type R@5**: announcement_interpretation 98.9% | responsibility 93.7% | definition 92.5% | procedure 92.5% | scenario_judgment 92.5% | case_reasoning 91.8% | condition_check 91.6%
+
+### Header 领域注入
+
+71 个高频跨法规混淆 (law, article_id) 对的 `retrieval_text` header 已添加领域/主题/关键词前缀，覆盖 10 个领域。参见 `fix_header_enrich.py`。
 
 ### Benchmark 版本演进
 
-| 版本 | 题数 | 命中体系 | parent_hit@5 | 状态 |
-|------|------|----------|-------------|------|
-| V1 | 457 | 单级 exact | -- | ❌ 已废弃 |
-| V2 | 898 | 三级 (exact/parent/soft) | -- | ⚠️ 含截断 law_name 问题 |
-| V3 | 772 | 四级 (exact/parent/soft/cosine) | -- | ⚠️ 126 题因滑动窗口重切失效 |
-| **V4** | **1000** | RRF + BGE-Reranker | **90.0%** | ✅ 当前主力 |
-
-### V4 评测报告 (2026-06-24)
-
-| 指标 | 值 |
-|------|-----|
-| parent_hit@5 | **90.0%** |
-| exact_hit@5 | 80.4% |
-| MRR | 0.6788 |
-| Miss 率 | 6.2% |
-
-按类别 parent_hit@5：
-
-| 类别 | 数量 | 命中率 |
-|------|------|--------|
-| opinion_news | 86 | **100%** |
-| pdf_case_paragraph | 215 | 93.0% |
-| pdf_law_parent | 558 | 90.7% |
-| policy_doc | 54 | 88.9% |
-| pdf_law_child | 88 | 69.3% |
+| 版本 | 题数 | R@5 | 关键改进 |
+|------|------|-----|---------|
+| V4 | 1000 | 90.0% | RRF + BGE-Reranker |
+| V9 | 2832 | 89.0% | 新评测体系 + Parent-Child Chunk |
+| V10 | 3146 | 89.5% | 相邻法条上下文 + Parent 黑名单 |
+| V11 | 2832 | 92.0% | 评测集净化 + 三路动态权重 |
+| V13 | 2832 | 92.0% | source_type_boost + textbook 1.03x |
+| **V14** | **2832** | **92.7%** | **Header 领域注入 71 对全量补齐** |
 
 ### 评测文件
 
-问答对位于 `data/eval_questions/`，报告位于 `data/QA_report/`：
+评测数据位于 `data/eval_questions/`，报告位于 `data/eval_questions/v*/`。
 
-| 文件 | 说明 |
-|------|------|
-| `eval_benchmark_v4.json` | V4 问答对（1000 题） |
-| `eval_benchmark_v4_clean_law.json` | V4 清洁版（law_name 已修正） |
-| `eval_benchmark_v3.json` | V3 问答对（772 题） |
-| `eval_benchmark_v2.json` | V2 问答对（898 题） |
-| `QA_report/eval_recall_report_v4.json` | **V4 完整评估报告** |
-| `QA_report/eval_recall_report_v3.json` | V3 评估报告 |
-| `QA_report/eval_recall_report_v2.json` | V2 评估报告 |
-| `policy_chunks_export.json` | 当前 Milvus 8,225 chunks 导出 |
+### 评测脚本
+
+```bash
+python eval_standalone.py    # 服务器端直连 Milvus + Embedding/Reranker
+python deploy_eval.py        # 部署到服务器
+```
 
 ## 配置总览
 
