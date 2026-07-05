@@ -348,16 +348,16 @@ search_unified(query)
 
 ## 评估
 
-### V14 召回评测 (2026-07-05)
+### V15 召回评测 (2026-07-05 最终版)
 
 **评测集**: V9 Canonical, 2832 题 | **管线**: Dense + BM25 → Weighted Fusion → Parent Context → BGE-Reranker | **Collection**: policy_v9
 
 | 指标 | R@1 | R@3 | R@5 | Miss |
 |------|-----|-----|-----|------|
-| 最终 (Reranker) | 66.3% | 86.4% | **92.7%** | 208 |
-| Dense only | 53.0% | 72.4% | 77.6% | — |
-| BM25 (jieba) | 62.3% | 80.5% | 86.6% | — |
-| Weighted fused | 62.6% | 81.1% | 87.5% | — |
+| 最终 (Reranker) | 67.0% | 87.0% | **93.5%** | 184 |
+| Dense only | 52.9% | 72.7% | 77.9% | — |
+| BM25 (jieba) | 63.1% | 81.2% | 87.1% | — |
+| Weighted fused | 63.3% | 82.0% | 88.0% | — |
 
 **按 chunk_type R@5**: opinion_news 100.0% | policy_doc 96.6% | pdf_law_child 92.8% | pdf_law_parent 90.9% | pdf_case_sliding 90.6% | pdf_case_structured 89.0%
 
@@ -376,7 +376,8 @@ search_unified(query)
 | V10 | 3146 | 89.5% | 相邻法条上下文 + Parent 黑名单 |
 | V11 | 2832 | 92.0% | 评测集净化 + 三路动态权重 |
 | V13 | 2832 | 92.0% | source_type_boost + textbook 1.03x |
-| **V14** | **2832** | **92.7%** | **Header 领域注入 71 对全量补齐** |
+| V14 | 2832 | 92.7% | Header 领域注入 27 对 (首轮) |
+| **V15** | **2832** | **93.5%** | **Header 领域注入 71 对全量补齐 (最终版)** |
 
 ### 评测文件
 

@@ -4,7 +4,33 @@
 
 ---
 
-## 2026-07-05 — V14 Header 领域注入 + 高频 Miss Chunk 跨法规混淆治理（最终版）
+## 2026-07-05 — V15 Header 领域注入全量补齐 + 召回率 93.5%（最终版）
+
+### V15 召回评测
+
+- **R@5: 93.5%**（V14: 92.7%，V13: 92.0%），两轮 header 注入累计 +1.5%
+- miss 从 226 → 208 → **184**（-42 条 vs V13）
+- Dense-only 和 BM25 双升，Weighted fused Pool@30 达到 98.0%
+- 全部 71 个 law-article 对覆盖 V14 miss 中所有未 enrichment 法规条目
+
+### 两轮 Header 注入对比
+
+| 轮次 | 新增条目 | 更新 chunks | R@5 |
+|------|---------|------------|------|
+| V14 首轮 | 27 对（Top 高频 miss） | 67 | 92.7% |
+| V15 补齐 | 44 对（V14 miss 全量） | 103 | **93.5%** |
+
+### 最终 Miss 结构 (184 条)
+
+- pdf_law_parent: 82 条（跨法规竞争为主，embedding 分辨力天花板）
+- pdf_case_structured: 41 条（教科书内部竞争）
+- policy_doc: 24 条
+- pdf_case_sliding: 20 条
+- pdf_law_child: 17 条
+
+---
+
+## 2026-07-05 — V14 Header 领域注入 + 高频 Miss Chunk 跨法规混淆治理
 
 ### V14 召回评测
 
