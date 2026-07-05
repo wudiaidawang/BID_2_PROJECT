@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""API服务入口 — 招投标智能问答系统 (融合版: SQL + RAG + Agent)"""
+"""API服务入口 — 招投标智能问答系统 v5.1 (Auto自适应路由: SQL + RAG + Planner DAG)"""
 import os
 
 os.environ['HF_ENDPOINT'] = os.getenv('HF_ENDPOINT', 'https://hf-mirror.com')
@@ -31,29 +31,56 @@ async def lifespan(app: FastAPI):
     print("\n[1/7] 加载 SQL 引擎...")
     app.state.sql_engine = SQLEngine()
 
-    # [2/7] Redis
+    # [2/7] Redis (可选 — 连接失败自动降级，不影响主流程)
     print("\n[2/7] 连接 Redis...")
     await redis_client._get_client()
+    if redis_client.available:
+        print(f"  Redis 已连接 ({settings.redis_host}:{settings.redis_port})")
+    else:
+        print(f"  ⚠ Redis 不可用 — 会话持久化已禁用，问答功能正常")
 
     # [3/7] LLM 生成器
     print("\n[3/7] 加载 LLM 生成器...")
     app.state.generator = LLMGenerator()
+
+    # [3.5/7] Memory 模块
+    print("\n[3.5/7] 加载 Memory 模块...")
+    from app.core.memory import MemoryManager
+    app.state.memory = MemoryManager(
+        llm=app.state.generator,
+        storage_dir=getattr(settings, 'memory_storage_dir', './memory_store'),
+        buffer_k=getattr(settings, 'memory_buffer_k', 5),
+    )
+    print(f"   MemoryManager 已初始化 (dir={app.state.memory._storage_dir})")
 
     # [4/7] 路由 (根据配置选择)
     print(f"\n[4/7] 加载路由器 (mode={settings.router_mode})...")
     router_instance = create_router(llm=app.state.generator)
     app.state.router = router_instance
 
-    # 如果是 planner 模式，额外初始化 Agent
-    if settings.router_mode == "planner" and settings.agent_enabled:
-        from app.agent.react_agent import ReActAgent
-        app.state.agent = ReActAgent(
-            retriever=None,  # 下面初始化
+    # 如果是 planner 或 auto 模式，初始化 PlannerExecutor
+    if settings.router_mode in ("planner", "auto", "think"):
+        from app.agent.planner import PlannerExecutor
+        app.state.planner_executor = PlannerExecutor(
+            retriever=None,  # 下面回填
             llm=app.state.generator,
-            max_steps=settings.agent_max_steps,
+            allow_replan=settings.planner_allow_replan,
         )
-        print("   Agent 已初始化")
+        print("   PlannerExecutor 已初始化 "
+              f"(allow_replan={settings.planner_allow_replan})")
+
+        if settings.agent_enabled:
+            from app.agent.react_agent import ReActAgent
+            app.state.agent = ReActAgent(
+                retriever=None,
+                llm=app.state.generator,
+                max_steps=settings.agent_max_steps,
+            )
+            print("   ReActAgent 已初始化 (planner降级备选)")
+        else:
+            app.state.agent = None
     else:
+        app.state.planner_executor = None
         app.state.agent = None
 
     # [5/7] 混合检索器
@@ -68,7 +95,13 @@ async def lifespan(app: FastAPI):
 
     app.state.retriever = HybridRetriever()
 
-    # Agent 的 retriever 回填
+    # 回填 retriever 到需要它的组件
+    if app.state.planner_executor and hasattr(app.state.planner_executor, 'retriever'):
+        app.state.planner_executor.retriever = app.state.retriever
+        # 同时更新所有工具的 retriever
+        for tool in app.state.planner_executor.tools.values():
+            tool.retriever = app.state.retriever
+
     if app.state.agent and hasattr(app.state.agent, 'retriever'):
         app.state.agent.retriever = app.state.retriever
 
@@ -141,7 +174,7 @@ async def root():
             "BGE-Reranker 精排",
             "3层查询改写: 口语→书面语 + 冗余精简 + 同义词替换",
             "4个Agent工具: search_regulations / get_article / sql_query / summarize",
-            "多轮对话 (Redis)",
+            "多轮对话 (Redis, 可选)",
         ],
         "endpoints": [
             {"path": "POST /api/v1/ask", "description": "问答接口"},

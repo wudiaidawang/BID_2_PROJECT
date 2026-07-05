@@ -17,22 +17,22 @@ class BaseTool:
 
 
 class SearchRegulationsTool(BaseTool):
-    """语义检索法规工具"""
+    """统一知识库检索工具 — 法规 + 招标项目双库召回"""
     name = "search_regulations"
-    description = """语义检索招投标法规知识库。
-适用场景：问概念定义（什么是围标）、问处罚规定（串通投标罚款多少）、问流程步骤（如何开标）。
+    description = """统一检索招投标知识库（法规条文 + 招标项目案例）。
+适用场景：问概念定义（什么是围标）、问处罚规定（串通投标罚款多少）、问流程步骤（如何开标）、问类似项目案例。
 输入：query（自然语言问题）
-输出：相关法规片段（最多3条）"""
+输出：相关法规片段和项目案例（最多5条，跨库去重）"""
 
     async def run(self, query: str = "", **kwargs) -> str:
         if not query:
             return "错误：请提供检索关键词"
 
         top_k = settings.top_k
-        results = self.retriever.search(query, "regulations", top_k=top_k)
+        results = self.retriever.search_unified(query, top_k=top_k)
 
         if not results:
-            return f"未找到与「{query}」相关的法规信息"
+            return f"未找到与「{query}」相关的信息"
 
         output_parts = []
         max_len = 500
@@ -44,18 +44,47 @@ class SearchRegulationsTool(BaseTool):
         return "\n\n".join(output_parts)
 
     def _format_source(self, chunk: Dict) -> str:
-        data = chunk.get("data", {})
-        doc_title = data.get("doc_title", "")
-        article_num = data.get("article_num", "")
-        if doc_title and doc_title != "unknown":
-            clean = doc_title.replace("《", "").replace("》", "")
-            if article_num and article_num not in ("unknown", "full"):
-                return f"{clean} 第{article_num}条"
-            return clean
-        source = data.get("source", "未知来源")
-        if article_num and article_num not in ("unknown", "full"):
-            return f"{source} 第{article_num}条"
-        return source
+        meta = chunk.get("metadata", {}) or chunk.get("data", {})
+        law_name = meta.get("law_name", "")
+        article = meta.get("article", "")
+        article_id = meta.get("article_id", "")
+
+        # ── 法规类型结果 ──
+        if law_name or article or article_id:
+            if law_name:
+                clean = law_name.replace("《", "").replace("》", "")
+                if article:
+                    return f"[法规] {clean} {article}"
+                if article_id:
+                    return f"[法规] {clean} 第{article_id}条"
+                return f"[法规] {clean}"
+            source = meta.get("source", "法规库")
+            if article:
+                return f"[法规] {source} {article}"
+            if article_id:
+                return f"[法规] {source} 第{article_id}条"
+            return f"[法规] {source}"
+
+        # ── 招标项目结果 ──
+        project_name = meta.get("项目名称", "")
+        winner = meta.get("中标人", "")
+        province = meta.get("省份", "")
+        if project_name:
+            base = f"[项目] {project_name}"
+            if winner:
+                base += f" | 中标: {winner}"
+            if province:
+                base += f" | {province}"
+            return base
+
+        # ── 降级 ──
+        source = meta.get("source", "未知来源")
+        text = chunk.get("text", "")
+        import re
+        match = re.search(r'第([一二三四五六七八九十百千\d]+)条', text)
+        if match:
+            return f"[法规] {source} 第{match.group(1)}条"
+        return f"[混合] {source}"
 
 
 class GetArticleTool(BaseTool):
@@ -70,21 +99,32 @@ class GetArticleTool(BaseTool):
         if not article_num:
             return "错误：请提供条款号"
 
-        results = self.retriever.search_article_exact(law_name, article_num)
+        # 使用主项目 retriever 的 search 方法（带 metadata 语义匹配）
+        query = f"{law_name} 第{article_num}条" if law_name else f"第{article_num}条"
+        results = self.retriever.search(query, "regulations", top_k=5)
 
         if not results:
-            fallback_query = f"{law_name} 第{article_num}条" if law_name else f"第{article_num}条"
-            results = self.retriever.search(fallback_query, "regulations", top_k=3)
-            if not results:
-                return f"未找到第{article_num}条的相关内容"
+            return f"未找到第{article_num}条的相关内容"
+
+        # 过滤：优先匹配 article_id
+        filtered = []
+        for r in results:
+            meta = r.get("metadata", {}) or r.get("data", {})
+            rid = str(meta.get("article_id", ""))
+            if rid == str(article_num):
+                filtered.append(r)
+
+        if not filtered:
+            # 降级：返回所有结果
+            filtered = results[:3]
 
         output_parts = []
-        for i, r in enumerate(results[:2], 1):
-            text = r.get("text", "")[:800]
-            data = r.get("data", {})
-            doc = data.get("doc_title", data.get("source", "未知"))
-            clean = doc.replace("《", "").replace("》", "")
-            output_parts.append(f"[{i}] 来源：{clean} 第{article_num}条\n{text}")
+        for i, r in enumerate(filtered[:2], 1):
+            text = r.get("parent_content") or r.get("text", "")[:800]
+            meta = r.get("metadata", {}) or r.get("data", {})
+            law = meta.get("law_name", meta.get("source", "未知"))
+            art = meta.get("article", f"第{article_num}条")
+            output_parts.append(f"[{i}] 来源：{law} {art}\n{text}")
 
         return "\n\n".join(output_parts)
 
@@ -104,7 +144,7 @@ class SQLQueryTool(BaseTool):
         try:
             from app.core.sql_engine import SQLEngine
             engine = SQLEngine()
-            sql, data = engine.execute_query(query)
+            sql, data = await engine.execute_query(query)
             if data:
                 return f"SQL查询: {sql}\n结果: {data}"
             return f"SQL查询: {sql}\n结果: 未查询到数据"
@@ -124,7 +164,7 @@ class SummarizeTool(BaseTool):
 用户问题：{query}
 检索结果：{chunks_text[:3000]}
 请给出结构化的答案，标注信息来源。如果信息不足以回答问题，请如实说明。"""
-        return await self.llm.generate(prompt)
+        return await self.llm._call_llm(prompt)
 
 
 # ── 工具注册表 ──

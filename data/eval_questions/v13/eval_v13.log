@@ -1,0 +1,181 @@
+============================================================
+V10 Standalone Recall Eval — 3 workers (local jieba BM25 + adjacent article context)
+============================================================
+[BM25] Fetching all documents from Milvus...
+Building prefix dict from the default dictionary ...
+Loading model from cache /tmp/jieba.cache
+Loading model cost 0.721 seconds.
+Prefix dict has been built successfully.
+[BM25] Local jieba index ready: 4984 docs
+[ParentExpand] Lookup map ready: 4984 docs
+Eval set: 2832 items
+
+[ParentFilter] 23 articles have children
+[ArticleIndex] 1631 parent articles indexed
+  [50/2832] 2%  R@5=50  Pool D=48 B=50 F=50 E=50  28s  ETA 1581s
+  [100/2832] 4%  R@5=90  Pool D=97 B=100 F=100 E=100  49s  ETA 1345s
+  [150/2832] 5%  R@5=140  Pool D=146 B=150 F=150 E=150  74s  ETA 1314s
+  [200/2832] 7%  R@5=187  Pool D=196 B=200 F=200 E=200  99s  ETA 1309s
+  [250/2832] 9%  R@5=237  Pool D=246 B=250 F=250 E=250  126s  ETA 1301s
+  [300/2832] 11%  R@5=287  Pool D=296 B=300 F=300 E=300  153s  ETA 1290s
+  [350/2832] 12%  R@5=337  Pool D=346 B=350 F=350 E=350  181s  ETA 1282s
+  [400/2832] 14%  R@5=385  Pool D=395 B=400 F=400 E=400  206s  ETA 1250s
+  [450/2832] 16%  R@5=435  Pool D=443 B=450 F=450 E=450  233s  ETA 1234s
+  [500/2832] 18%  R@5=483  Pool D=491 B=500 F=500 E=500  265s  ETA 1237s
+  [550/2832] 19%  R@5=532  Pool D=541 B=549 F=549 E=549  296s  ETA 1230s
+  [600/2832] 21%  R@5=581  Pool D=590 B=599 F=598 E=598  318s  ETA 1182s
+  [650/2832] 23%  R@5=629  Pool D=638 B=648 F=647 E=647  344s  ETA 1155s
+  [700/2832] 25%  R@5=675  Pool D=688 B=698 F=697 E=697  367s  ETA 1118s
+  [750/2832] 26%  R@5=721  Pool D=735 B=748 F=747 E=747  391s  ETA 1086s
+  [800/2832] 28%  R@5=768  Pool D=782 B=798 F=797 E=797  415s  ETA 1055s
+  [850/2832] 30%  R@5=815  Pool D=831 B=848 F=847 E=847  437s  ETA 1020s
+  [900/2832] 32%  R@5=861  Pool D=879 B=896 F=895 E=895  461s  ETA 990s
+  [950/2832] 34%  R@5=907  Pool D=923 B=944 F=943 E=943  486s  ETA 963s
+  [1000/2832] 35%  R@5=957  Pool D=970 B=991 F=993 E=993  510s  ETA 935s
+  [1050/2832] 37%  R@5=1000  Pool D=1012 B=1038 F=1039 E=1039  537s  ETA 912s
+  [1100/2832] 39%  R@5=1047  Pool D=1057 B=1086 F=1088 E=1088  563s  ETA 887s
+  [1150/2832] 41%  R@5=1090  Pool D=1101 B=1134 F=1137 E=1137  589s  ETA 861s
+  [1200/2832] 42%  R@5=1128  Pool D=1148 B=1181 F=1184 E=1184  614s  ETA 835s
+  [1250/2832] 44%  R@5=1174  Pool D=1187 B=1227 F=1232 E=1232  643s  ETA 814s
+  [1300/2832] 46%  R@5=1217  Pool D=1226 B=1272 F=1280 E=1280  666s  ETA 785s
+  [1350/2832] 48%  R@5=1266  Pool D=1271 B=1321 F=1330 E=1330  689s  ETA 756s
+  [1400/2832] 49%  R@5=1316  Pool D=1320 B=1370 F=1380 E=1380  714s  ETA 730s
+  [1450/2832] 51%  R@5=1361  Pool D=1367 B=1418 F=1429 E=1429  738s  ETA 703s
+  [1500/2832] 53%  R@5=1411  Pool D=1414 B=1468 F=1479 E=1479  761s  ETA 676s
+  [1550/2832] 55%  R@5=1459  Pool D=1460 B=1518 F=1529 E=1529  785s  ETA 650s
+  [1600/2832] 56%  R@5=1500  Pool D=1506 B=1565 F=1579 E=1579  819s  ETA 630s
+  [1650/2832] 58%  R@5=1547  Pool D=1555 B=1614 F=1628 E=1628  851s  ETA 610s
+  [1700/2832] 60%  R@5=1595  Pool D=1604 B=1664 F=1678 E=1678  875s  ETA 583s
+  [1750/2832] 62%  R@5=1645  Pool D=1651 B=1714 F=1728 E=1728  898s  ETA 555s
+  [1800/2832] 64%  R@5=1693  Pool D=1699 B=1763 F=1778 E=1778  917s  ETA 526s
+  [1850/2832] 65%  R@5=1743  Pool D=1748 B=1813 F=1828 E=1828  943s  ETA 501s
+  [1900/2832] 67%  R@5=1792  Pool D=1796 B=1862 F=1877 E=1877  970s  ETA 476s
+  [1950/2832] 69%  R@5=1837  Pool D=1842 B=1909 F=1925 E=1925  999s  ETA 452s
+  [2000/2832] 71%  R@5=1875  Pool D=1883 B=1955 F=1972 E=1972  1031s  ETA 429s
+  [2050/2832] 72%  R@5=1923  Pool D=1931 B=2004 F=2021 E=2021  1056s  ETA 403s
+  [2100/2832] 74%  R@5=1970  Pool D=1981 B=2054 F=2071 E=2071  1088s  ETA 379s
+  [2150/2832] 76%  R@5=2010  Pool D=2025 B=2103 F=2120 E=2120  1118s  ETA 355s
+  [2200/2832] 78%  R@5=2054  Pool D=2074 B=2152 F=2169 E=2169  1148s  ETA 330s
+  [2250/2832] 79%  R@5=2102  Pool D=2123 B=2202 F=2219 E=2219  1179s  ETA 305s
+  [2300/2832] 81%  R@5=2140  Pool D=2167 B=2242 F=2263 E=2263  1207s  ETA 279s
+  [2350/2832] 83%  R@5=2180  Pool D=2209 B=2287 F=2311 E=2311  1229s  ETA 252s
+  [2400/2832] 85%  R@5=2216  Pool D=2242 B=2332 F=2357 E=2357  1257s  ETA 226s
+  [2450/2832] 87%  R@5=2264  Pool D=2288 B=2379 F=2405 E=2405  1287s  ETA 201s
+  [2500/2832] 88%  R@5=2307  Pool D=2334 B=2424 F=2451 E=2451  1316s  ETA 175s
+  [2550/2832] 90%  R@5=2354  Pool D=2377 B=2473 F=2499 E=2499  1343s  ETA 149s
+  [2600/2832] 92%  R@5=2396  Pool D=2422 B=2519 F=2545 E=2545  1371s  ETA 122s
+  [2650/2832] 94%  R@5=2443  Pool D=2468 B=2568 F=2594 E=2594  1399s  ETA 96s
+  [2700/2832] 95%  R@5=2484  Pool D=2506 B=2615 F=2641 E=2641  1428s  ETA 70s
+  [2750/2832] 97%  R@5=2530  Pool D=2548 B=2663 F=2690 E=2690  1457s  ETA 43s
+  [2800/2832] 99%  R@5=2577  Pool D=2594 B=2711 F=2738 E=2738  1485s  ETA 17s
+  [2832/2832] 100%  R@5=2606  Pool D=2623 B=2740 F=2767 E=2767  1504s  ETA 0s
+
+============================================================
+RESULTS — Chunk ID Recall
+Total: 2832
+============================================================
+
+## 各阶段召回率对比（统一 Pool@30 口径）
+| 阶段 | Recall@1 | Recall@3 | Recall@5 | Pool@30 |
+|------|----------|----------|----------|---------|
+| Dense only | 52.8% | 72.8% | 78.0% | 92.6% |
+| BM25 (jieba) | 62.1% | 80.3% | 86.4% | 96.8% |
+| Weighted fused | 62.4% | 81.0% | 87.2% | 97.7% |
+| Parent expanded | 62.4% | 81.0% | 87.2% | 97.7% |
+| Reranker final | 66.3% | 86.1% | 92.0% | 92.0% |
+
+## 按 benchmark_level (final)
+  canonical: 2832题, R@1=66.3%, R@3=86.1%, R@5=92.0%
+
+## 按 chunk_type (final)
+  opinion_news: 130题, R@1=95.4%, R@3=98.5%, R@5=100.0%
+  pdf_case_sliding: 223题, R@1=49.3%, R@3=80.3%, R@5=90.6%
+  pdf_case_structured: 428题, R@1=34.1%, R@3=75.2%, R@5=90.7%
+  pdf_law_child: 235题, R@1=68.5%, R@3=83.0%, R@5=90.2%
+  pdf_law_parent: 1075题, R@1=71.8%, R@3=87.2%, R@5=89.1%
+  policy_doc: 741题, R@1=76.2%, R@3=91.5%, R@5=96.6%
+
+## 按 question_type (final)
+  announcement_interpretation: 88题, R@1=89.8%, R@3=96.6%, R@5=98.9%
+  case_reasoning: 147题, R@1=50.3%, R@3=83.7%, R@5=90.5%
+  condition_check: 548题, R@1=61.9%, R@3=83.0%, R@5=90.3%
+  definition: 212题, R@1=62.3%, R@3=84.0%, R@5=92.5%
+  procedure: 1087题, R@1=66.7%, R@3=85.3%, R@5=91.0%
+  responsibility: 364题, R@1=69.5%, R@3=89.8%, R@5=94.5%
+  scenario_judgment: 386题, R@1=71.5%, R@3=89.1%, R@5=93.8%
+
+## 按 retrieval_difficulty (final)
+  direct: 208题, R@1=65.9%, R@3=83.7%, R@5=88.9%
+  scenario: 12题, R@1=83.3%, R@3=91.7%, R@5=91.7%
+  synonym: 2612题, R@1=66.3%, R@3=86.3%, R@5=92.3%
+
+## 按 span (final)
+  cross_chunk: 517题, R@1=67.5%, R@3=83.2%, R@5=86.5%
+  cross_doc: 51题, R@1=41.2%, R@3=64.7%, R@5=70.6%
+  single: 2264题, R@1=66.6%, R@3=87.3%, R@5=93.8%
+
+## Miss 样本 (前 20 / 共 226)
+  1. [scenario_judgment][synonym] 上海市公共资源交易中心包含哪些分平台？
+     expected: policy_67
+     top1: policy_0
+  2. [scenario_judgment][synonym] 上海市公共资源交易平台建设工程招投标分平台属于哪个系统？
+     expected: policy_100
+     top1: policy_0
+  3. [scenario_judgment][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_67
+     top1: policy_125
+  4. [scenario_judgment][synonym] 上海市公共资源交易平台建设工程招投标分平台属于哪个系统？
+     expected: policy_100
+     top1: policy_0
+  5. [scenario_judgment][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_67
+     top1: policy_125
+  6. [scenario_judgment][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_67
+     top1: policy_125
+  7. [scenario_judgment][synonym] 上海市公共资源交易平台建设工程招投标分平台属于哪个系统？
+     expected: policy_100
+     top1: policy_0
+  8. [scenario_judgment][synonym] 上海市公共资源交易平台建设工程招投标分平台属于哪个系统？
+     expected: policy_100
+     top1: policy_0
+  9. [scenario_judgment][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_67
+     top1: policy_125
+  10. [scenario_judgment][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_76
+     top1: policy_125
+  11. [definition][direct] 《评标专家和评标专家库管理办法》是什么文件？
+     expected: policy_6
+     top1: parent_民航专业工程及货物招标投标评标专家和专家_1_776_4192
+  12. [scenario_judgment][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_5
+     top1: policy_125
+  13. [definition][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_103
+     top1: policy_125
+  14. [scenario_judgment][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_101
+     top1: policy_125
+  15. [procedure][synonym] 上海市公共资源交易中心各分平台在实施信用记分评估时，如果无法适用市交易中心的标准，应该怎么做？
+     expected: policy_129
+     top1: policy_126
+  16. [procedure][synonym] 根据《评标专家和评标专家库管理办法》，评标专家库管理的主要机制包括哪些？
+     expected: policy_4
+     top1: parent_通信工程建设项目评标专家及评标专家库管理_1_902_2667
+  17. [procedure][synonym] 根据《评标专家和评标专家库管理办法》，评标专家库管理的主要内容包括哪些？
+     expected: policy_4
+     top1: parent_通信工程建设项目评标专家及评标专家库管理_1_902_2667
+  18. [condition_check][synonym] 评标委员会的组成要求是什么？
+     expected: policy_20
+     top1: parent_明确或实际投标人报名数量未达到招标公告中_25_378_8707
+  19. [responsibility][synonym] 评标委员会的职责是什么？
+     expected: policy_20
+     top1: parent_铁路建设工程招标投标实施办法_41_701_3383
+  20. [procedure][synonym] 上海市公共资源交易平台包含哪些分平台？
+     expected: policy_1
+     top1: policy_125
+
+Miss JSON saved: /home/admin/eval_v13/data/eval_questions/v13/v13_recall_report.misses.json (226 entries)
+
+报告已输出: /home/admin/eval_v13/data/eval_questions/v13/v13_recall_report.md

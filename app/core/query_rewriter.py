@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import List, Tuple, Optional
 
+from app.core.legal_entity_registry import is_protected_entity
+
 
 class QueryRewriter:
     """统一查询改写器（单例）"""
@@ -92,14 +94,22 @@ class QueryRewriter:
         )
 
     def rewrite(self, question: str) -> str:
-        """执行改写管道：标点规范 → 冗余精简 → 口语转书面语 → 同义词替换"""
+        """执行改写管道：标点规范 → 条款号规范化 → 冗余精简 → 口语转书面语 → 同义词替换"""
         if not question or not isinstance(question, str):
             return question or ""
 
         result = question
 
-        # 0. 标点规范化
+        # 0. 标点规范化（始终执行）
         result = self._normalize_punctuation(result)
+
+        # 0.5 条款号规范化：中文数字 → 阿拉伯数字（始终执行，避免"第三十七条"和"第37条"不一致）
+        result = self._normalize_article_numbers(result)
+
+        # 如果包含法规名称，跳过后续改写（保护专有名词不被改坏）
+        # 使用统一实体注册中心检测
+        if is_protected_entity(result):
+            return result
 
         # 1. 冗余精简
         if self.enable_redundancy:
@@ -109,9 +119,9 @@ class QueryRewriter:
         if self.enable_colloquial:
             result = self._colloquial_to_formal(result)
 
-        # 3. 同义词替换
-        if self.enable_synonym:
-            result = self._expand_synonyms(result)
+        # 3. 同义词扩展 —— 已禁用（最易造成语义漂移，改为仅做口语规范化 + 实体识别）
+        # if self.enable_synonym:
+        #     result = self._expand_synonyms(result)
 
         # 4. 清理多余空格
         result = re.sub(r"\s+", " ", result).strip()
@@ -129,6 +139,23 @@ class QueryRewriter:
             text = text.replace(cn, en)
         return text
 
+    def _normalize_article_numbers(self, text: str) -> str:
+        """将条款号中的中文数字统一转为阿拉伯数字。
+
+        覆盖: 第X条 / 第X款 / 第X项 / 第X章 / 第X节
+        数字范围: 一～九、十、百、千（如"第一百二十三条"→"第123条"）
+        """
+        from app.utils.chinese_number import chinese_number_converter
+        result = text
+        cn_num = r'[一二三四五六七八九十百千]+'
+        for suffix in ['条', '款', '项', '章', '节']:
+            for match in re.finditer(rf'第({cn_num}){suffix}', result):
+                chinese = match.group(1)
+                arabic = chinese_number_converter.to_arabic(chinese)
+                if arabic != chinese:
+                    result = result.replace(f'第{chinese}{suffix}', f'第{arabic}{suffix}')
+        return result
+
     def _remove_redundancy(self, text: str) -> str:
         result = text
         for phrase in self.redundant_phrases:
@@ -143,17 +170,28 @@ class QueryRewriter:
         return result
 
     def _colloquial_to_formal(self, text: str) -> str:
+        """词边界感知的口语→书面语替换。
+        多字词直接替换；单字词仅当作为独立 jieba token 时才替换。
+        """
+        import jieba
         result = text
         for colloquial, formal in self.colloquial_mappings:
-            if colloquial in result:
+            if len(colloquial) >= 2 and colloquial in result:
                 result = result.replace(colloquial, formal)
+
+        single_chars = {c: f for c, f in self.colloquial_mappings if len(c) == 1}
+        if single_chars and result:
+            tokens = list(jieba.cut(result))
+            new_tokens = [single_chars.get(t, t) for t in tokens]
+            result = "".join(new_tokens)
         return result
 
     def _expand_synonyms(self, text: str) -> str:
+        """同义词替换 —— 追加标准术语，同时保留原始口语词"""
         result = text
         for oral, standard in self.synonym_mappings:
-            if oral in result:
-                result = result.replace(oral, standard)
+            if oral in result and standard not in result:
+                result = result.replace(oral, f"{oral} {standard}")
         return result
 
     def is_enabled(self) -> bool:

@@ -5,7 +5,7 @@ from typing import List, Dict, Tuple
 from collections import Counter
 
 from config import settings
-from app.storage.chroma_store import ChromaStore
+from app.storage import get_vector_store
 from app.core.embedding import EmbeddingService
 
 
@@ -78,8 +78,8 @@ SEMANTIC_HEAVY_PATTERNS = [
 class HybridFusionV2:
     """加权融合检索器（队友方案移植） — Min-Max归一化 + 动态权重 + Boost + Penalty"""
 
-    def __init__(self, chroma_store: ChromaStore = None, bm25_cache: BM25Cache = None):
-        self.chroma_store = chroma_store or ChromaStore()
+    def __init__(self, store=None, bm25_cache: BM25Cache = None):
+        self.store = store or get_vector_store()
         self.bm25_cache = bm25_cache or BM25Cache()
 
     def _chinese_tokenize(self, text: str) -> List[str]:
@@ -149,7 +149,7 @@ class HybridFusionV2:
         """加权融合检索"""
 
         # Dense 召回
-        dense_raw = self.chroma_store.search(
+        dense_raw = self.store.search(
             collection=collection, query=query, top_k=settings.vector_recall
         )
         if not dense_raw:
@@ -157,7 +157,7 @@ class HybridFusionV2:
 
         # 如果没有传入 texts/docs，从 Chroma 获取
         if texts is None or all_docs is None:
-            all_docs = self.chroma_store.get_all_documents(collection)
+            all_docs = self.store.get_all_documents(collection)
             if not all_docs:
                 return dense_raw[:top_k]
             texts = [doc["text"] for doc in all_docs]
@@ -203,11 +203,11 @@ class HybridFusionV2:
             doc_id = r.get("id") or hash(r.get("text", ""))
             base_score = dense_w * r.get("norm_score", 0)
 
-            is_law = r.get("data", {}).get("type") == "law_article"
-            if is_law and query_type == "semantic_heavy":
+            meta = r.get("metadata", {}) or r.get("data", {})
+            if meta.get("chunk_type") in ("parent", "child") and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("data", {}))
+            boost = self._compute_boost(r.get("text", ""), meta)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 
@@ -223,11 +223,11 @@ class HybridFusionV2:
             doc_id = r.get("id") or hash(r.get("text", ""))
             base_score = bm25_w * r.get("norm_score", 0)
 
-            is_law = r.get("data", {}).get("type") == "law_article"
-            if is_law and query_type == "semantic_heavy":
+            meta = r.get("metadata", {}) or r.get("data", {})
+            if meta.get("chunk_type") in ("parent", "child") and query_type == "semantic_heavy":
                 base_score *= 0.5
 
-            boost = self._compute_boost(r.get("text", ""), r.get("data", {}))
+            boost = self._compute_boost(r.get("text", ""), meta)
             penalty = self._compute_penalty(r.get("text", ""))
             final = base_score + boost + penalty
 

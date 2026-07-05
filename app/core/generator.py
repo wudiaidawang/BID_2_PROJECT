@@ -1,5 +1,6 @@
 """LLM生成器"""
 
+import json
 from typing import List, Dict
 import httpx
 
@@ -15,23 +16,58 @@ class LLMGenerator:
         self.model = settings.llm_model
     
     async def generate_with_history(
-        self, query: str, context: List[Dict], collection: str, history: List[Dict] = None
+        self, query: str, context: List[Dict], collection: str,
+        history: List[Dict] = None, memory_context: str = ""
     ) -> str:
-        """生成答案（带历史）"""
+        """生成答案（带历史 + memory 上下文）"""
         if not context:
             return "抱歉，没有找到相关信息。"
-        
-        prompt = self._build_prompt(query, context, collection, history)
-        
+
+        prompt = self._build_prompt(query, context, collection, history, memory_context)
+
         if self.api_key and self.api_url:
             return await self._call_llm(prompt)
         else:
             return self._fallback_answer(context, collection)
+
+    async def generate_stream(
+        self, query: str, context: List[Dict], collection: str,
+        history: List[Dict] = None, memory_context: str = ""
+    ):
+        """流式生成答案，逐 token yield"""
+        if not context:
+            yield "抱歉，没有找到相关信息。"
+            return
+
+        prompt = self._build_prompt(query, context, collection, history, memory_context)
+        messages = [
+            {"role": "system", "content": self._system_prompt()},
+            {"role": "user", "content": prompt}
+        ]
+
+        async for token in self._call_llm_stream(messages=messages):
+            yield token
     
-    async def _call_llm(self, prompt: str) -> str:
+    async def _call_llm(self, prompt=None, messages=None, temperature=None) -> str:
+        """调用 LLM API（非流式）。
+
+        支持两种调用方式：
+        - _call_llm(prompt="...")            Agent/RAG 路径，自动拼接 system prompt
+        - _call_llm(messages=[{...}], temperature=0)  Router 路径，直接传入消息列表
+        """
         try:
             print(f"DEBUG: 正在请求的 URL -> {self.api_url}")
             print(f"DEBUG: 使用的模型名称 -> {self.model}")
+
+            if messages is not None:
+                msg_list = messages
+            elif prompt is not None:
+                msg_list = [
+                    {"role": "system", "content": self._system_prompt()},
+                    {"role": "user", "content": prompt}
+                ]
+            else:
+                return "LLM调用失败: 未提供 prompt 或 messages"
 
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
@@ -39,25 +75,92 @@ class LLMGenerator:
                     headers={"Authorization": f"Bearer {self.api_key}"},
                     json={
                         "model": self.model,
-                        "messages": [
-                            {"role": "system", "content": self._system_prompt()},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "temperature": 0.3,
-                        "max_tokens": 500
+                        "messages": msg_list,
+                        "temperature": temperature if temperature is not None else settings.llm_temperature,
+                        "max_tokens": settings.llm_max_tokens
                     },
-                    timeout=30
+                    timeout=settings.llm_timeout
                 )
                 if resp.status_code == 200:
                     return resp.json()["choices"][0]["message"]["content"]
                 return f"LLM API错误: {resp.status_code}"
         except Exception as e:
             return f"LLM调用失败: {str(e)}"
+
+    async def _call_llm_stream(self, messages=None, prompt=None, temperature=None):
+        """调用 LLM API（流式），逐 token yield。
+
+        返回: (type, content) 元组 — type 为 "reasoning" 或 "assistant"
+        """
+        if messages is not None:
+            msg_list = messages
+        elif prompt is not None:
+            msg_list = [
+                {"role": "system", "content": self._system_prompt()},
+                {"role": "user", "content": prompt}
+            ]
+        else:
+            yield ("error", "LLM调用失败: 未提供 prompt 或 messages")
+            return
+
+        try:
+            async with httpx.AsyncClient() as client:
+                async with client.stream(
+                    "POST",
+                    self.api_url,
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    json={
+                        "model": self.model,
+                        "messages": msg_list,
+                        "temperature": temperature if temperature is not None else settings.llm_temperature,
+                        "max_tokens": settings.llm_max_tokens,
+                        "stream": True,
+                    },
+                    timeout=settings.llm_timeout
+                ) as response:
+                    if response.status_code != 200:
+                        body = await response.aread()
+                        yield ("error", f"LLM API错误: {response.status_code} {body.decode()[:200]}")
+                        return
+
+                    async for line in response.aiter_lines():
+                        if not line or not line.startswith("data: "):
+                            continue
+                        data = line[6:]
+                        if data == "[DONE]":
+                            return
+                        try:
+                            chunk = json.loads(data)
+                            delta = chunk["choices"][0].get("delta", {})
+                            # reasoning_content（deepseek / 混元思考模式）
+                            reasoning = delta.get("reasoning_content", "")
+                            if reasoning:
+                                yield ("reasoning", reasoning)
+                            # 普通 content
+                            content = delta.get("content", "")
+                            if content:
+                                yield ("assistant", content)
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            pass
+        except Exception as e:
+            yield ("error", f"LLM调用失败: {str(e)}")
     
     def _system_prompt(self) -> str:
-        return "你是招投标智能问答助手，请根据提供的参考信息准确回答问题。如果参考信息不足以回答问题，请如实告知，不要编造信息。"
+        return (
+            "你是招投标智能问答助手，请根据提供的参考信息准确回答问题。"
+            "重要规则：\n"
+            "1. 如果问题涉及多个法条或需要综合多条参考信息才能完整回答，请务必整合所有相关片段，不要只依赖单一来源。\n"
+            "2. 如果参考信息不足以回答问题，请如实告知，不要编造信息。\n"
+            "3. 引用法规时请注明出处（法律名称+条款号），引用项目数据时请注明项目和金额。"
+        )
     
-    def _build_prompt(self, query: str, context: List[Dict], collection: str, history: List[Dict] = None) -> str:
+    def _build_prompt(self, query: str, context: List[Dict], collection: str,
+                      history: List[Dict] = None, memory_context: str = "") -> str:
+        # Memory 上下文（跨 session 摘要 + 实体积累）
+        memory_text = ""
+        if memory_context:
+            memory_text = f"【记忆上下文】\n{memory_context}\n\n"
+
         history_text = ""
         if history:
             history_parts = []
@@ -65,13 +168,17 @@ class LLMGenerator:
                 history_parts.append(f"用户：{h['question']}\n助手：{h['answer']}")
             if history_parts:
                 history_text = "【对话历史】\n" + "\n\n".join(history_parts) + "\n\n"
-        
+
+        # 优先使用 parent_content（完整法条），其次 text（展示用纯文本）
+        # 取 top-5 片段，每条最多 1500 字符，确保长法条和多片段场景不被截断
+        max_per_fragment = 1500
+        max_fragments = min(len(context), 5)
         context_text = "\n\n".join([
-            f"【参考信息{i+1}】\n{c.get('text', '')[:500]}"
-            for i, c in enumerate(context[:3])
+            f"【参考信息{i+1}】\n{(c.get('parent_content') or c.get('text', ''))[:max_per_fragment]}"
+            for i, c in enumerate(context[:max_fragments])
         ])
-        
-        return f"{history_text}【参考信息】\n{context_text}\n\n【当前问题】\n{query}\n\n【回答】"
+
+        return f"{memory_text}{history_text}【参考信息】\n{context_text}\n\n【当前问题】\n{query}\n\n【回答】"
     
     def _fallback_answer(self, context: List[Dict], collection: str) -> str:
         best = context[0].get("data", {})

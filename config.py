@@ -1,9 +1,12 @@
 """配置管理 — YAML 文件 + 环境变量双驱动"""
 
 import os
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from app.core.config_loader import config_loader
 
+# 启动时加载 .env 到 os.environ（必须在 YAML 前，确保 ${VAR} 能解析）
+load_dotenv()
 
 # 启动时加载 YAML
 config_loader.load("config.yaml")
@@ -70,8 +73,84 @@ class Settings(BaseSettings):
         return _yaml("embedding.device", "cpu")
 
     @property
+    def model_service_url(self) -> str:
+        return _yaml("embedding.model_service_url", "http://127.0.0.1:8210")
+
+    @property
+    def reranker_service_url(self) -> str:
+        return _yaml("embedding.reranker_service_url", "http://127.0.0.1:8210")
+
+    @property
     def hf_endpoint(self) -> str:
         return _yaml("embedding.hf_endpoint", "https://hf-mirror.com")
+
+    # =========================================================================
+    # 向量库配置 — ChromaDB / Milvus 后端切换
+    # =========================================================================
+    @property
+    def vector_store_backend(self) -> str:
+        """chroma | milvus"""
+        return _yaml("vector_store.backend", "chroma")
+
+    @property
+    def milvus_uri(self) -> str:
+        return _yaml("vector_store.milvus.uri", "http://localhost:19530")
+
+    @property
+    def milvus_token(self) -> str:
+        return _yaml("vector_store.milvus.token", "")
+
+    @property
+    def milvus_database(self) -> str:
+        return _yaml("vector_store.milvus.database", "bid_qa")
+
+    @property
+    def milvus_timeout(self) -> int:
+        return int(_yaml("vector_store.milvus.timeout", 30))
+
+    @property
+    def milvus_metric_type(self) -> str:
+        return _yaml("vector_store.milvus.metric_type", "COSINE")
+
+    @property
+    def milvus_dense_field(self) -> str:
+        return _yaml("vector_store.milvus.dense_field", "dense_vector")
+
+    @property
+    def milvus_sparse_field(self) -> str:
+        return _yaml("vector_store.milvus.sparse_field", "sparse_vector")
+
+    @property
+    def milvus_primary_field(self) -> str:
+        return _yaml("vector_store.milvus.primary_field", "id")
+
+    @property
+    def milvus_content_field(self) -> str:
+        return _yaml("vector_store.milvus.content_field", "retrieval_text")
+
+    @property
+    def milvus_text_field(self) -> str:
+        return _yaml("vector_store.milvus.text_field", "text")
+
+    @property
+    def milvus_output_fields(self) -> list:
+        return _yaml("vector_store.milvus.output_fields", ["retrieval_text", "text", "title", "source_doc"])
+
+    @property
+    def milvus_hnsw_m(self) -> int:
+        return int(_yaml("vector_store.milvus.hnsw_m", 16))
+
+    @property
+    def milvus_hnsw_ef_construction(self) -> int:
+        return int(_yaml("vector_store.milvus.hnsw_ef_construction", 200))
+
+    @property
+    def milvus_bm25_k1(self) -> float:
+        return float(_yaml("vector_store.milvus.bm25_k1", 1.2))
+
+    @property
+    def milvus_bm25_b(self) -> float:
+        return float(_yaml("vector_store.milvus.bm25_b", 0.75))
 
     # =========================================================================
     # Reranker 配置
@@ -87,6 +166,10 @@ class Settings(BaseSettings):
     @property
     def reranker_max_input_length(self) -> int:
         return int(_yaml("reranker.max_input_length", 512))
+
+    @property
+    def reranker_device(self) -> str:
+        return _yaml("reranker.device", "cpu")
 
     @property
     def reranker_candidate_pool(self) -> int:
@@ -181,6 +264,14 @@ class Settings(BaseSettings):
     @property
     def agent_temperature(self) -> float:
         return float(_yaml("agent.temperature", 0.3))
+
+    @property
+    def checkpoint_enabled(self) -> bool:
+        return bool(_yaml("agent.checkpoint.enabled", True))
+
+    @property
+    def checkpoint_dir(self) -> str:
+        return _yaml("agent.checkpoint.dir", "./checkpoints")
 
     @property
     def agent_tools(self) -> list:
@@ -287,6 +378,85 @@ class Settings(BaseSettings):
     @property
     def eval_set_path(self) -> str:
         return _yaml("evaluation.eval_set_path", "./data/eval_questions/hybrid_test_cases.json")
+
+    # =========================================================================
+    # 法律结构化切块配置
+    # =========================================================================
+    @property
+    def legal_parent_context_enabled(self) -> bool:
+        return bool(_yaml("legal_chunking.parent_context_enabled", True))
+
+    @property
+    def legal_child_split_threshold(self) -> int:
+        return int(_yaml("legal_chunking.child_split_threshold", 400))
+
+    @property
+    def legal_child_target_size(self) -> int:
+        return int(_yaml("legal_chunking.child_target_size", 300))
+
+    @property
+    def legal_child_overlap(self) -> int:
+        return int(_yaml("legal_chunking.child_overlap", 40))
+
+    @property
+    def legal_header_injection_enabled(self) -> bool:
+        return bool(_yaml("legal_chunking.header_injection_enabled", True))
+
+    # =========================================================================
+    # Pipeline 可观测性 + 断路器配置
+    # =========================================================================
+    @property
+    def pipeline_tracing_enabled(self) -> bool:
+        return bool(_yaml("pipeline.tracing.enabled", True))
+
+    @property
+    def pipeline_tracing_show_counts(self) -> bool:
+        return bool(_yaml("pipeline.tracing.show_counts", True))
+
+    @property
+    def pipeline_tracing_show_timing(self) -> bool:
+        return bool(_yaml("pipeline.tracing.show_timing", True))
+
+    def pipeline_stage_config(self, stage_name: str) -> dict:
+        """获取某个阶段的配置 {enabled, circuit_breaker}"""
+        return {
+            "enabled": bool(_yaml(f"pipeline.stages.{stage_name}.enabled", True)),
+            "circuit_breaker": _yaml(f"pipeline.stages.{stage_name}.circuit_breaker", "fail_open"),
+        }
+
+    # =========================================================================
+    # 中文数字转换配置
+    # =========================================================================
+    @property
+    def chinese_number_mapping(self) -> dict:
+        return _yaml("chinese_number_mapping.mapping", {})
+
+    # =========================================================================
+    # source_type 权重提升
+    # =========================================================================
+    @property
+    def source_type_boost_enabled(self) -> bool:
+        return bool(_yaml("retrieval.source_type_boost.enabled", True))
+
+    @property
+    def source_type_weights(self) -> dict:
+        return _yaml("retrieval.source_type_boost.weights", {
+            "regulation_article": 1.15, "regulation_case": 1.05,
+            "regulation_opinion": 1.0, "regulation_policy": 1.0,
+            "bid": 1.0,
+        })
+
+    @property
+    def enable_dynamic_conversion(self) -> bool:
+        return bool(_yaml("chinese_number_mapping.enable_dynamic_conversion", True))
+
+    @property
+    def enable_digits(self) -> bool:
+        return bool(_yaml("chinese_number_mapping.enable_digits", True))
+
+    @property
+    def enable_units(self) -> bool:
+        return bool(_yaml("chinese_number_mapping.enable_units", True))
 
     # =========================================================================
     # Pydantic 基础配置（兼容旧代码里的直接属性访问）

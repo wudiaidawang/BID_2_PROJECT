@@ -1,23 +1,21 @@
-评估问答集目录
-================
+评估问答集 & 报告
 
-此目录用于存放评估用的问答对文件。
+版本演进:
+  V1 (已废弃) — 457题, 单级精确命中体系
+  V2 (已评测) — 772题, 三级命中体系 (exact/parent/soft)
+  V3 (待评测) — 772题, 四级命中体系 (exact/parent/soft/cosine)
+  V4 (已评测) — 1000题, 纯 chunk ID 匹配
+  V5 (已评测) — 2174题, chunk ID 匹配 (expected + acceptable)
 
-文件格式：
-- JSON 数组，每个元素包含 question（问题）和 expected_answer（期望答案关键词/原文）
-- 支持多个 .json 文件，评估时会合并加载
+双 Benchmark 策略 (2026-06-28):
+  Regression: v5_regression.json (当前版本, Chunk改写生成, Recall偏高)
+  Realistic:  v6_benchmark.json (待构建, 真实用户风格, 用于论文/最终评测)
 
-示例格式见 data/template.json.backup。
-
-使用方式：
-  将你的问答 .json 文件放入此目录，然后运行：
-  python eval_retrieval_accuracy.py
-  python test_accuracy.py
-
-数据结构说明：
-  {
-    "question": "问题文本",          // 必填
-    "expected_answer": "答案文本",    // 必填，用于提取关键词验证检索结果
-    "source": "来源标识",            // 可选
-    "full_chunk": "完整原文段落"      // 可选
-  }
+文件:
+  V2: eval_benchmark_v2.json
+  V3: eval_benchmark_v3.json
+  V4: eval_benchmark_v4.json
+  V5: v5_benchmark.json / v5_chunks.json / v5_regression.json
+  V6: v6_benchmark.json / v6_chunks.json (待生成)
+  报告: v4_report.md / v5_report.md / v6_report.md (待生成)
+  提示词: prompts/v6_prompt.md

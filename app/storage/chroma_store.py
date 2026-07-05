@@ -68,9 +68,11 @@ class ChromaStore:
                 score = 1 / (1 + distance)
                 documents.append({
                     "id": doc_id, "text": doc, "metadata": metadata,
-                    "score": score, "data": metadata
+                    "score": score,
                 })
-        return documents
+        # 规范化：确保统一 schema（同时设置 data 用于过渡期兼容）
+        from app.schema.metadata import normalize_chunks
+        return normalize_chunks(documents)
     
     def get_all_documents(self, collection: str) -> List[Dict]:
         collection_obj = self.get_collection(collection)
@@ -96,6 +98,29 @@ class ChromaStore:
         except:
             return 0
     
+    def get_by_ids(self, collection: str, document_ids: List[str]) -> List[Dict]:
+        """按主键批量获取（兼容 MilvusStore 接口）"""
+        if not document_ids:
+            return []
+        col = self.get_collection(collection)
+        try:
+            result = col.get(ids=document_ids)
+            docs = []
+            if result and result.get("ids"):
+                for i, doc_id in enumerate(result["ids"]):
+                    docs.append({
+                        "id": doc_id,
+                        "text": result["documents"][i] if result.get("documents") else "",
+                        "metadata": result["metadatas"][i] if result.get("metadatas") else {},
+                    })
+            return docs
+        except Exception:
+            return []
+
+    def get_raw_collection(self, name: str):
+        """兼容 MilvusStore 接口"""
+        return self.get_collection(name)
+
     def delete_collection(self, collection: str):
         if collection in self._collections:
             del self._collections[collection]
@@ -140,7 +165,10 @@ class ChromaStore:
                 metadatas.append(clean_record)
                 ids.append(f"{collection}_{i}")
 
-        # 3. 重建
-        self.delete_collection(collection)
+        # 3. 安全模式: 已有数据则跳过，不清空重建
+        existing = self.get_count(collection)
+        if existing > 0:
+            print(f"[Chroma] '{collection}' 已有 {existing} 条数据，跳过重建 (安全模式)")
+            return
         self.add_documents(collection, texts, metadatas, ids)
-        print(f"Rebuilt '{collection}' with {len(texts)} documents")
+        print(f"[Chroma] Imported '{collection}' with {len(texts)} documents")
