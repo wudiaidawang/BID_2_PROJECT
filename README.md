@@ -1,4 +1,4 @@
-# 招投标智能问答系统 v5.4
+# 招投标智能问答系统 v5.5 — 召回率 93.5%
 
 RAG + SQL 双引擎招投标智能问答平台 — 基于 FastAPI，Milvus 向量库 + BGE-M3 远程 Embedding，三库检索（regulations + bids + policy），6 大数据分类，fast/think 双模自适应路由。
 
@@ -351,6 +351,7 @@ search_unified(query)
 ### V15 召回评测 (2026-07-05 最终版)
 
 **评测集**: V9 Canonical, 2832 题 | **管线**: Dense + BM25 → Weighted Fusion → Parent Context → BGE-Reranker | **Collection**: policy_v9
+**命中标准**: 纯 chunk ID 匹配 — 每道题标注 `expected_chunk_id`，检索返回的 Top-K 中包含该 ID 即算命中。同一法条的不同子块 (child) 共享同一 parent，命中 parent 亦算命中
 
 | 指标 | R@1 | R@3 | R@5 | Miss |
 |------|-----|-----|-----|------|
