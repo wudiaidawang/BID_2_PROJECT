@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""部署 V14 eval 脚本到服务器并启动 screen 会话"""
+"""部署 V16 eval 脚本到服务器并启动 screen 会话"""
 import paramiko, os, sys
 
 HOST = "47.117.173.99"
@@ -28,7 +28,7 @@ dirs_to_create = [
     f"{REMOTE_DIR}/data",
     f"{REMOTE_DIR}/data/eval_questions",
     f"{REMOTE_DIR}/data/eval_questions/v9",
-    f"{REMOTE_DIR}/data/eval_questions/v14",
+    f"{REMOTE_DIR}/data/eval_questions/v16",
 ]
 for d in dirs_to_create:
     try:
@@ -55,8 +55,8 @@ sftp.close()
 stdin, stdout, stderr = ssh.exec_command(f"ls -la {REMOTE_DIR}/ && echo --- && ls -la {REMOTE_DIR}/data/eval_questions/v9/")
 print(stdout.read().decode())
 
-# Start eval in screen (V14)
-cmd_eval = f"cd {REMOTE_DIR} && screen -S eval_v14 -dm bash -c \"{VENV_PY} -u eval_standalone.py 2>&1 | tee eval_v14.log\""
+# Start eval in screen (V16)
+cmd_eval = f"cd {REMOTE_DIR} && screen -S eval_v16 -dm bash -c \"{VENV_PY} -u eval_standalone.py 2>&1 | tee eval_v16.log\""
 stdin, stdout, stderr = ssh.exec_command(cmd_eval)
 print(f"Eval screen: {stdout.read().decode()} {stderr.read().decode()}")
 
@@ -66,8 +66,8 @@ print(stdout.read().decode())
 
 print("\nDone. Commands to check:")
 print(f"  ssh admin@{HOST}")
-print(f"  screen -r eval_v14")
-print(f"  tail -f {REMOTE_DIR}/eval_v14.log")
-print(f"  cat {REMOTE_DIR}/data/eval_questions/v14/v14_recall_report.md")
+print(f"  screen -r eval_v16")
+print(f"  tail -f {REMOTE_DIR}/eval_v16.log")
+print(f"  cat {REMOTE_DIR}/data/eval_questions/v16/v16_recall_report.md")
 
 ssh.close()

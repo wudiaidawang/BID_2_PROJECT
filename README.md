@@ -1,4 +1,4 @@
-# 招投标智能问答系统 v5.5 — 召回率 93.5%
+# 招投标智能问答系统 v5.6 — 召回率 93.5%（绝对命中 89.5%）
 
 RAG + SQL 双引擎招投标智能问答平台 — 基于 FastAPI，Milvus 向量库 + BGE-M3 远程 Embedding，三库检索（regulations + bids + policy），6 大数据分类，fast/think 双模自适应路由。
 
@@ -348,21 +348,27 @@ search_unified(query)
 
 ## 评估
 
-### V15 召回评测 (2026-07-05 最终版)
+### V16 召回评测 (2026-07-05) — 绝对命中 vs 合并命中拆解
 
 **评测集**: V9 Canonical, 2832 题 | **管线**: Dense + BM25 → Weighted Fusion → Parent Context → BGE-Reranker | **Collection**: policy_v9
-**命中标准**: 纯 chunk ID 匹配 — 每道题标注 `expected_chunk_id`，检索返回的 Top-K 中包含该 ID 即算命中。同一法条的不同子块 (child) 共享同一 parent，命中 parent 亦算命中
 
-| 指标 | R@1 | R@3 | R@5 | Miss |
-|------|-----|-----|-----|------|
-| 最终 (Reranker) | 67.0% | 87.0% | **93.5%** | 184 |
-| Dense only | 52.9% | 72.7% | 77.9% | — |
-| BM25 (jieba) | 63.1% | 81.2% | 87.1% | — |
-| Weighted fused | 63.3% | 82.0% | 88.0% | — |
+**命中标准**:
+- **绝对命中** = Top-K 中包含 `expected_chunk_id`（精确 chunk ID 匹配）
+- **合并命中** = Top-K 中包含 `expected_chunk_id` 或 `acceptable_chunk_ids`
 
-**按 chunk_type R@5**: opinion_news 100.0% | policy_doc 96.6% | pdf_law_child 92.8% | pdf_law_parent 90.9% | pdf_case_sliding 90.6% | pdf_case_structured 89.0%
+| 指标 | 绝对 R@1 | 绝对 R@3 | 绝对 R@5 | 合并 R@1 | 合并 R@3 | 合并 R@5 | Miss |
+|------|----------|----------|----------|----------|----------|----------|------|
+| 最终 (Reranker) | 62.6% | 82.7% | **89.5%** | 67.0% | 87.0% | **93.5%** | 184 |
+| Dense only | 49.6% | 69.0% | 74.3% | 52.9% | 72.7% | 77.9% | — |
+| BM25 (jieba) | 58.3% | 75.8% | 82.3% | 63.1% | 81.2% | 87.1% | — |
+| Weighted fused | 58.2% | 76.9% | 83.6% | 63.3% | 82.0% | 88.0% | — |
 
-**按 question_type R@5**: announcement_interpretation 98.9% | responsibility 93.7% | definition 92.5% | procedure 92.5% | scenario_judgment 92.5% | case_reasoning 91.8% | condition_check 91.6%
+- 564/2832 题 (19.9%) 有 acceptable_chunk_ids 备选，合并-绝对差异 @5 = 4.0% (112 题)
+- pdf_case_sliding 绝对命中率最低，因滑动窗口 chunk 同质化需要备选 ID 兜底
+
+**按 chunk_type R@5**: opinion_news 100.0% | policy_doc 96.6% | pdf_law_child 93.6% | pdf_law_parent 92.9% | pdf_case_sliding 90.6% | pdf_case_structured 89.0%
+
+**按 question_type R@5**: announcement_interpretation 100.0% | responsibility 95.1% | procedure 93.5% | condition_check 93.1% | definition 92.5% | scenario_judgment 92.5% | case_reasoning 91.8%
 
 ### Header 领域注入
 
@@ -378,7 +384,8 @@ search_unified(query)
 | V11 | 2832 | 92.0% | 评测集净化 + 三路动态权重 |
 | V13 | 2832 | 92.0% | source_type_boost + textbook 1.03x |
 | V14 | 2832 | 92.7% | Header 领域注入 27 对 (首轮) |
-| **V15** | **2832** | **93.5%** | **Header 领域注入 71 对全量补齐 (最终版)** |
+| **V15** | **2832** | **93.5%** | **Header 领域注入 71 对全量补齐** |
+| **V16** | **2832** | **93.5% / 89.5%** | **合并/绝对命中拆解 (564 题含备选 ID)** |
 
 ### 评测文件
 

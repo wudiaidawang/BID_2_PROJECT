@@ -33,7 +33,7 @@ STAGE_POOL = 30  # 各阶段统一对比口径（与 reranker 入口一致）
 WORKERS = 3
 
 EVAL_PATH = Path(__file__).parent / "data" / "eval_questions" / "v9" / "v9_canonical.jsonl"
-OUTPUT_PATH = Path(__file__).parent / "data" / "eval_questions" / "v14" / "v14_recall_report.md"
+OUTPUT_PATH = Path(__file__).parent / "data" / "eval_questions" / "v16" / "v16_recall_report.md"
 
 # ── source_type 权重提升（对齐生产管线 app/pipeline/pipeline.py post-rerank boost）──
 SOURCE_TYPE_BOOST = {
@@ -782,6 +782,8 @@ def eval_one(qa):
     except Exception as e:
         return {
             "final_rank": 0, "dense_rank": 0, "bm25_rank": 0, "fused_rank": 0, "expanded_rank": 0,
+            "dense_exact_rank": 0, "bm25_exact_rank": 0, "fused_exact_rank": 0, "expanded_exact_rank": 0,
+            "final_exact_rank": 0,
             "dense_pool": False, "bm25_pool": False, "fused_pool": False, "expanded_pool": False,
             "final_pool": False,
             "qa_type": qa_type, "span": span,
@@ -799,6 +801,12 @@ def eval_one(qa):
     fused_rank = _get_rank(fused_results, target_ids)
     expanded_rank = _get_rank(expanded_results, target_ids)
 
+    # 区分 exact hit (expected_id 直接命中) vs acceptable hit (备选 ID 命中)
+    dense_exact_rank = _get_rank(dense_results, {expected_id}) if expected_id else 0
+    bm25_exact_rank = _get_rank(bm25_results, {expected_id}) if expected_id else 0
+    fused_exact_rank = _get_rank(fused_results, {expected_id}) if expected_id else 0
+    expanded_exact_rank = _get_rank(expanded_results, {expected_id}) if expected_id else 0
+
     # Pool@30: 各阶段统一口径（target 是否进 top 30，与 reranker 入口对齐）
     dense_pool = _hit_pool(dense_results, target_ids)
     bm25_pool = _hit_pool(bm25_results, target_ids)
@@ -811,22 +819,26 @@ def eval_one(qa):
         "benchmark_level": benchmark_level,
         "dense_rank": dense_rank, "bm25_rank": bm25_rank,
         "fused_rank": fused_rank, "expanded_rank": expanded_rank,
+        "dense_exact_rank": dense_exact_rank, "bm25_exact_rank": bm25_exact_rank,
+        "fused_exact_rank": fused_exact_rank, "expanded_exact_rank": expanded_exact_rank,
         "dense_pool": dense_pool, "bm25_pool": bm25_pool,
         "fused_pool": fused_pool, "expanded_pool": expanded_pool,
     }
 
     if not final_results:
         return {
-            **base_fields, "final_rank": 0,
+            **base_fields, "final_rank": 0, "final_exact_rank": 0,
             "miss_info": {"question": question[:100], "expected_id": expected_id[:60], "results": "NO RESULTS"},
         }
 
     final_rank = _get_rank(final_results, target_ids)
+    final_exact_rank = _get_rank(final_results, {expected_id}) if expected_id else 0
     final_pool = True  # final 本身 ≤5，进了 final 就是进了 pool
 
     if final_rank == 0:
         return {
-            **base_fields, "final_rank": 0, "final_pool": _hit_pool(final_results, target_ids, len(final_results)),
+            **base_fields, "final_rank": 0, "final_exact_rank": 0,
+            "final_pool": _hit_pool(final_results, target_ids, len(final_results)),
             "miss_info": {
                 "question": question[:100], "expected_id": expected_id[:60],
                 "law_name": law_name[:40], "span": span, "type": qa_type,
@@ -835,14 +847,14 @@ def eval_one(qa):
             },
         }
     return {
-        **base_fields, "final_rank": final_rank, "final_pool": True,
-        "miss_info": None,
+        **base_fields, "final_rank": final_rank, "final_exact_rank": final_exact_rank,
+        "final_pool": True, "miss_info": None,
     }
 
 
 def evaluate():
     print("=" * 60)
-    print(f"V10 Standalone Recall Eval — {WORKERS} workers (local jieba BM25 + adjacent article context)")
+    print(f"V16 Standalone Recall Eval — {WORKERS} workers (local jieba BM25 + adjacent article context)")
     print("=" * 60)
 
     # 预热本地 BM25 索引和 Parent 查找表
@@ -856,10 +868,12 @@ def evaluate():
     def _make_stat():
         return {"total": 0, "hits": {1: 0, 3: 0, 5: 0}}
 
-    # 各阶段独立统计 (R@K + Pool@30)
+    # 各阶段独立统计 (R@K + Pool@30) — 合并命中 (exact + acceptable)
     stage_names = ["dense", "bm25", "fused", "expanded", "final"]
     stage_hits = {s: {1: 0, 3: 0, 5: 0} for s in stage_names}
     stage_pool = {s: 0 for s in stage_names}  # Pool@30: target 是否在 top 30 内
+    # 各阶段独立统计 — 绝对命中 (仅 expected_chunk_id)
+    stage_exact_hits = {s: {1: 0, 3: 0, 5: 0} for s in stage_names}
     by_type = defaultdict(_make_stat)
     by_span = defaultdict(_make_stat)
     by_qtype = defaultdict(_make_stat)
@@ -893,7 +907,7 @@ def evaluate():
                 by_rdiff[rdiff]["total"] += 1
                 by_blevel[blevel]["total"] += 1
 
-                # 汇总各阶段 R@K hit
+                # 汇总各阶段 R@K hit (合并命中: exact + acceptable)
                 for stage, rank_val in [("dense", dense_rank), ("bm25", bm25_rank),
                                          ("fused", fused_rank), ("expanded", expanded_rank),
                                          ("final", final_rank)]:
@@ -903,6 +917,22 @@ def evaluate():
                         stage_hits[stage][3] += 1; stage_hits[stage][5] += 1
                     elif rank_val in (4, 5):
                         stage_hits[stage][5] += 1
+
+                # 汇总各阶段 R@K hit (绝对命中: 仅 expected_chunk_id)
+                for stage, exact_rank in [("dense", r.get("dense_exact_rank", 0)),
+                                          ("bm25", r.get("bm25_exact_rank", 0)),
+                                          ("fused", r.get("fused_exact_rank", 0)),
+                                          ("expanded", r.get("expanded_exact_rank", 0)),
+                                          ("final", r.get("final_exact_rank", 0))]:
+                    if exact_rank == 1:
+                        stage_exact_hits[stage][1] += 1
+                        stage_exact_hits[stage][3] += 1
+                        stage_exact_hits[stage][5] += 1
+                    elif exact_rank in (2, 3):
+                        stage_exact_hits[stage][3] += 1
+                        stage_exact_hits[stage][5] += 1
+                    elif exact_rank in (4, 5):
+                        stage_exact_hits[stage][5] += 1
 
                 # 汇总 Pool@30 (统一口径)
                 for stage, pool_flag in [("dense", r.get("dense_pool", False)),
@@ -941,15 +971,21 @@ def evaluate():
     print("=" * 60)
 
     print(f"\n## 各阶段召回率对比（统一 Pool@30 口径）")
-    print(f"| 阶段 | Recall@1 | Recall@3 | Recall@5 | Pool@30 |")
-    print(f"|------|----------|----------|----------|---------|")
+    print(f"| 阶段 | 命中类型 | Recall@1 | Recall@3 | Recall@5 | Pool@30 |")
+    print(f"|------|----------|----------|----------|----------|---------|")
     stage_labels = {"dense": "Dense only", "bm25": "BM25 (jieba)", "fused": "Weighted fused", "expanded": "Parent expanded", "final": "Reranker final"}
     for s in stage_names:
+        # 合并命中
         r1 = stage_hits[s][1] / total * 100 if total else 0
         r3 = stage_hits[s][3] / total * 100 if total else 0
         r5 = stage_hits[s][5] / total * 100 if total else 0
         p30 = stage_pool[s] / total * 100 if total else 0
-        print(f"| {stage_labels[s]} | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% | {p30:.1f}% |")
+        print(f"| {stage_labels[s]} | 合并 | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% | {p30:.1f}% |")
+        # 绝对命中
+        er1 = stage_exact_hits[s][1] / total * 100 if total else 0
+        er3 = stage_exact_hits[s][3] / total * 100 if total else 0
+        er5 = stage_exact_hits[s][5] / total * 100 if total else 0
+        print(f"| {stage_labels[s]} | 绝对 | {er1:.1f}% | {er3:.1f}% | {er5:.1f}% | - |")
 
     def _print_section(title, data):
         print(f"\n## {title}")
@@ -975,37 +1011,46 @@ def evaluate():
                 print(f"     top1: {m.get('top1_id','')[:70]}")
 
     # ── 写报告 ──
-    _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses, stage_pool)
+    _write_report(total, stage_hits, stage_exact_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses, stage_pool)
     print(f"\n报告已输出: {OUTPUT_PATH}")
 
 
-def _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses, stage_pool=None):
+def _write_report(total, stage_hits, stage_exact_hits, by_type, by_qtype, by_rdiff, by_span, by_blevel, misses, stage_pool=None):
     lines = [
-        "# V9 召回评测报告 — Chunk ID 匹配（加权融合 + 法条Boost + Parent上下文增强）",
+        "# V16 召回评测报告 — 绝对命中 vs 合并命中拆解",
         "",
-        f"**评测集**: v8_canonical.jsonl, {total} 题",
+        f"**评测集**: v9_canonical.jsonl, {total} 题",
         "**评测方式**: 纯 chunk ID 匹配（expected_chunk_id / acceptable_chunk_ids）",
-        "**融合策略**: Weighted Fusion（Min-Max 归一化 + 动态权重 semantic 0.55/0.45 + 法条检测 Boost）",
+        "**命中标准**:",
+        "- **绝对命中** = Top-K 中包含 expected_chunk_id（精确匹配）",
+        "- **合并命中** = Top-K 中包含 expected_chunk_id 或 acceptable_chunk_ids（含备选 ID，如 sliding window 重叠 chunk）",
+        "**融合策略**: Weighted Fusion（Min-Max 归一化 + 动态权重 + 法条检测 Boost + source_type Boost）",
         f"**统一口径**: Pool@30 = 各阶段取 top 30 看 target 是否在池中（与 reranker 入口对齐）",
         "**BM25**: 本地 jieba 分词",
         "",
-        "## 各阶段召回率对比",
+        "## 各阶段召回率对比（绝对命中 vs 合并命中）",
         "",
-        "| 阶段 | Recall@1 | Recall@3 | Recall@5 | Pool@30 |",
-        "|------|----------|----------|----------|---------|",
+        "| 阶段 | 命中类型 | Recall@1 | Recall@3 | Recall@5 | Pool@30 |",
+        "|------|----------|----------|----------|----------|---------|",
     ]
     stage_labels = {"dense": "Dense only", "bm25": "BM25 (jieba)", "fused": "Weighted fused", "expanded": "Parent expanded", "final": "Reranker final"}
     for s in stage_labels:
         sh = stage_hits[s]
+        ex = stage_exact_hits.get(s, {"1": 0, "3": 0, "5": 0})
         r1 = sh[1] / total * 100 if total else 0
         r3 = sh[3] / total * 100 if total else 0
         r5 = sh[5] / total * 100 if total else 0
         p30 = stage_pool.get(s, 0) / total * 100 if stage_pool and total else 0
-        lines.append(f"| {stage_labels[s]} | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% | {p30:.1f}% |")
+        lines.append(f"| {stage_labels[s]} | 合并 | {r1:.1f}% | {r3:.1f}% | {r5:.1f}% | {p30:.1f}% |")
+        er1 = ex[1] / total * 100 if total else 0
+        er3 = ex[3] / total * 100 if total else 0
+        er5 = ex[5] / total * 100 if total else 0
+        lines.append(f"| {stage_labels[s]} | 绝对 | {er1:.1f}% | {er3:.1f}% | {er5:.1f}% | - |")
     lines.append("")
 
     # final/reranker 整体
     final_hits = stage_hits["final"]
+    final_exact_hits = stage_exact_hits.get("final", {1: 0, 3: 0, 5: 0})
     lines += [
         "## 最终召回率 (Reranker 后)",
         "",
@@ -1014,7 +1059,14 @@ def _write_report(total, stage_hits, by_type, by_qtype, by_rdiff, by_span, by_bl
     ]
     for k in [1, 3, 5]:
         rate = final_hits[k] / total * 100 if total else 0
-        lines.append(f"| Recall@{k} | {final_hits[k]} | {total} | **{rate:.1f}%** |")
+        lines.append(f"| 合并 Recall@{k} | {final_hits[k]} | {total} | **{rate:.1f}%** |")
+    for k in [1, 3, 5]:
+        rate = final_exact_hits[k] / total * 100 if total else 0
+        lines.append(f"| 绝对 Recall@{k} | {final_exact_hits[k]} | {total} | **{rate:.1f}%** |")
+    diff_5 = final_hits[5] - final_exact_hits[5]
+    lines.append(f"| 差异 (合并-绝对) @5 | {diff_5} | {total} | **{diff_5/total*100:.1f}%** |")
+    acc_qty = sum(1 for qa in load_eval_set() if qa.get("acceptable_chunk_ids"))
+    lines.append(f"| 含 acceptable 题数 | {acc_qty} | {total} | {acc_qty/total*100:.1f}% |")
     lines.append("")
 
     def _write_section(title, data):
